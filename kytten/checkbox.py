@@ -2,9 +2,9 @@
 # Copyrighted (C) 2009 by Conrad "Lynx" Wong
 
 import pyglet
-from widgets import Control
-from layout import HALIGN_LEFT, HALIGN_RIGHT
-from override import KyttenLabel
+from .widgets import Control
+from .layout import HALIGN_LEFT, HALIGN_RIGHT
+from .override import KyttenLabel
 
 class Checkbox(Control):
     """

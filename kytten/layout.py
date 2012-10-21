@@ -12,7 +12,8 @@
 import pyglet
 from pyglet import gl
 
-from widgets import Widget, Control, Spacer, Graphic, Label
+from .widgets import Widget, Control, Spacer, Graphic, Label
+from functools import reduce
 
 # GUI layout constants
 
@@ -567,4 +568,3 @@ class FreeLayout(Spacer):
             item.teardown()
         self.content = []
         Widget.teardown(self)
-

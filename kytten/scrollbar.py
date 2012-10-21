@@ -2,7 +2,7 @@
 # Copyrighted (C) 2009 by Conrad "Lynx" Wong
 
 import pyglet
-from widgets import Control
+from .widgets import Control
 
 class HScrollbar(Control):
     """
@@ -470,4 +470,3 @@ class VScrollbar(HScrollbar):
             self.pos = float(min(max_bar_y, top - y)) / space_height
         if self.bar is not None:
             self.bar.update(*self._get_bar_region())
-

@@ -24,11 +24,11 @@ from kytten.scrollable import ScrollableGroup
 from kytten.theme import TextureGraphicElementTemplate
 from kytten.theme import FrameTextureGraphicElementTemplate
 from kytten.widgets import Control
-from proxy_dialog import ProxyDialog
-from resizable import Resizable
-from image_region_placer import ImageRegionPlacer
-from state_manager import StateManager
-from color_selector import ColorSelector
+from .proxy_dialog import ProxyDialog
+from .resizable import Resizable
+from .image_region_placer import ImageRegionPlacer
+from .state_manager import StateManager
+from .color_selector import ColorSelector
 
 # Default theme
 theme_dir = os.path.join(os.getcwd(), 'theme')
@@ -252,7 +252,7 @@ class _NodeEditState(BaseState):
     def _get_custom_components(self):
         # Handle all components without built-in handlers here
         components = []
-        items = self.theme[self.path].items()
+        items = list(self.theme[self.path].items())
         items.sort(lambda x, y: cmp(x[0], y[0]))
         for k, v in items:
             if isinstance(v, dict):
@@ -282,7 +282,7 @@ class _NodeEditState(BaseState):
         def on_delete(id):
             self.do_delete_field(fields_layout, id)
         fields = []
-        items = self.theme[self.path].items()
+        items = list(self.theme[self.path].items())
         items.sort(lambda x, y: cmp(x[0], y[0]))
         index = 0
         for k, v in items:
@@ -314,7 +314,7 @@ class _NodeEditState(BaseState):
     def _get_image_fields(self):
         # Display a menu to choose images to edit
         images  = []
-        items = self.theme[self.path].items()
+        items = list(self.theme[self.path].items())
         items.sort(lambda x, y: cmp(x[0], y[0]))
         for k, v in items:
             if isinstance(v, TextureGraphicElementTemplate):
@@ -346,7 +346,7 @@ class _NodeEditState(BaseState):
             self.popup = None
 
             name = form['name']
-            if self.theme[self.path].has_key(name):
+            if name in self.theme[self.path]:
                 self.popup_message("%s is already a field name!" % name)
                 return
             self.theme[self.path][name] = {}
@@ -384,7 +384,7 @@ class _NodeEditState(BaseState):
             self.popup = None
 
             name = form['name']
-            if self.theme[self.path].has_key(name):
+            if name in self.theme[self.path]:
                 self.popup_message("%s is already a field name!" % name)
                 return
             try:
@@ -432,7 +432,7 @@ class _NodeEditState(BaseState):
             self.popup = None
 
             name = form['name']
-            if self.theme[self.path].has_key(name):
+            if name in self.theme[self.path]:
                 self.popup_message("%s is already a field name!" % name)
                 return
             if not name.startswith('image'):
@@ -457,8 +457,8 @@ class _NodeEditState(BaseState):
                          kytten.Input(id='name', text='image')],
                         [kytten.Label('Texture'),
                          kytten.Dropdown(id='texture',
-                                         options=self.textures.keys(),
-                                         selected=self.textures.keys()[0])]
+                                         options=list(self.textures.keys()),
+                                         selected=list(self.textures.keys())[0])]
                     ]),
                     kytten.HorizontalLayout([
                         kytten.Button("Add", on_click=do_add_image),
@@ -662,7 +662,7 @@ Image: %s
         texture_id = self.template.texture.id
         our_texture = None
         our_filename = None
-        for texture_name, texture in self.textures.iteritems():
+        for texture_name, texture in self.textures.items():
             if texture.id == texture_id:
                 our_filename = texture_name
                 our_texture = texture
@@ -835,8 +835,8 @@ Image: %s
                     kytten.HorizontalLayout([
                         kytten.Label('Texture'),
                         kytten.Dropdown(id='texture',
-                                        options=self.textures.keys(),
-                                        selected=self.textures.keys()[0])]),
+                                        options=list(self.textures.keys()),
+                                        selected=list(self.textures.keys())[0])]),
                     kytten.HorizontalLayout([
                         kytten.Button("Change", on_click=do_change_texture),
                         None,

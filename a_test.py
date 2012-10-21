@@ -62,14 +62,14 @@ colorfully!
 def create_form_dialog():
     dialog = None
     def on_enter(dialog):
-        print ("Form submitted!")
-        for key, value in dialog.get_values().iteritems():
-            print ("  %s=%s" % (key, value))
+        print("Form submitted!")
+        for key, value in dialog.get_values().items():
+            print("  %s=%s" % (key, value))
         on_escape(dialog)
     def on_submit():
         on_enter(dialog)
     def on_cancel():
-        print ("Form canceled.")
+        print("Form canceled.")
         on_escape(dialog)
     dialog = kytten.Dialog(
         kytten.Frame(
@@ -119,10 +119,10 @@ def create_form_dialog():
 
 def create_scrollable_dialog():
     def on_select(choice):
-        print ("Kytten is %s" % choice)
+        print("Kytten is %s" % choice)
 
     def on_set(value):
-        print ("Kytten rating is %0.0f" % value)
+        print("Kytten rating is %0.0f" % value)
 
     dialog = kytten.Dialog(
         kytten.Frame(
@@ -201,7 +201,7 @@ And wait for the Jellicle moon to rise
 
 def create_dropdown_dialog():
     def on_select(choice):
-        print ("Selected: %s" % choice)
+        print("Selected: %s" % choice)
 
     dialog = kytten.Dialog(
         kytten.Frame(
@@ -225,7 +225,7 @@ def create_file_load_dialog():
     dialog = None
 
     def on_select(filename):
-        print ("File load: %s" % filename)
+        print("File load: %s" % filename)
         on_escape(dialog)
 
     dialog = kytten.FileLoadDialog(  # by default, path is current working dir
@@ -238,7 +238,7 @@ def create_file_save_dialog():
     dialog = None
 
     def on_select(filename):
-        print ("File save: %s" % filename)
+        print("File save: %s" % filename)
         on_escape(dialog)
 
     dialog = kytten.FileSaveDialog(  # by default, path is current working dir
@@ -251,7 +251,7 @@ def create_directory_select_dialog():
     dialog = None
 
     def on_select(filename):
-        print ("Directory: %s" % filename)
+        print("Directory: %s" % filename)
         on_escape(dialog)
 
     dialog = kytten.DirectorySelectDialog(
@@ -277,7 +277,7 @@ def on_select(choice):
     elif choice == 'Directory Select':
         create_directory_select_dialog()
     else:
-        print ("Unexpected menu selection: %s" % choice)
+        print("Unexpected menu selection: %s" % choice)
 
 if __name__ == '__main__':
     window = pyglet.window.Window(

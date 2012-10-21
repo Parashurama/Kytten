@@ -8,10 +8,10 @@
 #        to cover the Widget's area, or the space within which it is contained.
 # TitleFrame: like Frame, but has a title region on top as well.
 
-from widgets import Widget, Control, Graphic, Label
-from layout import HorizontalLayout, VerticalLayout, GetRelativePoint
-from layout import VALIGN_BOTTOM, HALIGN_LEFT, HALIGN_CENTER, HALIGN_RIGHT
-from layout import ANCHOR_CENTER
+from .widgets import Widget, Control, Graphic, Label
+from .layout import HorizontalLayout, VerticalLayout, GetRelativePoint
+from .layout import VALIGN_BOTTOM, HALIGN_LEFT, HALIGN_CENTER, HALIGN_RIGHT
+from .layout import ANCHOR_CENTER
 
 class Wrapper(Widget):
     """

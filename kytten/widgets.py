@@ -14,7 +14,7 @@
 
 import pyglet
 from pyglet import gl
-from override import KyttenLabel
+from .override import KyttenLabel
 
 class Widget:
     """
@@ -335,4 +335,3 @@ class Label(Widget):
             font = self.label.document.get_font()
             self.width = self.label.content_width
             self.height = font.ascent - font.descent  # descent is negative
-

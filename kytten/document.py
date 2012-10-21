@@ -3,8 +3,8 @@
 
 import pyglet
 
-from widgets import Control
-from scrollbar import VScrollbar
+from .widgets import Control
+from .scrollbar import VScrollbar
 
 class Document(Control):
     """
@@ -19,7 +19,7 @@ class Document(Control):
         Control.__init__(self, width, height)
         self.max_height = height
         self.content_width = width
-        if isinstance(document, basestring):
+        if isinstance(document, str):
             self.document = pyglet.text.document.UnformattedDocument(document)
         else:
             self.document = document

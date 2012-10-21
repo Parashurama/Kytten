@@ -3,15 +3,15 @@
 
 import pyglet
 
-from widgets import Widget, Control
-from dialog import Dialog
-from frame import Frame
-from layout import GetRelativePoint, VerticalLayout
-from layout import ANCHOR_CENTER, ANCHOR_TOP_LEFT, ANCHOR_BOTTOM_LEFT
-from layout import HALIGN_CENTER
-from layout import VALIGN_TOP, VALIGN_CENTER, VALIGN_BOTTOM
-from override import KyttenLabel
-from scrollable import Scrollable
+from .widgets import Widget, Control
+from .dialog import Dialog
+from .frame import Frame
+from .layout import GetRelativePoint, VerticalLayout
+from .layout import ANCHOR_CENTER, ANCHOR_TOP_LEFT, ANCHOR_BOTTOM_LEFT
+from .layout import HALIGN_CENTER
+from .layout import VALIGN_TOP, VALIGN_CENTER, VALIGN_BOTTOM
+from .override import KyttenLabel
+from .scrollable import Scrollable
 
 class MenuOption(Control):
     """
@@ -150,7 +150,7 @@ class Menu(VerticalLayout):
                  on_select=None):
         self.align = align
         menu_options = self._make_options(options)
-        self.options = dict(zip(options, menu_options))
+        self.options = dict(list(zip(options, menu_options)))
         self.on_select = on_select
         self.selected = None
         VerticalLayout.__init__(self, menu_options,
@@ -193,7 +193,7 @@ class Menu(VerticalLayout):
         self.delete()
         self.selected = None
         menu_options = self._make_options(options)
-        self.options = dict(zip(options, menu_options))
+        self.options = dict(list(zip(options, menu_options)))
         self.set(menu_options)
         self.saved_dialog.set_needs_layout()
 

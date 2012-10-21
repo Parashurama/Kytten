@@ -6,15 +6,15 @@ import os
 import pyglet
 from pyglet import gl
 
-from button import Button
-from dialog import Dialog
-from frame import Frame, SectionHeader
-from layout import VerticalLayout, HorizontalLayout
-from layout import ANCHOR_CENTER, HALIGN_LEFT, VALIGN_BOTTOM
-from menu import Menu, Dropdown
-from scrollable import Scrollable
-from text_input import Input
-from widgets import Label
+from .button import Button
+from .dialog import Dialog
+from .frame import Frame, SectionHeader
+from .layout import VerticalLayout, HorizontalLayout
+from .layout import ANCHOR_CENTER, HALIGN_LEFT, VALIGN_BOTTOM
+from .menu import Menu, Dropdown
+from .scrollable import Scrollable
+from .text_input import Input
+from .widgets import Label
 
 class FileLoadDialog(Dialog):
     def __init__(self, path=os.getcwd(), extensions=[], title="Select File",
@@ -104,7 +104,7 @@ class FileLoadDialog(Dialog):
 
         self.selected_file = None
         self.files_dict = dict(files)
-        self.files = self.files_dict.keys()
+        self.files = list(self.files_dict.keys())
 
         def dir_sort(x, y):
             if x.endswith(' (dir)') and y.endswith(' (dir)'):
@@ -307,7 +307,7 @@ class DirectorySelectDialog(FileLoadDialog):
 
         self.selected_file = None
         self.files_dict = dict(files)
-        self.files = self.files_dict.keys()
+        self.files = list(self.files_dict.keys())
 
         def dir_sort(x, y):
             if x == '(this dir)':

@@ -15,10 +15,9 @@ except ImportError:
         json_load = json.loads
     except ImportError:
         import sys
-        sys.stderr.write( \
-              "Warning: using 'safe_eval' to process json files, " \
-              "please upgrade to Python 2.6 or install simplejson")
-        import safe_eval
+        print("Warning: using 'safe_eval' to process json files, " \
+              "please upgrade to Python 2.6 or install simplejson", file=sys.stderr)
+        from . import safe_eval
         def json_load(expr):
             # strip carriage returns
             return safe_eval.safe_eval(''.join(str(expr).split('\r')))
@@ -248,7 +247,7 @@ class ScopedDict(dict):
     """
     def __init__(self, arg={}, parent=None):
         self.parent = parent
-        for k, v in arg.iteritems():
+        for k, v in arg.items():
             if isinstance(v, dict):
                 self[k] = ScopedDict(v, self)
             else:
@@ -288,7 +287,7 @@ class ScopedDict(dict):
             else:
                 raise KeyError(key)  # empty list
 
-        if self.has_key(key):
+        if key in self:
             return dict.get(self, key)
         elif self.parent:
             return self.parent.get(key, default)
@@ -312,7 +311,7 @@ class ScopedDict(dict):
     def write(self, f, indent=0):
         f.write('{\n')
         first = True
-        for k, v in self.iteritems():
+        for k, v in self.items():
             if not first:
                 f.write(',\n')
             else:
@@ -322,7 +321,7 @@ class ScopedDict(dict):
                 v.write(f, indent + 2)
             elif isinstance(v, UndefinedGraphicElementTemplate):
                 v.write(f, indent + 2)
-            elif isinstance(v, basestring):
+            elif isinstance(v, str):
                 f.write('"%s"' % v)
             elif isinstance(v, tuple):
                 f.write('%s' % repr(list(v)))
@@ -358,7 +357,7 @@ class Theme(ScopedDict):
 
         if isinstance(arg, Theme):
             self.textures = arg.textures
-            for k, v in arg.iteritems():
+            for k, v in arg.items():
                 self.__setitem__(k, v)
             self.update(override)
             return
@@ -371,7 +370,8 @@ class Theme(ScopedDict):
                 self.loader = pyglet.resource.Loader(path=arg)
                 try:
                     theme_file = self.loader.file(name)
-                    input = json_load(theme_file.read())
+                    raw_file = theme_file.read().decode('utf-8')
+                    input = json_load(raw_file)
                     theme_file.close()
                 except pyglet.resource.ResourceNotFoundException:
                     input = {}
@@ -398,7 +398,7 @@ class Theme(ScopedDict):
 
         @param filename The filename of the texture
         """
-        if not self.textures.has_key(filename):
+        if filename not in self.textures:
             texture = self.loader.texture(filename)
             texture.src = filename
             self.textures[filename] = texture
@@ -428,17 +428,17 @@ class Theme(ScopedDict):
         @param target The ScopedDict which is to be populated
         @param input The input dictionary
         """
-        for k, v in input.iteritems():
+        for k, v in input.items():
             if k.startswith('image'):
                 if isinstance(v, dict):
                     width = height = None
-                    if v.has_key('region'):
+                    if 'region' in v:
                         x, y, width, height = v['region']
                         texture = self._get_texture_region(
                                 v['src'], x, y, width, height)
                     else:
                         texture = self._get_texture(v['src'])
-                    if v.has_key('stretch'):
+                    if 'stretch' in v:
                         target[k] = FrameTextureGraphicElementTemplate(
                             self,
                             texture,

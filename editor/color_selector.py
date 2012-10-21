@@ -25,22 +25,22 @@ class ColorWheel(Control):
     BORDER = 4
     VECTORS = []
     NUM_SEGMENTS = int(2 * math.pi * (RADIUS + BORDER) / 24) * 6
-    for x in xrange(0, NUM_SEGMENTS):
+    for x in range(0, NUM_SEGMENTS):
         angle = float(x) * 2.0 * math.pi / float(NUM_SEGMENTS)
         VECTORS.append((math.cos(angle), math.sin(angle)))
     NUM_ARC_SEGMENTS = NUM_SEGMENTS / 6
     COLORS = []
-    for x in xrange(0, NUM_ARC_SEGMENTS):
+    for x in range(0, NUM_ARC_SEGMENTS):
         COLORS.append([255, x * 255 / NUM_ARC_SEGMENTS, 0])
-    for x in xrange(0, NUM_ARC_SEGMENTS):
+    for x in range(0, NUM_ARC_SEGMENTS):
         COLORS.append([255 - (x * 255 / NUM_ARC_SEGMENTS), 255, 0])
-    for x in xrange(0, NUM_ARC_SEGMENTS):
+    for x in range(0, NUM_ARC_SEGMENTS):
         COLORS.append([0, 255, x * 255 / NUM_ARC_SEGMENTS])
-    for x in xrange(0, NUM_ARC_SEGMENTS):
+    for x in range(0, NUM_ARC_SEGMENTS):
         COLORS.append([0, 255 - (x * 255 / NUM_ARC_SEGMENTS), 255])
-    for x in xrange(0, NUM_ARC_SEGMENTS):
+    for x in range(0, NUM_ARC_SEGMENTS):
         COLORS.append([x * 255 / NUM_ARC_SEGMENTS, 0, 255])
-    for x in xrange(0, NUM_ARC_SEGMENTS):
+    for x in range(0, NUM_ARC_SEGMENTS):
         COLORS.append([255, 0, 255 - (x * 255 / NUM_ARC_SEGMENTS)])
 
     def __init__(self, color, id=None, on_select=None):
@@ -548,19 +548,19 @@ class ColorSelector(Control):
 
         def on_red_set(red):
             red = min(max(int(red), 0), 255)
-            print ("red = %s" % red)
+            print("red = %s" % red)
             self.color = [red] + self.color[1:]
             self.wheel.set_color(self.color)
 
         def on_green_set(green):
             green = min(max(int(green), 0), 255)
-            print ("green = %s" % green)
+            print("green = %s" % green)
             self.color = [self.color[0], green] + self.color[2:]
             self.wheel.set_color(self.color)
 
         def on_blue_set(blue):
             blue = min(max(int(blue), 0), 255)
-            print ("blue = %s" % blue)
+            print("blue = %s" % blue)
             self.color = self.color[:2] + [blue, self.color[3]]
             self.wheel.set_color(self.color)
 

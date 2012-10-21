@@ -2,8 +2,8 @@
 # Copyrighted (C) 2009 by Conrad "Lynx" Wong
 
 import pyglet
-from widgets import Control
-from override import KyttenLabel
+from .widgets import Control
+from .override import KyttenLabel
 
 class Button(Control):
     """
