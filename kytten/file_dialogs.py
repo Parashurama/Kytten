@@ -1,6 +1,12 @@
 # kytten/file_dialogs.py
 # Copyrighted (C) 2009 by Conrad "Lynx" Wong
 
+####################
+#### Todo
+#
+# 1. Rewrite directory sort cmp function as key function
+
+
 import glob
 import os
 import pyglet
@@ -15,6 +21,25 @@ from .menu import Menu, Dropdown
 from .scrollable import Scrollable
 from .text_input import Input
 from .widgets import Label
+
+def cmp_to_key(mycmp):
+    'Convert a cmp= function into a key= function'
+    class K(object):
+        def __init__(self, obj, *args):
+            self.obj = obj
+        def __lt__(self, other):
+            return mycmp(self.obj, other.obj) < 0
+        def __gt__(self, other):
+            return mycmp(self.obj, other.obj) > 0
+        def __eq__(self, other):
+            return mycmp(self.obj, other.obj) == 0
+        def __le__(self, other):
+            return mycmp(self.obj, other.obj) <= 0
+        def __ge__(self, other):
+            return mycmp(self.obj, other.obj) >= 0
+        def __ne__(self, other):
+            return mycmp(self.obj, other.obj) != 0
+    return K
 
 class FileLoadDialog(Dialog):
     def __init__(self, path=os.getcwd(), extensions=[], title="Select File",
@@ -313,11 +338,21 @@ class DirectorySelectDialog(FileLoadDialog):
             if x == '(this dir)':
                 return -1
             elif x.endswith(' (dir)') and y.endswith(' (dir)'):
-                return cmp(x, y)
+                if x > y:
+                    return 1
+                elif x < y:
+                    return -1
+                else:
+                    return 0
             elif x.endswith(' (dir)') and y != '(this dir)':
                 return -1
             elif y.endswith(' (dir)'):
                 return 1
             else:
-                return cmp(x, y)
-        self.files.sort(dir_sort)
+                if x > y:
+                    return 1
+                elif x < y:
+                    return -1
+                else:
+                    return 0
+        self.files.sort(key=cmp_to_key(dir_sort))

@@ -70,7 +70,7 @@ class KyttenInputLabel(KyttenLabel):
         remove = []
         if self.width and not self._multiline:
             for vlist in self._vertex_lists:
-                num_quads = len(vlist.vertices) / 8
+                num_quads = int(len(vlist.vertices) / 8)
                 remove_quads = 0
                 has_quads = False
                 for n in range(0, num_quads):
