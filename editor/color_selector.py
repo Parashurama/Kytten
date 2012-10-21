@@ -548,7 +548,7 @@ class ColorSelector(Control):
 
         def on_red_set(red):
             red = min(max(int(red), 0), 255)
-            print (red = %s" % red)
+            print ("red = %s" % red)
             self.color = [red] + self.color[1:]
             self.wheel.set_color(self.color)
 
