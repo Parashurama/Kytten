@@ -9,10 +9,10 @@ class ProxyDialog(kytten.Wrapper):
     Allows us to insert the theme being worked on into our own dialog.
     """
     def __init__(self, content, theme):
-	kytten.Wrapper.__init__(self, content)
-	self.content = content
-	self.theme = theme
-	self.batch = None
+        kytten.Wrapper.__init__(self, content)
+        self.content = content
+        self.theme = theme
+        self.batch = None
         self.root_group = None
         self.panel_group = None
         self.bg_group = None
@@ -20,8 +20,8 @@ class ProxyDialog(kytten.Wrapper):
         self.highlight_group = None
 
     def delete(self):
-	kytten.Wrapper.delete(self)
-	self.root_group = None
+        kytten.Wrapper.delete(self)
+        self.root_group = None
         self.panel_group = None
         self.bg_group = None
         self.fg_group = None
