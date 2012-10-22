@@ -82,7 +82,8 @@ class Background:
             our_width = self.width
         x1 = int(self.width/2 - our_width/2)
         y1 = int(self.height/2 - our_height/2)
-        x2, y2 = x1 + our_width, y1 + our_height
+        x2 = int(x1 + our_width)
+        y2 = int(y1 + our_height)
         self.group = pyglet.graphics.TextureGroup(
             self.texture, self.parent_group)
         self.vertex_list = self.batch.add(4, gl.GL_QUADS, self.group,
