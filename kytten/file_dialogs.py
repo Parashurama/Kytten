@@ -133,14 +133,24 @@ class FileLoadDialog(Dialog):
 
         def dir_sort(x, y):
             if x.endswith(' (dir)') and y.endswith(' (dir)'):
-                return cmp(x, y)
+                if x > y:
+                    return 1
+                elif x < y:
+                    return -1
+                else:
+                    return 0
             elif x.endswith(' (dir)'):
                 return -1
             elif y.endswith(' (dir)'):
                 return 1
             else:
-                return cmp(x, y)
-        self.files.sort(dir_sort)
+                if x > y:
+                    return 1
+                elif x < y:
+                    return -1
+                else:
+                    return 0
+        self.files.sort(key=cmp_to_key(dir_sort))
 
     def get(self):
         return self.selected_file
