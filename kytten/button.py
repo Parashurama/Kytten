@@ -112,7 +112,7 @@ class Button(Control):
         if self.button is None:
             self.button = dialog.theme[path]['image'].generate(
                 color,
-                dialog.batch, dialog.bg_group)
+                dialog.batch, dialog.bg_group, dialog.fg_group)
         if self.highlight is None and self.is_highlight():
             self.highlight = dialog.theme[path]['highlight']['image'].\
                 generate(dialog.theme[path]['highlight_color'],

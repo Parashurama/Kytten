@@ -53,7 +53,7 @@ class UndefinedGraphicElementTemplate:
         self.margins = [0, 0, 0, 0]
         self.padding = [0, 0, 0, 0]
 
-    def generate(self, color, batch, group):
+    def generate(self, color, batch, group, fg=None):
         return UndefinedGraphicElement(self.theme, color, batch, group)
 
     def write(self, f, indent=0):
@@ -66,7 +66,7 @@ class TextureGraphicElementTemplate(UndefinedGraphicElementTemplate):
         self.width = width or texture.width
         self.height = height or texture.height
 
-    def generate(self, color, batch, group):
+    def generate(self, color, batch, group, fg=None):
         return TextureGraphicElement(self.theme, self.texture,
                                      color, batch, group)
 
@@ -89,7 +89,7 @@ class FrameTextureGraphicElementTemplate(TextureGraphicElementTemplate):
                         texture.height - height - y, y) # top, bottom
         self.padding = padding
 
-    def generate(self, color, batch, group):
+    def generate(self, color, batch, group, fg=None):
         return FrameTextureGraphicElement(
             self.theme, self.texture, self.stretch_texture,
             self.margins, self.padding, color, batch, group)
@@ -110,6 +110,70 @@ class FrameTextureGraphicElementTemplate(TextureGraphicElementTemplate):
             f.write(',\n' + ' ' * (indent + 2) + '"padding": %s' %
                     repr(list(self.padding)))
         f.write('\n' + ' ' * indent + '}')
+
+
+class TextureIconElementTemplate(TextureGraphicElementTemplate):
+    def __init__(self, theme, texture, icon, width=None, height=None):
+        TextureGraphicElementTemplate.__init__(self, theme, texture,
+                                               width=width, height=height)
+        self.icon = icon
+
+    def generate(self, color, batch, group, fg):
+        return TextureIconElement(
+            self.theme, self.texture, self.icon,
+            color, batch, group, fg)
+
+
+class TextureIconElement:
+    def __init__(self, theme, texture, icon, color, batch, group, fg):
+        self.x = self.y = 0
+        self.width, self.height = texture.width, texture.height
+        self.iwidth, self.iheight = icon.width, icon.height
+        self.group = ThemeTextureGroup(texture, group)
+        self.igroup = ThemeTextureGroup(icon, fg)
+        self.vertex_list = batch.add(4, gl.GL_QUADS, self.group,
+                                     ('v2i', self._get_vertices()),
+                                     ('c4B', color * 4),
+                                     ('t3f', texture.tex_coords))
+        self.ivertex_list = batch.add(4, gl.GL_QUADS, self.igroup,
+                                     ('v2i', self._get_ivertices()),
+                                     ('c4B', color * 4),
+                                     ('t3f', icon.tex_coords))
+
+    def _get_vertices(self):
+        x1, y1 = int(self.x), int(self.y)
+        x2, y2 = x1 + int(self.width), y1 + int(self.height)
+        return (x1, y1, x2, y1, x2, y2, x1, y2)
+
+    def _get_ivertices(self):
+        x1 = int(self.x + self.width/2 - self.iwidth/2)
+        y1 = int(self.y + self.height/1.5 - self.iheight/2)
+        x2, y2 = x1 + int(self.iwidth), y1 + int(self.iheight)
+        return (x1, y1, x2, y1, x2, y2, x1, y2)
+
+    def delete(self):
+        self.vertex_list.delete()
+        self.vertex_list = None
+        self.ivertex_list.delete()
+        self.ivertex_list = None
+        self.group = None
+
+    def get_content_region(self):
+        return (self.x, self.y, self.width, self.height)
+
+    def get_content_size(self, width, height):
+        return width, height
+
+    def get_needed_size(self, content_width, content_height):
+        return self.width, self.height
+
+    def update(self, x, y, width, height):
+        self.x, self.y, self.width, self.height = x, y, width, height
+        if self.vertex_list is not None:
+            self.vertex_list.vertices = self._get_vertices()
+        if self.ivertex_list is not None:
+            self.ivertex_list.vertices = self._get_ivertices()
+
 
 class TextureGraphicElement:
     def __init__(self, theme, texture, color, batch, group):
@@ -438,13 +502,21 @@ class Theme(ScopedDict):
                                 v['src'], x, y, width, height)
                     else:
                         texture = self._get_texture(v['src'])
-                    if 'stretch' in v:
+                    if 'icon' in v:
+                        icon = self._get_texture(v['icon'])
+                        target[k] = TextureIconElementTemplate(
+                            self,
+                            texture,
+                            icon,
+                            width=width, height=height)
+
+                    elif 'stretch' in v:
                         target[k] = FrameTextureGraphicElementTemplate(
                             self,
                             texture,
                             v['stretch'],
                             v.get('padding', [0, 0, 0, 0]),
-                        width=width, height=height)
+                            width=width, height=height)
                     else:
                         target[k] = TextureGraphicElementTemplate(
                             self, texture, width=width, height=height)
