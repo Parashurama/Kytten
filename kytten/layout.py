@@ -114,8 +114,13 @@ class VerticalLayout(Widget):
         """Deletes all graphic elements within the layout."""
         for item in self.content:
             item.delete()
-        self.content = []
         Widget.delete(self)
+
+    def clear(self):
+        """Cleare layout for new content placement."""
+        for item in self.content:
+            item.delete()
+        self.content = []
 
     def expand(self, width, height):
         """
