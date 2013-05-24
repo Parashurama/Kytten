@@ -113,9 +113,8 @@ class FrameTextureGraphicElementTemplate(TextureGraphicElementTemplate):
 
 
 class TextureIconElementTemplate(TextureGraphicElementTemplate):
-    def __init__(self, theme, texture, icon, width=None, height=None):
-        TextureGraphicElementTemplate.__init__(self, theme, texture,
-                                               width=width, height=height)
+    def __init__(self, theme, texture, icon):
+        TextureGraphicElementTemplate.__init__(self, theme, texture)
         self.icon = icon
 
     def generate(self, color, batch, group, fg):
@@ -173,6 +172,65 @@ class TextureIconElement:
             self.vertex_list.vertices = self._get_vertices()
         if self.ivertex_list is not None:
             self.ivertex_list.vertices = self._get_ivertices()
+
+
+class TextureSkewedElementTemplate(TextureGraphicElementTemplate):
+
+    def __init__(self, theme, texture, skewed, skew=0):
+        TextureGraphicElementTemplate.__init__(self, theme, texture)
+        self.skewed = skewed
+        self.skew = skew
+
+    def generate(self, color, batch, group):
+        return TextureSkewedElement(
+            self.theme, self.texture, color, batch, group,
+            self.skewed, self.skew)
+
+
+class TextureSkewedElement:
+    def __init__(self, theme, texture, color, batch, group, skewed, skew=0):
+        self.x = self.y = 0
+        self.skewed = skewed
+        self.skew = skew
+        self.tilt = .5
+        self.width, self.height = texture.width, texture.height
+        self.group = ThemeTextureGroup(texture, group)
+        self.vertex_list = batch.add(4, gl.GL_QUADS, self.group,
+                                     ('v2i', self._get_vertices()),
+                                     ('c4B', color * 4),
+                                     ('t3f', texture.tex_coords))
+
+    def _get_vertices(self):
+        x1, y1 = int(self.x), int(self.y)
+        x2 = x1 + int(self.width)
+        tilt, skew = self.height * self.tilt, self.height * self.skew
+        yl = y1 + min(max(int(tilt + skew), 0), self.height)
+        yr = y1 + min(max(int(tilt - skew), 0), self.height)
+        if self.skewed == 'top':
+            return (x1, y1, x2, y1, x2, yr, x1, yl)
+        else:
+            yt = y1 + self.height
+            return (x1, yl, x2, yr, x2, yt, x1, yt)
+
+    def delete(self):
+        self.vertex_list.delete()
+        self.vertex_list = None
+        self.group = None
+
+    def get_content_region(self):
+        return (self.x, self.y, self.width, self.height)
+
+    def get_content_size(self, width, height):
+        return width, height
+
+    def get_needed_size(self, content_width, content_height):
+        return self.width, self.height
+
+    def update(self, x, y, width, height, skew=0, tilt=.5):
+        self.x, self.y, self.width, self.height = x, y, width, height
+        self.skew, self.tilt = skew, tilt
+        if self.vertex_list is not None:
+            self.vertex_list.vertices = self._get_vertices()
 
 
 class TextureGraphicElement:
@@ -507,9 +565,13 @@ class Theme(ScopedDict):
                         target[k] = TextureIconElementTemplate(
                             self,
                             texture,
-                            icon,
-                            width=width, height=height)
-
+                            icon)
+                    elif 'skewed' in v:
+                        target[k] = TextureSkewedElementTemplate(
+                            self,
+                            texture,
+                            v['skewed'],
+                            v.get('skew', 0))
                     elif 'stretch' in v:
                         target[k] = FrameTextureGraphicElementTemplate(
                             self,
