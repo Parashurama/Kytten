@@ -281,6 +281,11 @@ class Scrollable(Wrapper):
                 2, self.root_group)
             self.highlight_group = pyglet.graphics.OrderedGroup(
                 3, self.root_group)
+
+            self.bgh_group = pyglet.graphics.OrderedGroup(2, self.root_group)
+            self.fgh_group = pyglet.graphics.OrderedGroup(3, self.root_group)
+            self.label_group = pyglet.graphics.OrderedGroup(4, self.root_group)
+
             Wrapper.delete(self)  # force children to abandon old groups
 
         Wrapper.size(self, self)  # all children are to use our groups
