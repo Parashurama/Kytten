@@ -66,7 +66,7 @@ class TextureGraphicElementTemplate(UndefinedGraphicElementTemplate):
         self.width = width or texture.width
         self.height = height or texture.height
 
-    def generate(self, color, batch, group, fg=None):
+    def generate(self, color, batch, group, fg=None, no_label=False):
         return TextureGraphicElement(self.theme, self.texture,
                                      color, batch, group)
 
@@ -89,7 +89,7 @@ class FrameTextureGraphicElementTemplate(TextureGraphicElementTemplate):
                         texture.height - height - y, y) # top, bottom
         self.padding = padding
 
-    def generate(self, color, batch, group, fg=None):
+    def generate(self, color, batch, group, fg=None, no_label=False):
         return FrameTextureGraphicElement(
             self.theme, self.texture, self.stretch_texture,
             self.margins, self.padding, color, batch, group)
@@ -117,19 +117,21 @@ class TextureIconElementTemplate(TextureGraphicElementTemplate):
         TextureGraphicElementTemplate.__init__(self, theme, texture)
         self.icon = icon
 
-    def generate(self, color, batch, group, fg):
+    def generate(self, color, batch, group, igroup, no_label=False):
         return TextureIconElement(
             self.theme, self.texture, self.icon,
-            color, batch, group, fg)
+            color, batch, group, igroup, no_label)
 
 
 class TextureIconElement:
-    def __init__(self, theme, texture, icon, color, batch, group, fg):
+    def __init__(self, theme, texture, icon, color, batch, group, igroup,
+                 no_label):
         self.x = self.y = 0
+        self.no_label = no_label
         self.width, self.height = texture.width, texture.height
         self.iwidth, self.iheight = icon.width, icon.height
         self.group = ThemeTextureGroup(texture, group)
-        self.igroup = ThemeTextureGroup(icon, fg)
+        self.igroup = ThemeTextureGroup(icon, igroup)
         self.vertex_list = batch.add(4, gl.GL_QUADS, self.group,
                                      ('v2i', self._get_vertices()),
                                      ('c4B', color * 4),
@@ -145,8 +147,11 @@ class TextureIconElement:
         return (x1, y1, x2, y1, x2, y2, x1, y2)
 
     def _get_ivertices(self):
+        divider = 1.5
+        if self.no_label:
+            divider = 2
         x1 = int(self.x + self.width/2 - self.iwidth/2)
-        y1 = int(self.y + self.height/1.5 - self.iheight/2)
+        y1 = int(self.y + self.height/divider - self.iheight/2)
         x2, y2 = x1 + int(self.iwidth), y1 + int(self.iheight)
         return (x1, y1, x2, y1, x2, y2, x1, y2)
 

@@ -309,8 +309,8 @@ class Label(Widget):
     def layout(self, x, y):
         Widget.layout(self, x, y)
         font = self.label.document.get_font()
-        self.label.x = x
-        self.label.y = y - font.descent
+        self.label.x = int(x)
+        self.label.y = int(y - font.descent)
 
     def set_text(self, text):
         self.text = text
