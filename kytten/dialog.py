@@ -436,9 +436,9 @@ class Dialog(Wrapper, DialogEventManager):
         max_offset_x = self.screen.width - self.width - x
         max_offset_y = self.screen.height - self.height - y
         offset_x, offset_y = self.offset
-        offset_x = max(min(offset_x, max_offset_x), -x)
-        offset_y = max(min(offset_y, max_offset_y), -y)
-        self.offset = (offset_x, offset_y)
+#        offset_x = max(min(offset_x, max_offset_x), -x)
+#        offset_y = max(min(offset_y, max_offset_y), -y)
+#        self.offset = (offset_x, offset_y)
         x += offset_x
         y += offset_y
 
