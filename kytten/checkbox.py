@@ -1,5 +1,9 @@
+#! /usr/bin/env python
+# *-* coding: UTF-8 *-*
+
 # kytten/checkbox.py
 # Copyrighted (C) 2009 by Conrad "Lynx" Wong
+# Copyrighted (C) 2013 by "Parashurama"
 
 import pyglet
 from .widgets import Control
@@ -10,9 +14,9 @@ class Checkbox(Control):
     """
     A two-state checkbox.
     """
-    def __init__(self, text="", is_checked=False, id=None,
+    def __init__(self, text="", is_checked=False, name=None,
                  align=HALIGN_RIGHT, padding=4, on_click=None,
-                 disabled=False):
+                 disabled=False, color=None):
         """
         Creates a new checkbox.  The provided text will be used to caption the
         checkbox.
@@ -27,7 +31,7 @@ class Checkbox(Control):
         @param disabled True if the checkbox should be disabled
         """
         assert align in [HALIGN_LEFT, HALIGN_RIGHT]
-        Control.__init__(self, id=id, disabled=disabled)
+        Control.__init__(self, name=name, disabled=disabled)
         self.text = text
         self.is_checked = is_checked
         self.align = align
@@ -36,6 +40,7 @@ class Checkbox(Control):
         self.label = None
         self.checkbox = None
         self.highlight = None
+        self.main_color=color
 
     def delete(self):
         """
@@ -98,13 +103,17 @@ class Checkbox(Control):
         if not self.is_disabled():
             self.is_checked = not self.is_checked
             if self.on_click is not None:
-                if self.id is not None:
-                    self.on_click(self.id, self.is_checked)
-                else:
-                    self.on_click(self.is_checked)
+                self.on_click(self,self.is_checked)
 
             # Delete the button to force it to be redrawn
             self.delete()
+            if self.saved_dialog is not None:
+                self.saved_dialog.set_needs_layout()
+
+    def SetState(self,checked=True):
+        self.is_checked=checked
+        self.delete()
+        if self.saved_dialog is not None:
             self.saved_dialog.set_needs_layout()
 
     def size(self, dialog):
@@ -126,7 +135,7 @@ class Checkbox(Control):
             color = dialog.theme[path]['gui_color']
         if self.checkbox is None:
             self.checkbox = dialog.theme[path]['image'].generate(
-                color,
+                self.main_color or color, #User-set colors or default colors
                 dialog.batch, dialog.bg_group)
         if self.highlight is None and self.is_highlight():
             self.highlight = dialog.theme[path]['highlight']['image'].generate(
@@ -137,7 +146,7 @@ class Checkbox(Control):
             self.label = KyttenLabel(self.text,
                 font_name=dialog.theme[path]['font'],
                 font_size=dialog.theme[path]['font_size'],
-                color=color,
+                color=self.main_color or color,
                 batch=dialog.batch, group=dialog.fg_group)
 
         # Treat the height of the label as ascent + descent

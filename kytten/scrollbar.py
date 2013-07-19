@@ -1,5 +1,9 @@
+#! /usr/bin/env python
+# *-* coding: UTF-8 *-*
+
 # kytten/scrollbar.py
 # Copyrighted (C) 2009 by Conrad "Lynx" Wong
+# Copyrighted (C) 2013 by "Parashurama"
 
 import pyglet
 from .widgets import Control
@@ -137,7 +141,8 @@ class HScrollbar(Control):
             self.pos = (right - pos_width) / max_width  # Shift to the right
         self.pos = min(max(self.pos, 0.0), 1.0 - self.bar_width)
         self.delete()
-        self.saved_dialog.set_needs_layout()
+        if self.saved_dialog is not None:
+            self.saved_dialog.set_needs_layout()
 
     def get(self, width, max_width):
         """
@@ -185,7 +190,8 @@ class HScrollbar(Control):
         if self.is_dragging:
             self.drag_bar(dx, dy)
             self.delete()
-            self.saved_dialog.set_needs_layout()
+            if self.saved_dialog is not None:
+                self.saved_dialog.set_needs_layout()
             return pyglet.event.EVENT_HANDLED
 
     def on_mouse_press(self, x, y, button, modifiers):
@@ -198,13 +204,15 @@ class HScrollbar(Control):
         @param button Button being pressed
         @param modifiers Modifiers to apply to button
         """
+
         space_x, space_y, space_width, space_height = self._get_space_region()
         if x >= space_x and x < space_x + space_width and \
            y >= space_y and y < space_y + space_height:
             self.set_bar_pos(x, y)
             self.is_dragging = True
             self.delete()
-            self.saved_dialog.set_needs_layout()
+            if self.saved_dialog is not None:
+                self.saved_dialog.set_needs_layout()
         else:
             left_x, left_y, left_width, left_height = self._get_left_region()
             if x >= left_x and x < left_x + left_width and \
@@ -243,7 +251,8 @@ class HScrollbar(Control):
         """
         self.drag_bar(scroll_y * 10, 0)
         self.delete()
-        self.saved_dialog.set_needs_layout()
+        if self.saved_dialog is not None:
+            self.saved_dialog.set_needs_layout()
 
     def on_update(self, dt):
         """
@@ -253,7 +262,8 @@ class HScrollbar(Control):
         """
         if self.is_scrolling:
             self.drag_bar(self.scroll_delta * 50.0 * dt, 0)
-            self.saved_dialog.set_needs_layout()
+            if self.saved_dialog is not None:
+                self.saved_dialog.set_needs_layout()
 
     def set(self, width, max_width):
         """
@@ -277,11 +287,13 @@ class HScrollbar(Control):
         space_x, space_y, space_width, space_height = self._get_space_region()
         bar_x, bar_y, bar_width, bar_height = self._get_bar_region()
         if x < bar_x:
+            x -= bar_width/2.
             self.pos = float(x - space_x) / space_width
         elif x > bar_x + bar_width:
             max_bar_x = space_width - bar_width
-            x -= bar_width
+            x -= bar_width/2.
             self.pos = float(min(max_bar_x, x - space_x)) / space_width
+
         if self.bar is not None:
             self.bar.update(*self._get_bar_region())
 
@@ -419,7 +431,8 @@ class VScrollbar(HScrollbar):
             self.pos = 1.0 - float(bottom) / max_height - self.bar_width
         self.pos = min(max(self.pos, 0.0), 1.0 - self.bar_width)
         self.delete()
-        self.saved_dialog.set_needs_layout()
+        if self.saved_dialog is not None:
+            self.saved_dialog.set_needs_layout()
 
     def on_mouse_scroll(self, x, y, scroll_x, scroll_y):
         """
@@ -432,7 +445,8 @@ class VScrollbar(HScrollbar):
         """
         self.drag_bar(0, scroll_y * 10)
         self.delete()
-        self.saved_dialog.set_needs_layout()
+        if self.saved_dialog is not None:
+            self.saved_dialog.set_needs_layout()
 
     def on_update(self, dt):
         """
@@ -443,7 +457,8 @@ class VScrollbar(HScrollbar):
         """
         if self.is_scrolling:
             self.drag_bar(0, -self.scroll_delta * 50.0 * dt)
-            self.saved_dialog.set_needs_layout()
+            if self.saved_dialog is not None:
+                self.saved_dialog.set_needs_layout()
 
     def set(self, height, max_height):
         """Sets the new height of the scrollbar, and the height of
@@ -463,10 +478,12 @@ class VScrollbar(HScrollbar):
         bar_x, bar_y, bar_width, bar_height = self._get_bar_region()
         top = space_y + space_height
         if y > bar_y + bar_height:
+            y += bar_height/2.
             self.pos = float(top - y) / space_height
         elif y < bar_y:
-            y += bar_height
+            y += bar_height/2.
             max_bar_y = space_height - bar_height
             self.pos = float(min(max_bar_y, top - y)) / space_height
         if self.bar is not None:
             self.bar.update(*self._get_bar_region())
+

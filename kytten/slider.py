@@ -1,5 +1,10 @@
+#! /usr/bin/env python
+# *-* coding: UTF-8 *-*
+
 # kytten/slider.py
 # Copyrighted (C) 2009 by Conrad "Lynx" Wong
+# Copyrighted (C) 2013 by "Parashurama"
+
 
 import pyglet
 from .widgets import Control
@@ -13,7 +18,7 @@ class Slider(Control):
     IMAGE_STEP = ['slider', 'step']
 
     def __init__(self, value=0.0, min_value=0.0, max_value=1.0, steps=None,
-                 width=100, id=None, on_set=None, disabled=False):
+                 width=100, name=None, on_set=None, disabled=False):
         """
         Creates a new slider.
 
@@ -31,7 +36,7 @@ class Slider(Control):
                       changes.
         @param diasbled True if the slider should be disabled
         """
-        Control.__init__(self, id=id, disabled=disabled)
+        Control.__init__(self, name=name, disabled=disabled)
         self.min_value = min_value
         self.max_value = max_value
         self.steps = steps
@@ -40,9 +45,7 @@ class Slider(Control):
         self.bar = None
         self.knob = None
         self.markers = []
-        self.pos = max(
-            min(float(value - min_value) / (max_value - min_value), 1.0),
-            0.0)
+        self.pos = max(  min(float(value - min_value) / (max_value - min_value), 1.0),  0.0)
         self.offset = (0, 0)
         self.step_offset = (0, 0)
         self.padding = (0, 0, 0, 0)
@@ -67,6 +70,9 @@ class Slider(Control):
 
     def get_value(self):
         return self.min_value + (self.max_value - self.min_value) * self.pos
+
+    def set_value(self, value):
+        self.set_pos( max(   min( float(value - self.min_value) / (self.max_value - self.min_value), 1.0),  0.0) )
 
     def is_expandable(self):
         return True
@@ -98,16 +104,20 @@ class Slider(Control):
             if self.markers:
                 step = float(width) / self.steps
                 offset_x, offset_y = self.step_offset
-                for n in range(0, self.steps + 1):
+                for n in xrange(0, self.steps + 1):
                     self.markers[n].update(int(x + step * n) + offset_x,
                                            y + offset_y,
                                            self.markers[n].width,
                                            self.markers[n].height)
 
     def on_mouse_drag(self, x, y, dx, dy, buttons, modifiers):
-        if self.is_dragging and self.bar is not None:
+        if self.is_dragging and self.bar is not None and self.hit_test(x,y):
+
             bar_x, bar_y, bar_width, bar_height = self.bar.get_content_region()
-            self.set_pos(self.pos + float(dx) / bar_width)
+            self.set_pos(float(x - bar_x) / bar_width)
+
+        if self.on_set is not None:
+            self.on_set(self, self.get_value())
 
     def on_mouse_press(self, x, y, button, modifiers):
         if self.is_disabled():
@@ -125,20 +135,28 @@ class Slider(Control):
         self.is_dragging = False
         self.snap_to_nearest()
         if self.on_set is not None:
-            value = self.get_value()
-            if self.id is not None:
-                self.on_set(self.id, value)
-            else:
-                self.on_set(value)
+            self.on_set(self, self.get_value())
+
 
     def set_pos(self, pos):
+
         self.pos = max(min(pos, 1.0), 0.0)
+
         if self.bar is not None and self.knob is not None:
             x, y, width, height = self.bar.get_content_region()
             offset_x, offset_y = self.offset
             self.knob.update(x + int(width * self.pos) + offset_x,
                              y + offset_y,
                              self.knob.width, self.knob.height)
+
+    def SetRange(self, min_value=None, max_value=None):
+        current_value=self.get_value()
+
+        if min_value: self.min_value = min_value
+        if max_value: self.max_value = max_value
+        #self.set_pos(self.pos)
+
+        self.set_value(current_value)
 
     def size(self, dialog):
         """
@@ -165,7 +183,7 @@ class Slider(Control):
             self.offset = dialog.theme[path]['offset']
         if not self.markers and self.steps is not None:
             path = self.IMAGE_STEP
-            for n in range(0, self.steps + 1):
+            for n in xrange(0, self.steps + 1):
                 self.markers.append(
                     dialog.theme[path]['image'].generate(
                         color,

@@ -1,4 +1,7 @@
-# safe_eval
+#! /usr/bin/env python
+# *-* coding: UTF-8 *-*
+
+# safe_eval.py
 # Copyrighted (C) Michael Spencer
 #
 # Source: http://code.activestate.com/recipes/364469/

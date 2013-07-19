@@ -1,33 +1,5 @@
-# Copyright (c) 2009 Conrad "Lynx" Wong
-# All rights reserved.
-#
-# Redistribution and use in source and binary forms, with or without
-# modification, are permitted provided that the following conditions
-# are met:
-#
-#  * Redistributions of source code must retain the above copyright
-#    notice, this list of conditions and the following disclaimer.
-#  * Redistributions in binary form must reproduce the above copyright
-#    notice, this list of conditions and the following disclaimer in
-#    the documentation and/or other materials provided with the
-#    distribution.
-#  * Neither the name of DarkCoda nor the names of its
-#    contributors may be used to endorse or promote products
-#    derived from this software without specific prior written
-#    permission.
-#
-# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
-# "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
-# LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
-# FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE
-# COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
-# INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
-# BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
-# LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
-# CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
-# LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
-# ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
-# POSSIBILITY OF SUCH DAMAGE.
+#! /usr/bin/env python
+# *-* coding: UTF-8 *-*
 
 """kytten - a skinnable, easily constructed GUI toolkit for pyglet
 
@@ -45,16 +17,39 @@ from .layout import ANCHOR_TOP_LEFT, ANCHOR_TOP, ANCHOR_TOP_RIGHT, \
 
 # GUI public classes
 
-from .button import Button
+from .button import Button, ButtonStyle, ImageButton, DraggableImageButton
+from .togglebutton import ToggleGroup, ToggleButton, ToggleImageButton
+from .spin_button import SpinControl, SpinControlGroup
 from .checkbox import Checkbox
-from .dialog import Dialog, PopupMessage, PopupConfirm
+from .dialog import Dialog, PopupMessage, PopupConfirm, PropertyDialog, ToolTip, GuiElement, GuiStyle, Drag_n_Drop
 from .document import Document
 from .file_dialogs import FileLoadDialog, FileSaveDialog, DirectorySelectDialog
-from .frame import Frame, TitleFrame, Wrapper, SectionHeader, FoldingSection
-from .layout import GridLayout, HorizontalLayout, VerticalLayout, FreeLayout
-from .menu import Menu, Dropdown
+from .frame import Frame, TitleFrame, TransparentFrame, GuiFrame, Wrapper, SectionHeader, FoldingSection
+from .layout import GridLayout, HorizontalLayout, VerticalLayout, FreeLayout, FreeForm, PaletteLayout, InteractiveLayout, InteractivePaletteLayout
+from .menu import Menu, Dropdown, MenuList
 from .scrollable import Scrollable
 from .slider import Slider
-from .text_input import Input
+from .text_input import Input, MultilineInput
 from .theme import Theme
-from .widgets import Widget, Spacer, Label
+from .widgets import Widget, Spacer, Label, Control, Image, TextStyle
+from .color_selector import ColorSelector, ColorWheel
+from .base import GetObjectfromId, GetObjectfromName, ReferenceName, DisplayGroup, GetActiveDialogs
+from .base import InvalidWidgetNameError
+from .manager import GuiManager, PageManager
+from .selectable_image import Selectable
+
+def SetWindow(window, manager=None):
+    global KyttenManager, KyttenRenderGUI
+
+    width,height=(window.width,window.height)
+    if manager is not None and not isinstance(manager, GuiManager):
+        raise TypeError('Invalid Gui Manager instance')
+    base.KyttenManager= manager is not None or GuiManager(window, isBuffered=True)
+
+    KyttenManager = base.KyttenManager
+    KyttenRenderGUI = base.KyttenManager.Render
+
+    # Initialize Elements
+    from .base import __int__
+    from .theme import KyttenTexture
+    __int__.BlankTexture = KyttenTexture( [ 255 ]*16, 'ubyte', (2,2))

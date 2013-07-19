@@ -1,14 +1,134 @@
+#! /usr/bin/env python
+# *-* coding: UTF-8 *-*
+
 # kytten/override.py
 # Copyrighted (C) 2009 by Conrad "Lynx" Wong
+# Copyrighted (C) 2013 by "Parashurama"
 
 import pyglet
+import pyglet.gl as gl
+import inspect
+#print "STACK\n",inspect.stack()[1]
 
 KYTTEN_LAYOUT_GROUPS = {}
 KYTTEN_LAYOUT_GROUP_REFCOUNTS = {}
 
+_Line = pyglet.text.layout._Line
+
+class KyttenEventDispatcher(pyglet.event.EventDispatcher):
+
+
+    def remove_handlers(self, *args, **kwargs):
+        '''Remove event handlers from the event stack.
+
+        See `push_handlers` for the accepted argument types.  All handlers
+        are removed from the first stack frame that contains any of the given
+        handlers.  No error is raised if any handler does not appear in that
+        frame, or if no stack frame contains any of the given handlers.
+
+        If the stack frame is empty after removing the handlers, it is
+        removed from the stack.  Note that this interferes with the expected
+        symmetry of `push_handlers` and `pop_handlers`.
+        '''
+        handlers = list(self._get_handlers(args, kwargs))
+
+        # Find the first stack frame containing any of the handlers
+        def find_frame():
+            for frame in self._event_stack:
+                for name, handler in handlers:
+                    try:
+                        if frame[name] == handler:
+                            return frame
+                    except KeyError:
+                        pass
+        frame = find_frame()
+
+        # No frame matched; no error.
+        if not frame:
+            return
+
+        # Remove each handler from the frame.
+        for name, handler in handlers:
+            try:
+                if frame[name] == handler:
+                    del frame[name]
+            except KeyError:
+                pass
+
+        # Remove the frame if it's empty.
+        if not frame:
+            self._event_stack.remove(frame)
+
+    def remove_handler(self, name, handler):
+        '''Remove a single event handler.
+
+        The given event handler is removed from the first handler stack frame
+        it appears in.  The handler must be the exact same callable as passed
+        to `set_handler`, `set_handlers` or `push_handlers`; and the name
+        must match the event type it is bound to.
+
+        No error is raised if the event handler is not set.
+
+        :Parameters:
+            `name` : str
+                Name of the event type to remove.
+            `handler` : callable
+                Event handler to remove.
+        '''
+        for frame in self._event_stack:
+            try: # set comparison to EQUAL (is testing was failling for some instance bond functions)
+                if frame[name] == handler:
+                    del frame[name]
+                    break
+            except KeyError:
+                pass
+
+class TextLayoutGroup_KYTTEN_OVERRIDE(pyglet.graphics.Group):
+    def set_state(self):
+        gl.glPushAttrib(gl.GL_ENABLE_BIT | gl.GL_CURRENT_BIT)
+        gl.glEnable(gl.GL_BLEND)
+        gl.glBlendFuncSeparate(gl.GL_SRC_ALPHA, gl.GL_ONE_MINUS_SRC_ALPHA, gl.GL_ONE, gl.GL_ONE_MINUS_SRC_ALPHA)
+        # To Allow Normal Rendering when Buffering with FrameBufferObject
+        # Without this option : problem with alpha blending when rendering buffered GUI textures
+        #Also in context.glContext
+
+    def unset_state(self):
+        gl.glPopAttrib()
+
+
+class ScrollableTextLayoutGroup_KYTTEN_OVERRIDE(pyglet.text.layout.ScrollableTextLayoutGroup):
+
+    def set_state(self):
+        gl.glPushAttrib(gl.GL_ENABLE_BIT | gl.GL_TRANSFORM_BIT | gl.GL_CURRENT_BIT)
+        gl.glEnable(gl.GL_BLEND)
+        gl.glBlendFuncSeparate(gl.GL_SRC_ALPHA, gl.GL_ONE_MINUS_SRC_ALPHA, gl.GL_ONE, gl.GL_ONE_MINUS_SRC_ALPHA)
+        # To Allow Normal Rendering when Buffering with FrameBufferObject
+        # Without this option : problem with alpha blending when rendering buffered GUI textures
+        #Also in context.glContext
+
+        # Disable clipping planes to check culling.
+        gl.glEnable(gl.GL_CLIP_PLANE0)
+        gl.glEnable(gl.GL_CLIP_PLANE1)
+        gl.glEnable(gl.GL_CLIP_PLANE2)
+        gl.glEnable(gl.GL_CLIP_PLANE3)
+        # Left
+        gl.glClipPlane(gl.GL_CLIP_PLANE0, (gl.GLdouble * 4)(
+                    1, 0, 0, -(self._clip_x - 1)))
+        # Top
+        gl.glClipPlane(gl.GL_CLIP_PLANE1, (gl.GLdouble * 4)(
+                    0, -1, 0, self._clip_y))
+        # Right
+        gl.glClipPlane(gl.GL_CLIP_PLANE2, (gl.GLdouble * 4)(
+                    -1, 0, 0, self._clip_x + self._clip_width + 1))
+        # Bottom
+        gl.glClipPlane(gl.GL_CLIP_PLANE3, (gl.GLdouble * 4)(
+                    0, 1, 0, -(self._clip_y - self._clip_height)))
+        gl.glTranslatef(self.translate_x, self.translate_y, 0)
+
+
 def GetKyttenLayoutGroups(group):
-    if group not in KYTTEN_LAYOUT_GROUPS:
-        top_group = pyglet.text.layout.TextLayoutGroup(group)
+    if not group in  KYTTEN_LAYOUT_GROUPS:
+        top_group = TextLayoutGroup_KYTTEN_OVERRIDE(group)
         background_group = pyglet.graphics.OrderedGroup(0, top_group)
         foreground_group = \
             pyglet.text.layout.TextLayoutForegroundGroup(1, top_group)
@@ -28,6 +148,62 @@ def ReleaseKyttenLayoutGroups(group):
     if not KYTTEN_LAYOUT_GROUP_REFCOUNTS[group]:
         del KYTTEN_LAYOUT_GROUP_REFCOUNTS[group]
         del KYTTEN_LAYOUT_GROUPS[group]
+
+pyglet_IncrementalTextLayout = pyglet.text.layout.IncrementalTextLayout
+
+class KyttenIncrementalTextLayout(pyglet_IncrementalTextLayout):
+    def _init_groups(self, group):
+        # Scrollable layout never shares group becauase of translation.
+        self.top_group = ScrollableTextLayoutGroup_KYTTEN_OVERRIDE(group)
+        self.background_group = pyglet.graphics.OrderedGroup(0, self.top_group)
+        self.foreground_group = pyglet.text.layout.TextLayoutForegroundGroup(1, self.top_group)
+        self.foreground_decoration_group =  pyglet.text.layout.TextLayoutForegroundDecorationGroup(2, self.top_group)
+
+    def _update(self):
+        if not self._update_enabled:
+            return
+
+        trigger_update_event = (self.invalid_glyphs.is_invalid() or
+                                self.invalid_flow.is_invalid() or
+                                self.invalid_lines.is_invalid())
+
+        # Special care if there is no text:
+        if not self.glyphs:
+            for line in self.lines:
+                line.delete(self)
+            del self.lines[:]
+            self.lines.append(_Line(0))
+            font = self.document.get_font(0, dpi=self._dpi)
+            self.lines[0].ascent = font.ascent
+            self.lines[0].descent = font.descent
+            self.lines[0].paragraph_begin = self.lines[0].paragraph_end = True
+            self.invalid_lines.invalidate(0, 1)
+
+        self._update_glyphs()
+        self._update_flow_glyphs()
+        self._update_flow_lines()
+        '''
+        #not useful updated in: self.view_y = self.view_y property
+        #self._update_visible_lines()
+        #self._update_vertex_lists()
+        #self.top_group.top = self._get_top(self.lines)
+        '''
+        # Reclamp view_y in case content height has changed and reset top of
+        # content.
+        self.view_y = self.view_y
+        self.top_group.top = self._get_top(self._get_lines())
+
+        if trigger_update_event:
+            self.dispatch_event('on_layout_update')
+
+    def select_all(self):
+        self.set_selection(0, len(self.document.text))
+
+    def get_selection_text(self):
+        return self.document.text[self.selection_start: self.selection_end]
+
+    def get_selection(self):
+        return (self.selection_start, self.selection_end)
 
 class KyttenLabel(pyglet.text.Label):
     def _init_groups(self, group):
@@ -70,10 +246,10 @@ class KyttenInputLabel(KyttenLabel):
         remove = []
         if self.width and not self._multiline:
             for vlist in self._vertex_lists:
-                num_quads = int(len(vlist.vertices) / 8)
+                num_quads = len(vlist.vertices) / 8
                 remove_quads = 0
                 has_quads = False
-                for n in range(0, num_quads):
+                for n in xrange(0, num_quads):
                     x1, y1, x2, y2, x3, y3, x4, y4 = vlist.vertices[n*8:n*8+8]
                     tx1, ty1, tz1, tx2, ty2, tz2, \
                        tx3, ty3, tz3, tx4, ty4, tz4 = \
@@ -101,3 +277,4 @@ class KyttenInputLabel(KyttenLabel):
         for vlist in remove:
             vlist.delete()
             self._vertex_lists.remove(vlist)
+

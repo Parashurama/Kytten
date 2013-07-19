@@ -1,5 +1,10 @@
+#! /usr/bin/env python
+# *-* coding: UTF-8 *-*
+
 # kytten/widgets.py
 # Copyrighted (C) 2009 by Conrad "Lynx" Wong
+# Copyrighted (C) 2013 by "Parashurama"
+
 
 # Simple widgets belong in this file, to avoid cluttering the directory with
 # many small files.  More complex widgets should be placed in separate files.
@@ -13,10 +18,13 @@
 # Label: a Widget which wraps a simple text label.
 
 import pyglet
+import weakref
 from pyglet import gl
-from .override import KyttenLabel
+from .override import KyttenLabel, KyttenEventDispatcher
+from .base import GenId, ReferenceName, DereferenceName, GetObjectfromName, DisplayGroup, Log, string_to_unicode
+from .theme import DefaultTextureGraphicElement
 
-class Widget:
+class Widget(object):
     """
     The base of all Kytten GUI elements.  Widgets correspond to areas on the
     screen and may (in the form of Controls) respond to user input.
@@ -29,7 +37,7 @@ class Widget:
     for the first time, they initialize any requisite graphic elements
     that could not be done at creation time.
     """
-    def __init__(self, width=0, height=0):
+    def __init__(self, width=0, height=0, name=None, group=None, spacer=False):
         """
         Creates a new Widget.
 
@@ -40,6 +48,21 @@ class Widget:
         self.width = width
         self.height = height
         self.saved_dialog = None
+        self.visible=True
+        self.destroyed=False
+
+        #self.is_unset=True
+        #self.to_hide=False
+        self.__parent__=None
+        #self.parent_entry=None
+
+        if  isinstance(group, str) : GetObjectfromName(group).add(self)
+        elif isinstance(group, DisplayGroup): group.add(self)
+
+        #if not spacer: self.id=GenId(self)
+        self.id=GenId(self)
+        self.name=name
+        if self.name: ReferenceName(self,self.name)
 
     def _get_controls(self):
         """
@@ -53,6 +76,7 @@ class Widget:
         Deletes any graphic elements we have constructed.  Note that
         we may be asked to recreate them later.
         """
+
         pass
 
     def ensure_visible(self):
@@ -115,7 +139,14 @@ class Widget:
         @param dialog The Dialog which contains this Widget
         """
         if dialog != self and dialog is not None:
-            self.saved_dialog = dialog
+
+            if isinstance(dialog, weakref.ProxyType): dialog = dialog
+            else: dialog = weakref.proxy(dialog)
+
+            if isinstance( dialog, ScrollableAssert):
+                self.saved_dialog = dialog.saved_dialog
+            else:
+                self.saved_dialog = dialog
 
     def teardown(self):
         """
@@ -123,8 +154,85 @@ class Widget:
         """
         self.delete()
         self.saved_dialog = None
+        self.__parent__=None
+        if self.destroyed is False:
+            self.destroyed = True
+            if self.name is not None:
+                DereferenceName(self.name)
+        else:
+            print "widget", self, "destroyed again"
 
-class Control(Widget, pyglet.event.EventDispatcher):
+
+    """
+    def Set(self):
+        self.is_unset = False
+        if self.to_hide is True:
+            self.to_hide=False
+            self.Hide()
+
+            if self.saved_dialog is not None:
+                self.saved_dialog.set_needs_layout()
+                self.saved_dialog.EventHandled()"""
+
+    def Hide(self):
+
+        if Log.isLogging(): print "ShouldHide",self, self.name, self.visible
+
+        if self.visible:
+            self.visible=False
+            self.delete()
+
+            if self.__parent__ :
+
+                self.__parent__.__dereference_obj__(self) # Parent is Layout Instance (except GridLayout Not yet implemented)
+
+                if self.__parent__.saved_dialog:
+                    self.__parent__.saved_dialog.set_needs_layout()
+
+                elif hasattr(self.__parent__,'set_needs_layout'): # Top Level Wrapper
+                    self.__parent__.set_needs_layout()
+
+                #else: print "???HIDING???",self, "Parent", self.__parent__, self.__parent__.saved_dialog
+
+            else:
+                """
+                if not isinstance(self, DialogAssert ) :
+                    for i,j in vars(self).iteritems():
+                        print '{}:{}'.format(i,j)
+                """
+                if not isinstance(self, DialogAssert ) : print "HIDE",self.name, self.__class__
+                #assert isinstance(self, DialogAssert ), "Error: Should be a Kytten Dialog Instance.\nIs instead {0} named '{1}'".format(self, self.name)
+
+    def Show(self):
+        if Log.isLogging(): print "ShouldShow",self, self.name, self.visible
+        if not self.visible:
+            self.visible=True
+
+            if self.__parent__:
+                self.__parent__.__rereference_obj__(self) # Parent is Layout Instance (except GridLayout Not yet implemented)
+
+                if self.__parent__.saved_dialog:
+                    self.__parent__.saved_dialog.set_needs_layout()
+
+                elif hasattr(self.__parent__,'set_needs_layout'): # Top Level Wrapper
+                    self.__parent__.set_needs_layout()
+
+                #else: print "???SHOWING???",self, "Parent", self.__parent__
+
+            else:
+                if not isinstance(self, DialogAssert ) : print "SHOW",self.name, self.__class__
+
+                #assert isinstance(self, DialogAssert ), "Error: Should be a Kytten Dialog Instance.\nIs instead {0} named '{1}'".format(self, self.name)
+
+
+    def ToggleVisibility(self):
+        if not self.visible: self.Show()
+        else: self.Hide()
+
+    def _self(self):
+        return self
+
+class Control(Widget, KyttenEventDispatcher):
     """
     Controls are widgets which can accept events.
 
@@ -132,7 +240,9 @@ class Control(Widget, pyglet.event.EventDispatcher):
     then dispatch events to whichever control is currently the focus of
     the user's attention.
     """
-    def __init__(self, id=None, value=None, width=0, height=0, disabled=False):
+    on_gain_hover_func=None
+    on_lose_hover_func=None
+    def __init__(self, name=None, on_gain_hover=None, on_lose_hover=None, value=None, width=0, height=0, disabled=False, noId=False, group=None):
         """
         Creates a new Control.
 
@@ -147,25 +257,34 @@ class Control(Widget, pyglet.event.EventDispatcher):
         @param height Initial height
         @param disabled True if control should be disabled
         """
-        Widget.__init__(self, width, height)
-        self.id = id
+        Widget.__init__(self, width, height, name, spacer=noId, group=group)
+        KyttenEventDispatcher.__init__(self)
+
         self.value = value
         self.disabled_flag = disabled
-        pyglet.event.EventDispatcher.__init__(self)
         self.highlight_flag = False
         self.focus_flag = False
+        self.hover_flag = False
+        self.tooltip = None
+
+        if on_gain_hover is not None: self.on_gain_hover_func=on_gain_hover
+        if on_lose_hover is not None: self.on_lose_hover_func=on_lose_hover
 
     def _get_controls(self):
         return [(self, self.x, self.x + self.width,    # control, left, right,
                        self.y + self.height, self.y)]  # top, bottom
 
     def disable(self):
+        if self.disabled_flag: return
+
         self.disabled_flag = True
         self.delete()
         if self.saved_dialog is not None:
             self.saved_dialog.set_needs_layout()
 
     def enable(self):
+        if not self.disabled_flag: return
+
         self.disabled_flag = False
         self.delete()
         if self.saved_dialog is not None:
@@ -195,6 +314,18 @@ class Control(Widget, pyglet.event.EventDispatcher):
     def on_lose_highlight(self):
         self.highlight_flag = False
 
+    def on_gain_hover(self,*args):
+        self.hover_flag=True
+        if self.on_gain_hover_func: self.on_gain_hover_func(self)
+
+    def on_lose_hover(self,*args):
+        self.hover_flag=False
+        if self.on_lose_hover_func: self.on_lose_hover_func(self)
+
+        #print "on_lose_hover", self, args, self.on_lose_hover_func
+    def on_mouse_double_click(self, *args):
+        pass
+
 # Controls can potentially accept most of the events defined for the window,
 # but in practice we'll only pass selected events from Dialog.  This avoids
 # a large number of unsightly empty method declarations.
@@ -206,13 +337,18 @@ Control.register_event_type('on_gain_highlight')
 Control.register_event_type('on_lose_focus')
 Control.register_event_type('on_lose_highlight')
 Control.register_event_type('on_update')
+Control.register_event_type('on_gain_hover')
+Control.register_event_type('on_lose_hover')
+Control.register_event_type('on_show')
+Control.register_event_type('on_hide')
+Control.register_event_type('on_mouse_double_click')
 
 class Spacer(Widget):
     """
     A Spacer is an empty widget that expands to fill space in layouts.
     Use Widget if you need a fixed-sized spacer.
     """
-    def __init__(self, width=0, height=0):
+    def __init__(self, width=0, height=0, spacer=True):
         """
         Creates a new Spacer.  The width and height given are the minimum
         area that we must cover.
@@ -220,7 +356,7 @@ class Spacer(Widget):
         @param width Minimum width
         @param height Minimum height
         """
-        Widget.__init__(self)
+        Widget.__init__(self, spacer=spacer)
         self.min_width, self.min_height = width, height
 
     def expand(self, width, height):
@@ -242,19 +378,22 @@ class Spacer(Widget):
         @param dialog Dialog which contains us"""
         if dialog is None:
             return
+
         Widget.size(self, dialog)
+
         self.width, self.height = self.min_width, self.min_height
 
 class Graphic(Widget):
     """
     Lays out a graphic from the theme, i.e. part of a title bar.
     """
-    def __init__(self, path, is_expandable=False):
-        Widget.__init__(self)
+    def __init__(self, path, is_expandable=False, group=None, color=None):
+        Widget.__init__(self, group=group)
         self.path = path
         self.expandable=is_expandable
         self.graphic = None
         self.min_width = self.min_height = 0
+        self.color=color
 
     def delete(self):
         if self.graphic is not None:
@@ -278,28 +417,110 @@ class Graphic(Widget):
             return
         Widget.size(self, dialog)
         if self.graphic is None:
+
+            if self.color: color=self.color
+            else: color=dialog.theme[self.path]['gui_color']
+
             template = dialog.theme[self.path]['image']
             self.graphic = template.generate(
-                dialog.theme[self.path]['gui_color'],
+                color,
                 dialog.batch,
                 dialog.fg_group)
             self.min_width = self.graphic.width
             self.min_height = self.graphic.height
         self.width, self.height = self.min_width, self.min_height
 
+
+class Image(Widget):
+    '''
+    Lays out a graphic widget from a texture.
+    '''
+    def __init__(self, texture, color=[255,255,255,255], flag='default', size=None, name=None, is_expandable=False, group=None):
+        Widget.__init__(self, name=name, group=group)
+        self.texture    = texture
+        self.expandable = is_expandable
+        self.graphic    = None
+        self.min_width  = self.min_height = 0
+        self.texture    = texture
+        self.color      = color
+        self.flag       = flag
+
+        self.width, self.height = size or self.texture.size
+
+    def set_bitmap(self, texture, size=None):
+        self.texture = texture
+
+        self.width, self.height = size or self.texture.size
+
+        self.delete()
+        if self.saved_dialog is not None:
+            self.saved_dialog.set_needs_layout()
+
+    def delete(self):
+        if self.graphic is not None:
+            self.graphic.delete()
+            self.graphic = None
+
+    def expand(self, width, height):
+        if self.expandable:
+            self.width, self.height = width, height
+            self.graphic.update(self.x, self.y, self.width, self.height)
+
+    def is_expandable(self):
+        return self.expandable
+
+    def layout(self, x, y):
+        self.x, self.y = x, y
+
+        self.graphic.update(x, y, self.width, self.height)
+
+    def size(self, dialog):
+        if dialog is None:
+            return
+        Widget.size(self, dialog)
+        if self.graphic is None:
+
+            self.graphic =  DefaultTextureGraphicElement( texture=self.texture, color=self.color, size=(self.width, self.height), position=(self.x,self.y),  batch=dialog.batch,  group=dialog.bg_group)
+
+            self.min_width = self.graphic.width
+            self.min_height = self.graphic.height
+
+        self.width, self.height = self.min_width, self.min_height
+
+class TextStyle(object):
+    def __init__(self, bold=False, italic=False, font_name=None, font_size=None, color=None):
+        self.bold=bold
+        self.italic=italic
+        self.font_name=font_name
+        self.font_size=font_size
+        self.color=color
+
 class Label(Widget):
     """A wrapper around a simple text label."""
-    def __init__(self, text="", bold=False, italic=False,
-                 font_name=None, font_size=None, color=None, path=[]):
-        Widget.__init__(self)
-        self.text = text
-        self.bold = bold
-        self.italic = italic
-        self.font_name = font_name
-        self.font_size = font_size
-        self.color = color
+    def __init__(self, text="", name=None, style=None, bold=False, italic=False,
+                 font_name=None, font_size=None, color=None, multiline=False, width=None, path=[], group=None):
+        Widget.__init__(self, name=name, group=group)
+
+        self.text = string_to_unicode(text)
+        if style is not None:
+            assert isinstance(style,TextStyle)
+
+            self.bold = style.bold or bold
+            self.italic = style.italic or italic
+            self.font_name = style.font_name or font_name
+            self.font_size = style.font_size or font_size
+            self.color = style.color or color
+        else:
+            self.bold = bold
+            self.italic = italic
+            self.font_name = font_name
+            self.font_size = font_size
+            self.color = color
+
         self.path = path
         self.label = None
+        self.is_multiline = multiline
+        self.label_width = width
 
     def delete(self):
         if self.label is not None:
@@ -310,28 +531,54 @@ class Label(Widget):
         Widget.layout(self, x, y)
         font = self.label.document.get_font()
         self.label.x = int(x)
-        self.label.y = int(y - font.descent)
+        self.label.y = int(y + self.height - font.ascent)
 
     def set_text(self, text):
-        self.text = text
-        self.delete()
-        if self.saved_dialog is not None:
-            self.saved_dialog.set_needs_layout()
+        self.text = string_to_unicode(text)
+
+        if self.visible:
+            self.delete()
+            if self.saved_dialog is not None:
+                self.saved_dialog.set_needs_layout()
 
     def size(self, dialog):
         if dialog is None:
             return
         Widget.size(self, dialog)
+
         if self.label is None:
             self.label = KyttenLabel(
-                self.text, bold=self.bold, italic=self.italic,
-                color=self.color or
-                    dialog.theme[self.path + ['gui_color']],
-                font_name=self.font_name or
-                          dialog.theme[self.path + ['font']],
-                font_size=self.font_size or
-                          dialog.theme[self.path + ['font_size']],
-                batch=dialog.batch, group=dialog.fg_group)
+                self.text,
+                bold = self.bold,
+                italic = self.italic,
+                color = self.color or dialog.theme[self.path + ['gui_color']],
+                font_name = self.font_name or dialog.theme[self.path + ['font']],
+                font_size = self.font_size or dialog.theme[self.path + ['font_size']],
+                batch = dialog.batch, group=dialog.fg_group,
+                multiline = self.is_multiline,
+                width = self.label_width)
+
             font = self.label.document.get_font()
             self.width = self.label.content_width
-            self.height = font.ascent - font.descent  # descent is negative
+
+            if not self.is_multiline:
+                self.height = font.ascent - font.descent
+            else:
+                self.height = self.label.content_height  - font.descent #font.ascent - font.descent  # descent is negative
+
+
+class LayoutAssert:
+    pass
+
+class FreeLayoutAssert(LayoutAssert):
+    pass
+
+class DialogAssert:
+    pass
+
+class ScrollableAssert:
+    pass
+
+class InteractiveLayoutAssert:
+    pass
+

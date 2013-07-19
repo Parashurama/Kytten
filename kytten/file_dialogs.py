@@ -1,11 +1,8 @@
+#! /usr/bin/env python
+# *-* coding: UTF-8 *-*
+
 # kytten/file_dialogs.py
 # Copyrighted (C) 2009 by Conrad "Lynx" Wong
-
-####################
-#### Todo
-#
-# 1. Rewrite directory sort cmp function as key function
-
 
 import glob
 import os
@@ -43,9 +40,9 @@ def cmp_to_key(mycmp):
 
 class FileLoadDialog(Dialog):
     def __init__(self, path=os.getcwd(), extensions=[], title="Select File",
-                 width=540, height=300, window=None, batch=None, group=None,
+                 width=540, height=300, window=None, batch=None, group=None, name=None, parent=None,
                  anchor=ANCHOR_CENTER, offset=(0, 0),
-                 theme=None, movable=True, on_select=None, on_escape=None):
+                 theme=None, movable=True, on_select=None, on_enter=None, on_escape=None, always_on_top=False, tooltip=False, attached_to=None):
         self.path = path
         self.extensions = extensions
         self.title = title
@@ -53,10 +50,10 @@ class FileLoadDialog(Dialog):
         self.selected_file = None
         self._set_files()
 
-        def on_parent_menu_select(choice):
+        def on_parent_menu_select(choice, choice_index=None):
             self._select_file(self.parents_dict[choice])
 
-        def on_menu_select(choice):
+        def on_menu_select(choice, choice_index=None):
             self._select_file(self.files_dict[choice])
 
         self.dropdown = Dropdown(options=self.parents,
@@ -70,9 +67,9 @@ class FileLoadDialog(Dialog):
             width=width, height=height)
 
         content = self._get_content()
-        Dialog.__init__(self, content, window=window, batch=batch, group=group,
+        Dialog.__init__(self, content, window=window, batch=batch, group=group, name =name, parent=parent,
                         anchor=anchor, offset=offset, theme=theme,
-                        movable=movable, on_escape=on_escape)
+                        movable=movable, on_escape=on_escape, always_on_top=always_on_top, tooltip=tooltip, attached_to=attached_to )
 
     def _get_content(self):
         return Frame(
@@ -92,7 +89,8 @@ class FileLoadDialog(Dialog):
         else:
             self.selected_file = filename
             if self.on_select is not None:
-                self.on_select(filename)
+                if self.on_select(filename):
+                    self.teardown()
 
     def _set_files(self):
         # Once we have a new path, update our files
@@ -167,11 +165,11 @@ class FileSaveDialog(FileLoadDialog):
         self.text_input = Input()
 
         # Set up buttons to be shown in our contents
-        def on_save():
+        def on_save(btn):
             self._do_select()
         self.save_button = Button("Save", on_click=on_save)
 
-        def on_cancel():
+        def on_cancel(btn):
             self._do_cancel()
         self.cancel_button = Button("Cancel", on_click=on_cancel)
 
@@ -202,10 +200,12 @@ class FileSaveDialog(FileLoadDialog):
         elif not path:
             filename = os.path.join(self.path, filename)
         if self.real_on_select is not None:
-            if self.id is not None:
-                self.real_on_select(self.id, filename)
-            else:
-                self.real_on_select(filename)
+            #if self.id is not None:
+            #    self.real_on_select(self.id, filename)
+            #else:
+            #    self.real_on_select(filename)
+            if self.real_on_select(filename):
+                self.teardown()
 
     def _get_content(self):
         return Frame(
@@ -245,7 +245,7 @@ class DirectorySelectDialog(FileLoadDialog):
             self.text_input.set_text(filename)
         self.on_select = on_select
 
-        def on_parent_menu_select(choice):
+        def on_parent_menu_select( id, choice):
             self.text_input.set_text(self.parents_dict[choice])
             self._do_open()
         self.dropdown.on_select = on_parent_menu_select

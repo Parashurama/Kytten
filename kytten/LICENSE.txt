@@ -1,4 +1,6 @@
+BSD-3 License
 Copyright (c) 2009, Conrad "Lynx" Wong
+Copyright (c) 2013 "Parashurama"
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
