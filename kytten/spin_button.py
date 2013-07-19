@@ -58,12 +58,12 @@ class SpinButton(Button):
         Button.__init__(self, name=name, on_click=on_click, disabled=disabled)
 
     def layout(self, x, y):
-        """
+        '''
         Places the Button.
 
         @param x X coordinate of lower left corner
         @param y Y coordinate of lower left corner
-        """
+        '''
         Control.layout(self, x, y)
         self.button.update(self.x, self.y, self.width, self.height)
         if self.highlight is not None:
@@ -71,11 +71,11 @@ class SpinButton(Button):
         x, y, width, height = self.button.get_content_region()
 
     def size(self, dialog):
-        """
+        '''
         Sizes the Button.  If necessary, creates the graphic elements.
 
         @param dialog Dialog which contains the Button
-        """
+        '''
         if dialog is None:
             return
         Control.size(self, dialog)

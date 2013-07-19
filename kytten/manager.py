@@ -6,7 +6,7 @@
 
 import weakref
 import pyglet
-from .glcontext import SetGuiContext,RestoreContext, RenderBuffer
+from .glcontext import GuiInternalBuffer, GuiRenderContext
 from .base import __int__, GetActiveDialogs, GetObjectfromName
 
 
@@ -22,7 +22,7 @@ class GuiManager(pyglet.graphics.Batch):
 
         self.backgroup = pyglet.graphics.OrderedGroup(0)
         self.foregroup = pyglet.graphics.OrderedGroup(1)
-        self._buffer   = RenderBuffer(window.width,window.height)
+        self._buffer   = GuiInternalBuffer(window.width,window.height)
         self._dialogs  = weakref.WeakSet()
         self._window_size = (window.width,window.height)
 
@@ -42,7 +42,7 @@ class GuiManager(pyglet.graphics.Batch):
 
     def Render(self, kytten_buffered=True):
 
-        if self.is_buffered and kytten_buffered is True :
+        if   self.is_buffered and kytten_buffered is True :
             self._render(kytten_buffered)
         elif kytten_buffered == 'bypass':
             self._render_from_buffer()
@@ -50,37 +50,28 @@ class GuiManager(pyglet.graphics.Batch):
             self._render_unbuffered()
 
     def _render(self, fbo_allowed=True):
-        SetGuiContext(*self._window_size)
+        with GuiRenderContext(*self._window_size):
+            if self._update_gui() or self.force_refresh is True:
 
-        if self._update_gui() or self.force_refresh is True:
+                self.force_refresh=False
+                with self._buffer:
+                    self.draw()
 
-            self.force_refresh=False
-            self._buffer.activate()
-            self.draw()
-            self._buffer.deactivate()
+                for dialog in self._dialogs: dialog.to_refresh=False
 
-            for dialog in self._dialogs: dialog.to_refresh=False
+            self._buffer.render()
 
-        self._buffer.render()
-
-        RestoreContext()
 
     def _render_unbuffered(self):
-
-        SetGuiContext(*self._window_size)
-        self._update_gui()
-
-        for dialog in self._dialogs: dialog.to_refresh=False
-
-        self.draw()
-
-        RestoreContext()
+        with GuiRenderContext(*self._window_size):
+            self._update_gui()
+            for dialog in self._dialogs: dialog.to_refresh=False
+            self.draw()
 
     def _render_from_buffer(self):
-        SetGuiContext(*self._window_size)
-        self.force_refresh= True
-        self._buffer.render()
-        RestoreContext()
+        with GuiRenderContext(*self._window_size):
+            self.force_refresh= True
+            self._buffer.render()
 
     def _update_gui(self):
         to_refresh=False

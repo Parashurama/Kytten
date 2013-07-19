@@ -13,11 +13,11 @@ from .base import  GetObjectfromName, CVars, string_to_unicode
 from .theme import DefaultTextureGraphicElement
 
 class Button(Control):
-    """
+    '''
     A simple text-labeled button.
-    """
+    '''
     def __init__(self, text="", name=None, on_click=None, on_double_click=None, group=None, on_gain_hover=None, on_lose_hover=None, disabled=False):
-        """
+        '''
         Creates a new Button.  The provided text will be used to caption the button.
 
         @param text  Label for the button
@@ -28,7 +28,7 @@ class Button(Control):
         @param on_gain_hover  Callback for the button
         @param on_lose_hover  Callback for the button
         @param disabled True  if the button should be disabled
-        """
+        '''
         Control.__init__(self, name=name, on_gain_hover=on_gain_hover, group=group, on_lose_hover=on_lose_hover, disabled=disabled)
         self.text = string_to_unicode(text)
         self.on_click = on_click
@@ -39,18 +39,18 @@ class Button(Control):
         self.is_pressed = False
 
     def set_text(self, text):
-        """
+        '''
         Set Text for the button
-        """
+        '''
         self.text=string_to_unicode(text)
         self.delete()
         if self.saved_dialog is not None:
             self.saved_dialog.set_needs_layout()
 
     def delete(self):
-        """
+        '''
         Clean up our graphic elements
-        """
+        '''
         Control.delete(self)
         if self.button is not None:
             self.button.delete()
@@ -63,12 +63,12 @@ class Button(Control):
             self.highlight = None
 
     def layout(self, x, y):
-        """
+        '''
         Places the Button.
 
         @param x X coordinate of lower left corner
         @param y Y coordinate of lower left corner
-        """
+        '''
         Control.layout(self, x, y)
         self.button.update(self.x, self.y, self.width, self.height)
         if self.highlight is not None:
@@ -79,30 +79,30 @@ class Button(Control):
         self.label.y = y + height/2 - font.ascent/2 - font.descent
 
     def on_gain_highlight(self):
-        """
-        If mouse hovers the button, display hightlight
-        """
+        '''
+        If mouse hovers the button, display highlight
+        '''
         Control.on_gain_highlight(self)
         self.size(self.saved_dialog)
         if self.highlight is not None:
             self.highlight.update(self.x, self.y, self.width, self.height)
 
     def on_lose_highlight(self):
-        """
-        When the mouse leaves the button, delete hightlight
-        """
+        '''
+        When the mouse leaves the button, delete highlight
+        '''
         Control.on_lose_highlight(self)
         if self.highlight is not None:
             self.highlight.delete()
             self.highlight = None
 
     def on_mouse_press(self, x, y, button, modifiers):
-        """
+        '''
         @param x X coordinate of mouse
         @param y Y coordinate of mouse
         @param button Button pressed
         @param modifiers Modifiers to apply to button
-        """
+        '''
         if not self.is_pressed and not self.is_disabled():
             self.is_pressed = True
 
@@ -113,12 +113,12 @@ class Button(Control):
 
 
     def on_mouse_release(self, x, y, button, modifiers):
-        """
+        '''
         @param x X coordinate of mouse
         @param y Y coordinate of mouse
         @param button Button pressed
         @param modifiers Modifiers to apply to button
-        """
+        '''
         if self.is_pressed:
             self.is_pressed = False
 
@@ -133,21 +133,21 @@ class Button(Control):
                 return pyglet.event.EVENT_HANDLED
 
     def on_mouse_double_click(self, x, y, button, modifiers):
-        """
+        '''
         @param x X coordinate of mouse
         @param y Y coordinate of mouse
         @param button Button pressed
         @param modifiers Modifiers to apply to button
-        """
+        '''
         if self.on_double_click_func is not None:
             self.on_double_click_func(self, x, y, button, modifiers)
 
     def size(self, dialog):
-        """
+        '''
         Sizes the Button.  If necessary, (re)creates the graphic elements.
 
         @param dialog Dialog which contains the Button
-        """
+        '''
         if dialog is None:
             return
         Control.size(self, dialog)
@@ -182,16 +182,16 @@ class Button(Control):
             self.label.content_width, height)
 
     def teardown(self):
-        """
+        '''
         Destroy the button definitively
-        """
+        '''
         self.on_click = None
         Control.teardown(self)
 
 class ButtonStyle(object):
-    """
+    '''
     A simple class to manage styles for ImagesButton
-    """
+    '''
     def __init__(self,  default,
                         hover=None,
                         clicked=None,
@@ -201,7 +201,7 @@ class ButtonStyle(object):
                         on_click=None,
                         on_gain_hover=None,
                         on_lose_hover=None ):
-        """
+        '''
         Create a new ButtonStyle. The provided data will used to style other ImageButtons
 
         @param default  Default image for the button
@@ -214,7 +214,7 @@ class ButtonStyle(object):
         @param on_click Callback  for the button
         @param on_gain_hover  Callback for the button
         @param on_lose_hover  Callback for the button
-        """
+        '''
         self.default_image = default
 
         if hover : self.hover_image = hover
@@ -233,9 +233,9 @@ class ButtonStyle(object):
         self.no_border = no_border
 
     def SetStyle(self, button):
-        """
+        '''
         Assign Style to ImageButton
-        """
+        '''
         button.default_image = self.default_image
         button.hover_image = self.hover_image
         button.clicked_image = self.clicked_image
@@ -248,9 +248,9 @@ class ButtonStyle(object):
         button.text_style=self.text_style
 
 class ImageButton(Button):
-    """
+    '''
     A simple class to manage styles for ImagesButton
-    """
+    '''
     padding = 8
 
     def  __init__(self, image=None,
@@ -268,7 +268,7 @@ class ImageButton(Button):
                         group=None,
                         square=True,
                         no_border=True):
-        """
+        '''
         Create a new ButtonStyle. The provided data will used to style other ImageButtons
 
         @param image  Default image for the button
@@ -286,7 +286,7 @@ class ImageButton(Button):
         @param padding
         @param square  Button shape is square
         @param no_border  True to display GuiStyle borders
-        """
+        '''
 
         Button.__init__(self, name=name, text=text, on_click=on_click, on_double_click=on_double_click, group=group, on_gain_hover=on_gain_hover, on_lose_hover=on_lose_hover, disabled=disabled)
         self.bitmap = None
@@ -570,7 +570,7 @@ class DraggableImageButton(ImageButton):
             Widget=None
 
             if NEW_POSITION is None :
-                """
+                '''
                 if not self.isCopying:
                     if isinstance(self.__old__parent__, InteractiveLayout):
                         self.__old__parent__.set( *self.__old__parent_layout_info__)
@@ -581,7 +581,7 @@ class DraggableImageButton(ImageButton):
                     self.__old__parent__.saved_dialog.set_focus(self)
 
                 else:
-                """
+                '''
                 self.teardown()
 
             else:

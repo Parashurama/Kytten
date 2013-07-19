@@ -59,6 +59,7 @@ Controls implemented so far:
 
 You can use the included GuiManager or use your own class.
 The included GuiManager renders the interface from an internal framebuffer and only update the internal buffer when needed (for performance reasons)
+
 Dialogs can be anchored to each others.
 Controls have hover and double_click callback support.
 Documents have clickable links with callback support

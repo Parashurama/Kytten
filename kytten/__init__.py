@@ -1,11 +1,12 @@
 #! /usr/bin/env python
 # *-* coding: UTF-8 *-*
 
-"""kytten - a skinnable, easily constructed GUI toolkit for pyglet
+'''
+kytten - a skinnable, easily constructed GUI toolkit for pyglet
 
 Inspired by simplui (Tristam MacDonald) and many other GUI projects.
 Thanks to Gary Herron and Steve Johnson for debugging assistance!
-"""
+'''
 
 # GUI public constants
 
@@ -41,10 +42,9 @@ from .selectable_image import Selectable
 def SetWindow(window, manager=None):
     global KyttenManager, KyttenRenderGUI
 
-    width,height=(window.width,window.height)
     if manager is not None and not isinstance(manager, GuiManager):
         raise TypeError('Invalid Gui Manager instance')
-    base.KyttenManager= manager is not None or GuiManager(window, isBuffered=True)
+    base.KyttenManager = manager is not None or GuiManager(window, isBuffered=True)
 
     KyttenManager = base.KyttenManager
     KyttenRenderGUI = base.KyttenManager.Render

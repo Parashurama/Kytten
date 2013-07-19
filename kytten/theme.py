@@ -39,11 +39,11 @@ DEFAULT_THEME_SETTINGS = {
 }
 
 class ThemeTextureGroup(pyglet.graphics.TextureGroup):
-    """
+    '''
     ThemeTextureGroup, in addition to setting the texture, also ensures that
     we map to the nearest texel instead of trying to interpolate from nearby
     texels.  This prevents 'blooming' along the edges.
-    """
+    '''
     def set_state(self):
         pyglet.graphics.TextureGroup.set_state(self)
         gl.glTexParameteri(gl.GL_TEXTURE_2D, gl.GL_TEXTURE_MAG_FILTER,
@@ -57,10 +57,10 @@ class ThemeTextureGroup(pyglet.graphics.TextureGroup):
 
 
 class CustomGraphicTextureGroup(pyglet.graphics.TextureGroup):
-    """
+    '''
     CustomGraphicTextureGroup, in addition to setting the texture, also ensures that
     correct interpolation between texels.
-    """
+    '''
 
     def set_state(self):
         pyglet.graphics.TextureGroup.set_state(self)
@@ -137,7 +137,6 @@ class FrameTextureGraphicElementTemplate(TextureGraphicElementTemplate):
                     repr(list(self.padding)))
         f.write('\n' + ' ' * indent + '}')
 
-
 class TextureIconElementTemplate(TextureGraphicElementTemplate):
     def __init__(self, theme, texture, icon):
         TextureGraphicElementTemplate.__init__(self, theme, texture)
@@ -147,6 +146,19 @@ class TextureIconElementTemplate(TextureGraphicElementTemplate):
         return TextureIconElement(
             self.theme, self.texture, self.icon,
             color, batch, group, igroup, no_label)
+
+class TextureSkewedElementTemplate(TextureGraphicElementTemplate):
+
+    def __init__(self, theme, texture, skewed, skew=0):
+        TextureGraphicElementTemplate.__init__(self, theme, texture)
+        self.skewed = skewed
+        self.skew = skew
+
+    def generate(self, color, batch, group):
+        return TextureSkewedElement(
+            self.theme, self.texture, color, batch, group,
+            self.skewed, self.skew)
+
 
 
 class TextureIconElement:
@@ -203,20 +215,6 @@ class TextureIconElement:
             self.vertex_list.vertices = self._get_vertices()
         if self.ivertex_list is not None:
             self.ivertex_list.vertices = self._get_ivertices()
-
-
-class TextureSkewedElementTemplate(TextureGraphicElementTemplate):
-
-    def __init__(self, theme, texture, skewed, skew=0):
-        TextureGraphicElementTemplate.__init__(self, theme, texture)
-        self.skewed = skewed
-        self.skew = skew
-
-    def generate(self, color, batch, group):
-        return TextureSkewedElement(
-            self.theme, self.texture, color, batch, group,
-            self.skewed, self.skew)
-
 
 class TextureSkewedElement:
     def __init__(self, theme, texture, color, batch, group, skewed, skew=0):
@@ -344,6 +342,11 @@ class FrameTextureGraphicElement:
                 x2, y3, x3, y3, x3, y4, x2, y4,  # top
                 x3, y3, x4, y3, x4, y4, x3, y4)  # top right
 
+    def delete(self):
+        self.vertex_list.delete()
+        self.vertex_list = None
+        self.group = None
+
     def get_content_region(self):
         left, right, top, bottom = self.padding
         return (self.x + left, self.y + bottom,
@@ -358,15 +361,11 @@ class FrameTextureGraphicElement:
         return (max(content_width + left + right, self.outer_texture.width),
                 max(content_height + top + bottom, self.outer_texture.height))
 
-    def delete(self):
-        self.vertex_list.delete()
-        self.vertex_list = None
-        self.group = None
-
     def update(self, x, y, width, height):
         self.x, self.y, self.width, self.height = x, y, width, height
         if self.vertex_list is not None:
             self.vertex_list.vertices = self._get_vertices()
+
 
 
 class Stretch_NinePatchTextureGraphicElement(object):
@@ -382,45 +381,29 @@ class Stretch_NinePatchTextureGraphicElement(object):
         self._texture.target=gl.GL_TEXTURE_2D
         self._group = CustomGraphicTextureGroup(self._texture, parent=group)
 
-        self.padding = texture.padding
-        self._header_bar = texture._header_bar
+        #self.padding = texture.border_padding
+        self._header_bar = texture.header_bar
 
         self._vertex_list = batch.add(36, gl.GL_QUADS, self._group,
                                      ('v2i', self._get_vertices()),
                                      ('c4B', self._color * 36),
                                      ('t2f', self._get_tex_coords()))
 
-    def delete(self):
-        if self._vertex_list is not None:
-            self._vertex_list.delete()
-            self._vertex_list = None
-        self._texture = None
-
-        # Easy way to break circular reference, speeds up GC
-        self._group = None
-
-    def update(self, x, y, width=None, height=None):
-        self._x, self._y = self.position = (x,y)
-
-        width = self.width  if width  is None else width
-        height= self.height if height is None else height
-
-        self.width, self.height = self.size = (width, height)
-
-        if self._vertex_list is not None:
-            self._vertex_list.vertices = self._get_vertices()
-
     def _get_tex_coords(self):
         s0, t0, s1, t1 = self._texture.texcoords
-        left, right, top, bottom = self._texture.padding
+        left, right, top, bottom = self._texture.border_padding
         tex_width, tex_height = self._texture.size
         t_width, t_height = s1-s0, t1-t0
 
         x1, y1 = s0, t0 # outer's lower left
         x4, y4 = s1, t1 # outer's upper right
-        x2, y2 = t_width*float(left)/texture_width, t_height*float(bottom)/texture_height # inner's lower left
+        x2, y2 = s0 + t_width*float(left)/tex_width, t0 + t_height*float(bottom)/tex_height # inner's lower left
 
-        x3, y3 = t_width*(1.0-float(right)/texture_width), t_height*(1.0-float(top)/texture_height) # inner's upper right
+        x3, y3 = s1 - t_width*(float(right)/tex_width), t1 - t_height*(float(top)/tex_height) # inner's upper right
+
+        #was used only works when texture not in tetxure_atlas
+        #x3, y3 = t_width*(1.0-float(right)/tex_width), t_height*(1.0-float(top)/tex_height) # inner's upper right
+
         return (x1, y1, x2, y1, x2, y2, x1, y2,  # bottom left
                 x2, y1, x3, y1, x3, y2, x2, y2,  # bottom
                 x3, y1, x4, y1, x4, y2, x3, y2,  # bottom right
@@ -432,13 +415,13 @@ class Stretch_NinePatchTextureGraphicElement(object):
                 x3, y3, x4, y3, x4, y4, x3, y4)  # top right
 
     def _get_vertices(self):
-        left, right, top, bottom = self.padding
+        left, right, top, bottom = self._texture.border_padding
         x1, y1 = int(self._x), int(self._y)
         x2, y2 = x1 + int(left), y1 + int(bottom)
         x3 = x1 + int(self.width) - int(right)
         y3 = y1 + int(self.height) - int(top)
         x4, y4 = x1 + int(self.width), y1 + int(self.height)
-        return (x1-10, y1-10, x2-10, y1-10, x2-10, y2-10, x1-10, y2-10,  # bottom left
+        return (x1, y1, x2, y1, x2, y2, x1, y2,  # bottom left #x1-10, y1-10, x2-10, y1-10, x2-10, y2-10, x1-10, y2-10,
                 x2, y1, x3, y1, x3, y2, x2, y2,  # bottom
                 x3, y1, x4, y1, x4, y2, x3, y2,  # bottom right
                 x1, y2, x2, y2, x2, y3, x1, y3,  # left
@@ -446,17 +429,39 @@ class Stretch_NinePatchTextureGraphicElement(object):
                 x3, y2, x4, y2, x4, y3, x3, y3,  # right
                 x1, y3, x2, y3, x2, y4, x1, y4,  # top left
                 x2, y3, x3, y3, x3, y4, x2, y4,  # top
-                x3+10, y3+10, x4+10, y3+10, x4+10, y4+10, x3+10, y4+10)  # top right
+                x3, y3, x4, y3, x4, y4, x3, y4)  # top right
+
+    def delete(self):
+        if self._vertex_list is not None:
+            self._vertex_list.delete()
+            self._vertex_list = None
+        self._texture = None
+
+        # Easy way to break circular reference, speeds up GC
+        self._group = None
 
     def get_content_region(self):
-        left, right, top, bottom = self.padding
-        return (self._x + left, self._y + bottom,
-                self.width - left - right, self.height - top - bottom)
+        left, right, top, bottom = self._texture.content_padding
+        return (self._x + left,   self._y + bottom,   self.width - left - right,   self.height - top - bottom)
+
+    def get_content_size(self, width, height):
+        left, right, top, bottom = self._texture.content_padding
+        return width - left - right, height - top - bottom
 
     def get_needed_size(self, content_width, content_height):
-        left, right, top, bottom = self.padding
-        return (content_width + left + right,
-                content_height + top + bottom)
+        left, right, top, bottom = self._texture.content_padding
+        return (content_width + left + right,  content_height + top + bottom)
+
+    def update(self, x, y, width=None, height=None):
+        self._x, self._y = self.position = (x,y)
+
+        width = self.width  if width  is None else width
+        height= self.height if height is None else height
+
+        self.width, self.height = self.size = (width, height)
+
+        if self._vertex_list is not None:
+            self._vertex_list.vertices = self._get_vertices()
 
 class Repeat_NinePatchTextureGraphicElement(object):
 
@@ -474,7 +479,13 @@ class Repeat_NinePatchTextureGraphicElement(object):
         self._group = CustomGraphicTextureGroup(self._texture, parent=group)
         self._header_bar = texture.header_bar
 
-        self.padding = texture.padding
+        #self.padding = texture.padding
+
+    def _get_vertices(self):
+        return list(repeat_ninepatches_vertexcoords(self._texture, self.position, self.size))
+
+    def _get_texcoords(self):
+        return list(repeat_ninepatches_texcoords(self._texture, self.position, self.size))
 
     def delete(self):
         if self._vertex_list is not None:
@@ -484,6 +495,18 @@ class Repeat_NinePatchTextureGraphicElement(object):
 
         # Easy way to break circular reference, speeds up GC
         self._group = None
+
+    def get_content_region(self):
+        left, right, top, bottom = self._texture.content_padding
+        return (self._x + left,   self._y + bottom,   self.width - left - right,   self.height - top - bottom)
+
+    def get_content_size(self, width, height):
+        left, right, top, bottom = self._texture.content_padding
+        return width - left - right, height - top - bottom
+
+    def get_needed_size(self, content_width, content_height):
+        left, right, top, bottom = self._texture.content_padding
+        return (content_width + left + right,  content_height + top + bottom)
 
     def update(self, x, y, width=None, height=None):
         self._x, self._y = self.position =(x,y)
@@ -507,19 +530,6 @@ class Repeat_NinePatchTextureGraphicElement(object):
                                                 ('c4B', self._color*n_vertexes ),
                                                 ('t2f', self._get_texcoords())
                                                 )
-    def _get_vertices(self):
-        return list(repeat_ninepatches_vertexcoords(self._texture, self.position, self.size))
-
-    def _get_texcoords(self):
-        return list(repeat_ninepatches_texcoords(self._texture, self.position, self.size))
-
-    def get_content_region(self):
-        left, right, top, bottom = self.padding
-        return (self._x + left,   self._y + bottom,   self.width - left - right,   self.height - top - bottom)
-
-    def get_needed_size(self, content_width, content_height):
-        left, right, top, bottom = self.padding
-        return (content_width + left + right,  content_height + top + bottom)
 
 class DefaultTextureGraphicElement(object):
 
@@ -547,15 +557,6 @@ class DefaultTextureGraphicElement(object):
         s0,t0,s1,t1 = self._texture.texcoords
         return s0,t0,s1,t0,s1,t1,s0,t1
 
-    def get_content_region(self):
-        return (self._x, self._y, self.width, self.height)
-
-    def get_content_size(self, width, height):
-        return width, height
-
-    def get_needed_size(self, content_width, content_height):
-        return content_width, content_height
-
     def delete(self):
         if self._vertex_list:
             self._vertex_list.delete()
@@ -564,6 +565,15 @@ class DefaultTextureGraphicElement(object):
 
         # Easy way to break circular reference, speeds up GC
         self._group = None
+
+    def get_content_region(self):
+        return (self._x, self._y, self.width, self.height)
+
+    def get_content_size(self, width, height):
+        return width, height
+
+    def get_needed_size(self, content_width, content_height):
+        return content_width, content_height
 
     def update(self, x, y, width=None, height=None):
         self._x, self._y, self.width, self.height = x, y, width or self.width, height or self.height
@@ -590,7 +600,7 @@ class UndefinedGraphicElement(TextureGraphicElement):
 
 
 class ScopedDict(dict):
-    """
+    '''
     ScopedDicts differ in several useful ways from normal dictionaries.
 
     First, they are 'scoped' - if a key exists in a parent ScopedDict but
@@ -602,7 +612,7 @@ class ScopedDict(dict):
 
     This would return the highlight color assigned to the highlight a button
     should have when it is clicked.
-    """
+    '''
     def __init__(self, arg={}, parent=None):
         self.parent = parent
         for k, v in arg.iteritems():
@@ -689,14 +699,14 @@ class ScopedDict(dict):
         f.write(' ' * indent + '}')
 
 class Theme(ScopedDict):
-    """
+    '''
     Theme is a dictionary-based class that converts any elements beginning
     with 'image' into a GraphicElementTemplate.  This allows us to specify
     both simple textures and 9-patch textures, and more complex elements.
-    """
+    '''
     def __init__(self, arg, override={}, default=DEFAULT_THEME_SETTINGS,
                  allow_empty_theme=False, name='theme.json'):
-        """
+        '''
         Creates a new Theme.
 
         @param arg The initializer for Theme.  May be:
@@ -708,7 +718,7 @@ class Theme(ScopedDict):
         @param override Replace some dictionary entries with these
         @param default Initial dictionary entries before handling input
         @param allow_empty_theme True if we should allow creating a new theme
-        """
+        '''
         ScopedDict.__init__(self, default, None)
 
         self.groups = {}
@@ -749,12 +759,12 @@ class Theme(ScopedDict):
                 raise e
 
     def _get_texture(self, filename):
-        """
+        '''
         Returns the texture associated with a filename.  Loads it from
         resources if we haven't previously fetched it.
 
         @param filename The filename of the texture
-        """
+        '''
         if filename not in self.textures:
             texture = self.loader.texture(filename)
             texture.src = filename
@@ -762,7 +772,7 @@ class Theme(ScopedDict):
         return self.textures[filename]
 
     def _get_texture_region(self, filename, x, y, width, height):
-        """
+        '''
         Returns a texture region.
 
         @param filename The filename of the texture
@@ -770,7 +780,7 @@ class Theme(ScopedDict):
         @param y Y coordinate of lower left corner of region
         @param width Width of region
         @param height Height of region
-        """
+        '''
         texture = self._get_texture(filename)
         retval = texture.get_region(x, y, width, height).get_texture()
         retval.src = texture.src
@@ -778,13 +788,13 @@ class Theme(ScopedDict):
         return retval
 
     def _update_with_images(self, target, input):
-        """
+        '''
         Update a ScopedDict with the input dictionary.  Translate
         images into texture templates.
 
         @param target The ScopedDict which is to be populated
         @param input The input dictionary
-        """
+        '''
         for k, v in input.iteritems():
             if k.startswith('image'):
                 if isinstance(v, dict):
@@ -836,8 +846,7 @@ class Theme(ScopedDict):
 
 @wrapper(yield_single_value)
 def repeat_ninepatches_vertexcoords(texture, position, size):
-
-    paddx1,paddx2,paddy2,paddy1 = texture.border_padding
+    left,right,top,bottom = texture.border_padding
 
     X1,Y1=position
 
@@ -846,139 +855,144 @@ def repeat_ninepatches_vertexcoords(texture, position, size):
 
     i=-1 ; j=-1
 
-    repeatwidth=size[0]-(paddx1+paddx2)  ; repeatx_tex=texture.size[0]-(paddx1+paddx2) ; repeatx=repeatwidth/repeatx_tex
-    repeatheight=size[1]-(paddy1+paddy2) ; repeaty_tex=texture.size[1]-(paddy1+paddy2) ; repeaty=repeatheight/repeaty_tex
+    repeatwidth=size[0]-(left+right)  ; repeatx_tex=texture.size[0]-(left+right) ; repeatx=repeatwidth/repeatx_tex
+    repeatheight=size[1]-(bottom+top) ; repeaty_tex=texture.size[1]-(bottom+top) ; repeaty=repeatheight/repeaty_tex
 
     for pos in (
-        (X1,Y1,0.0), (X1+paddx1,Y1,0.0), (X1+paddx1,Y1+paddy1,0.0), (X1,Y1+paddy1,0.0),
-        (X1,Y2-paddy2,0.0), (X1+paddx1,Y2-paddy2,0.0), (X1+paddx1,Y2,0.0), (X1,Y2,0.0),
-        (X2-paddx2,Y1,0.0), (X2,Y1,0.0), (X2,Y1+paddy1,0.0), (X2-paddx2,Y1+paddy1,0.0),
-        (X2-paddx2,Y2-paddy2,0.0), (X2,Y2-paddy2,0.0), (X2,Y2,0.0), (X2-paddx2,Y2,0.0) ):
+        (X1,Y1,0.0), (X1+left,Y1,0.0), (X1+left,Y1+bottom,0.0), (X1,Y1+bottom,0.0),
+        (X1,Y2-top,0.0), (X1+left,Y2-top,0.0), (X1+left,Y2,0.0), (X1,Y2,0.0),
+        (X2-right,Y1,0.0), (X2,Y1,0.0), (X2,Y1+bottom,0.0), (X2-right,Y1+bottom,0.0),
+        (X2-right,Y2-top,0.0), (X2,Y2-top,0.0), (X2,Y2,0.0), (X2-right,Y2,0.0) ):
         yield pos
 
-    #VERTEXARRAY= np.vstack( (VERTEXARRAY, np.array([  ( (X1,Y1+paddy1 + i*repeaty_tex,0.0), (X1+paddx1,Y1+paddy1 + i*repeaty_tex,0.0), (X1+paddx1,Y1+paddy1 + (i+1)*repeaty_tex,0.0), (X1,Y1+paddy1 + (i+1)*repeaty_tex,0.0) ) for i in range(int(repeaty)) ]+[ ( (X1,Y1+paddy1 + (i+1)*repeaty_tex,0.0), (X1+paddx1,Y1+paddy1 + (i+1)*repeaty_tex,0.0),  (X1+paddx1,Y2-paddy2,0.0), (X1,Y2-paddy2,0.0) )  ],'float32' ).reshape(-1,3) ))
+    #VERTEXARRAY= np.vstack( (VERTEXARRAY, np.array([  ( (X1,Y1+bottom + i*repeaty_tex,0.0), (X1+left,Y1+bottom + i*repeaty_tex,0.0), (X1+left,Y1+bottom + (i+1)*repeaty_tex,0.0), (X1,Y1+bottom + (i+1)*repeaty_tex,0.0) ) for i in range(int(repeaty)) ]+[ ( (X1,Y1+bottom + (i+1)*repeaty_tex,0.0), (X1+left,Y1+bottom + (i+1)*repeaty_tex,0.0),  (X1+left,Y2-top,0.0), (X1,Y2-top,0.0) )  ],'float32' ).reshape(-1,3) ))
     for i in range(int(repeaty)):
-        yield (X1,Y1+paddy1 + i*repeaty_tex,0.0)
-        yield (X1+paddx1,Y1+paddy1 + i*repeaty_tex,0.0)
-        yield (X1+paddx1,Y1+paddy1 + (i+1)*repeaty_tex,0.0)
-        yield (X1,Y1+paddy1 + (i+1)*repeaty_tex,0.0)
+        yield (X1,Y1+bottom + i*repeaty_tex,0.0)
+        yield (X1+left,Y1+bottom + i*repeaty_tex,0.0)
+        yield (X1+left,Y1+bottom + (i+1)*repeaty_tex,0.0)
+        yield (X1,Y1+bottom + (i+1)*repeaty_tex,0.0)
 
-    yield (X1,Y1+paddy1 + (i+1)*repeaty_tex,0.0)
-    yield (X1+paddx1,Y1+paddy1 + (i+1)*repeaty_tex,0.0)
-    yield (X1+paddx1,Y2-paddy2,0.0)
-    yield (X1,Y2-paddy2,0.0)
+    yield (X1,Y1+bottom + (i+1)*repeaty_tex,0.0)
+    yield (X1+left,Y1+bottom + (i+1)*repeaty_tex,0.0)
+    yield (X1+left,Y2-top,0.0)
+    yield (X1,Y2-top,0.0)
 
-    #VERTEXARRAY= np.vstack( (VERTEXARRAY, np.array([  ( (X2-paddx2,Y1+paddy1 + i*repeaty_tex,0.0), (X2,Y1+paddy1 + i*repeaty_tex,0.0), (X2,Y1+paddy1 + (i+1)*repeaty_tex,0.0), (X2-paddx2,Y1+paddy1 + (i+1)*repeaty_tex,0.0) ) for i in range(int(repeaty)) ]+[ ( (X2-paddx2,Y1+paddy1 + (i+1)*repeaty_tex,0.0), (X2,Y1+paddy1 + (i+1)*repeaty_tex,0.0),  (X2,Y2-paddy2,0.0), (X2-paddx2,Y2-paddy2,0.0) )  ],'float32' ).reshape(-1,3) ))
+    #VERTEXARRAY= np.vstack( (VERTEXARRAY, np.array([  ( (X2-right,Y1+bottom + i*repeaty_tex,0.0), (X2,Y1+bottom + i*repeaty_tex,0.0), (X2,Y1+bottom + (i+1)*repeaty_tex,0.0), (X2-right,Y1+bottom + (i+1)*repeaty_tex,0.0) ) for i in range(int(repeaty)) ]+[ ( (X2-right,Y1+bottom + (i+1)*repeaty_tex,0.0), (X2,Y1+bottom + (i+1)*repeaty_tex,0.0),  (X2,Y2-top,0.0), (X2-right,Y2-top,0.0) )  ],'float32' ).reshape(-1,3) ))
     for i in range(int(repeaty)):
-        yield (X2-paddx2,Y1+paddy1 + i*repeaty_tex,0.0)
-        yield (X2,Y1+paddy1 + i*repeaty_tex,0.0)
-        yield (X2,Y1+paddy1 + (i+1)*repeaty_tex,0.0)
-        yield (X2-paddx2,Y1+paddy1 + (i+1)*repeaty_tex,0.0)
+        yield (X2-right,Y1+bottom + i*repeaty_tex,0.0)
+        yield (X2,Y1+bottom + i*repeaty_tex,0.0)
+        yield (X2,Y1+bottom + (i+1)*repeaty_tex,0.0)
+        yield (X2-right,Y1+bottom + (i+1)*repeaty_tex,0.0)
 
-    yield (X2-paddx2,Y1+paddy1 + (i+1)*repeaty_tex,0.0)
-    yield (X2,Y1+paddy1 + (i+1)*repeaty_tex,0.0)
-    yield (X2,Y2-paddy2,0.0)
-    yield (X2-paddx2,Y2-paddy2,0.0)
+    yield (X2-right,Y1+bottom + (i+1)*repeaty_tex,0.0)
+    yield (X2,Y1+bottom + (i+1)*repeaty_tex,0.0)
+    yield (X2,Y2-top,0.0)
+    yield (X2-right,Y2-top,0.0)
 
-    #    VERTEXARRAY= np.vstack( (VERTEXARRAY, np.array([  ( (X1+paddx1 + j*repeatx_tex,Y1,0.0), (X1+paddx1 + (j+1)*repeatx_tex,Y1,0.0), (X1+paddx1 + (j+1)*repeatx_tex,Y1+paddy1,0.0), (X1+paddx1 + j*repeatx_tex,Y1+paddy1,0.0) ) for j in range(int(repeatx)) ]+[ ( (X1+paddx1 + (j+1)*repeatx_tex,Y1,0.0), (X2-paddx2, Y1,0.0),(X2-paddx2, Y1+paddy1,0.0), (X1+paddx1 + (j+1)*repeatx_tex,Y1+paddy1,0.0) )  ],'float32' ).reshape(-1,3) ))
+    #    VERTEXARRAY= np.vstack( (VERTEXARRAY, np.array([  ( (X1+left + j*repeatx_tex,Y1,0.0), (X1+left + (j+1)*repeatx_tex,Y1,0.0), (X1+left + (j+1)*repeatx_tex,Y1+bottom,0.0), (X1+left + j*repeatx_tex,Y1+bottom,0.0) ) for j in range(int(repeatx)) ]+[ ( (X1+left + (j+1)*repeatx_tex,Y1,0.0), (X2-right, Y1,0.0),(X2-right, Y1+bottom,0.0), (X1+left + (j+1)*repeatx_tex,Y1+bottom,0.0) )  ],'float32' ).reshape(-1,3) ))
 
     for j in range(int(repeatx)):
-        yield (X1+paddx1 + j*repeatx_tex,Y1,0.0)
-        yield (X1+paddx1 + (j+1)*repeatx_tex,Y1,0.0)
-        yield (X1+paddx1 + (j+1)*repeatx_tex,Y1+paddy1,0.0)
-        yield (X1+paddx1 + j*repeatx_tex,Y1+paddy1,0.0)
+        yield (X1+left + j*repeatx_tex,Y1,0.0)
+        yield (X1+left + (j+1)*repeatx_tex,Y1,0.0)
+        yield (X1+left + (j+1)*repeatx_tex,Y1+bottom,0.0)
+        yield (X1+left + j*repeatx_tex,Y1+bottom,0.0)
 
-    yield (X1+paddx1 + (j+1)*repeatx_tex,Y1,0.0)
-    yield (X2-paddx2, Y1,0.0)
-    yield (X2-paddx2, Y1+paddy1,0.0)
-    yield (X1+paddx1 + (j+1)*repeatx_tex,Y1+paddy1,0.0)
+    yield (X1+left + (j+1)*repeatx_tex,Y1,0.0)
+    yield (X2-right, Y1,0.0)
+    yield (X2-right, Y1+bottom,0.0)
+    yield (X1+left + (j+1)*repeatx_tex,Y1+bottom,0.0)
 
-    #VERTEXARRAY= np.vstack( (VERTEXARRAY, np.array([  ( (X1+paddx1 + j*repeatx_tex,Y2-paddy2,0.0), (X1+paddx1 + (j+1)*repeatx_tex, Y2-paddy2,0.0), (X1+paddx1 + (j+1)*repeatx_tex,Y2,0.0), (X1+paddx1 + j*repeatx_tex,Y2,0.0) ) for j in range(int(repeatx)) ]+[ ( (X1+paddx1 + (j+1)*repeatx_tex,Y2-paddy2,0.0), (X2-paddx2, Y2-paddy2,0.0),(X2-paddx2, Y2,0.0), (X1+paddx1 + (j+1)*repeatx_tex,Y2,0.0) )  ],'float32' ).reshape(-1,3) ))
+    #VERTEXARRAY= np.vstack( (VERTEXARRAY, np.array([  ( (X1+left + j*repeatx_tex,Y2-top,0.0), (X1+left + (j+1)*repeatx_tex, Y2-top,0.0), (X1+left + (j+1)*repeatx_tex,Y2,0.0), (X1+left + j*repeatx_tex,Y2,0.0) ) for j in range(int(repeatx)) ]+[ ( (X1+left + (j+1)*repeatx_tex,Y2-top,0.0), (X2-right, Y2-top,0.0),(X2-right, Y2,0.0), (X1+left + (j+1)*repeatx_tex,Y2,0.0) )  ],'float32' ).reshape(-1,3) ))
 
     for j in range(int(repeatx)):
-        yield (X1+paddx1 + j*repeatx_tex,Y2-paddy2,0.0)
-        yield (X1+paddx1 + (j+1)*repeatx_tex, Y2-paddy2,0.0)
-        yield (X1+paddx1 + (j+1)*repeatx_tex,Y2,0.0)
-        yield (X1+paddx1 + j*repeatx_tex,Y2,0.0)
+        yield (X1+left + j*repeatx_tex,Y2-top,0.0)
+        yield (X1+left + (j+1)*repeatx_tex, Y2-top,0.0)
+        yield (X1+left + (j+1)*repeatx_tex,Y2,0.0)
+        yield (X1+left + j*repeatx_tex,Y2,0.0)
 
-    yield (X1+paddx1 + (j+1)*repeatx_tex,Y2-paddy2,0.0)
-    yield (X2-paddx2, Y2-paddy2,0.0)
-    yield (X2-paddx2, Y2,0.0)
-    yield (X1+paddx1 + (j+1)*repeatx_tex,Y2,0.0)
+    yield (X1+left + (j+1)*repeatx_tex,Y2-top,0.0)
+    yield (X2-right, Y2-top,0.0)
+    yield (X2-right, Y2,0.0)
+    yield (X1+left + (j+1)*repeatx_tex,Y2,0.0)
 
-    #VERTEXARRAY= np.vstack( (VERTEXARRAY, np.array([  ( (X1+paddx1 + j*repeatx_tex, Y1+paddy1 + i*repeaty_tex,0.0), (X1+paddx1 + (j+1)*repeatx_tex, Y1+paddy1 + i*repeaty_tex,0.0), (X1+paddx1 + (j+1)*repeatx_tex, Y1+paddy1 + (i+1)*repeaty_tex,0.0), (X1+paddx1 + j*repeatx_tex, Y1+paddy1 + (i+1)*repeaty_tex,0.0) )  for i in range(int(repeaty)) for j in range(int(repeatx)) ] +\
+    #VERTEXARRAY= np.vstack( (VERTEXARRAY, np.array([  ( (X1+left + j*repeatx_tex, Y1+bottom + i*repeaty_tex,0.0), (X1+left + (j+1)*repeatx_tex, Y1+bottom + i*repeaty_tex,0.0), (X1+left + (j+1)*repeatx_tex, Y1+bottom + (i+1)*repeaty_tex,0.0), (X1+left + j*repeatx_tex, Y1+bottom + (i+1)*repeaty_tex,0.0) )  for i in range(int(repeaty)) for j in range(int(repeatx)) ] +\
 
     for i in range(int(repeaty)):
         for j in range(int(repeatx)):
-            yield (X1+paddx1 + j*repeatx_tex, Y1+paddy1 + i*repeaty_tex,0.0)
-            yield (X1+paddx1 + (j+1)*repeatx_tex, Y1+paddy1 + i*repeaty_tex,0.0)
-            yield (X1+paddx1 + (j+1)*repeatx_tex, Y1+paddy1 + (i+1)*repeaty_tex,0.0)
-            yield (X1+paddx1 + j*repeatx_tex, Y1+paddy1 + (i+1)*repeaty_tex,0.0)
+            yield (X1+left + j*repeatx_tex, Y1+bottom + i*repeaty_tex,0.0)
+            yield (X1+left + (j+1)*repeatx_tex, Y1+bottom + i*repeaty_tex,0.0)
+            yield (X1+left + (j+1)*repeatx_tex, Y1+bottom + (i+1)*repeaty_tex,0.0)
+            yield (X1+left + j*repeatx_tex, Y1+bottom + (i+1)*repeaty_tex,0.0)
 
-    #[ ( (X1+paddx1 + (j+1)*repeatx_tex,Y1+paddy1 + i*repeaty_tex,0.0), (X2-paddx2, Y1+paddy1 + i*repeaty_tex,0.0),(X2-paddx2,  Y1+paddy1 + (i+1)*repeaty_tex,0.0), (X1+paddx1 + (j+1)*repeatx_tex, Y1+paddy1 + (i+1)*repeaty_tex,0.0) ) for i in range(int(repeaty)) ] +\
+    #[ ( (X1+left + (j+1)*repeatx_tex,Y1+bottom + i*repeaty_tex,0.0), (X2-right, Y1+bottom + i*repeaty_tex,0.0),(X2-right,  Y1+bottom + (i+1)*repeaty_tex,0.0), (X1+left + (j+1)*repeatx_tex, Y1+bottom + (i+1)*repeaty_tex,0.0) ) for i in range(int(repeaty)) ] +\
     for i in range(int(repeaty)):
-        yield (X1+paddx1 + (j+1)*repeatx_tex,Y1+paddy1 + i*repeaty_tex,0.0)
-        yield (X2-paddx2, Y1+paddy1 + i*repeaty_tex,0.0)
-        yield (X2-paddx2,  Y1+paddy1 + (i+1)*repeaty_tex,0.0)
-        yield (X1+paddx1 + (j+1)*repeatx_tex, Y1+paddy1 + (i+1)*repeaty_tex,0.0)
+        yield (X1+left + (j+1)*repeatx_tex,Y1+bottom + i*repeaty_tex,0.0)
+        yield (X2-right, Y1+bottom + i*repeaty_tex,0.0)
+        yield (X2-right,  Y1+bottom + (i+1)*repeaty_tex,0.0)
+        yield (X1+left + (j+1)*repeatx_tex, Y1+bottom + (i+1)*repeaty_tex,0.0)
 
-    #[ ( (X1+paddx1 + j*repeatx_tex, Y1+paddy1 + (i+1)*repeaty_tex,0.0), (X1+paddx1 + (j+1)*repeatx_tex, Y1+paddy1 + (i+1)*repeaty_tex,0.0), (X1+paddx1 + (j+1)*repeatx_tex, Y2-paddy2,0.0), (X1+paddx1 + j*repeatx_tex, Y2-paddy2,0.0) ) for j in range(int(repeatx)) ] ,'float32' ).reshape(-1,3) ))
+    #[ ( (X1+left + j*repeatx_tex, Y1+bottom + (i+1)*repeaty_tex,0.0), (X1+left + (j+1)*repeatx_tex, Y1+bottom + (i+1)*repeaty_tex,0.0), (X1+left + (j+1)*repeatx_tex, Y2-top,0.0), (X1+left + j*repeatx_tex, Y2-top,0.0) ) for j in range(int(repeatx)) ] ,'float32' ).reshape(-1,3) ))
     for j in range(int(repeatx)):
-        yield (X1+paddx1 + j*repeatx_tex, Y1+paddy1 + (i+1)*repeaty_tex,0.0)
-        yield (X1+paddx1 + (j+1)*repeatx_tex, Y1+paddy1 + (i+1)*repeaty_tex,0.0)
-        yield (X1+paddx1 + (j+1)*repeatx_tex, Y2-paddy2,0.0)
-        yield (X1+paddx1 + j*repeatx_tex, Y2-paddy2,0.0)
+        yield (X1+left + j*repeatx_tex, Y1+bottom + (i+1)*repeaty_tex,0.0)
+        yield (X1+left + (j+1)*repeatx_tex, Y1+bottom + (i+1)*repeaty_tex,0.0)
+        yield (X1+left + (j+1)*repeatx_tex, Y2-top,0.0)
+        yield (X1+left + j*repeatx_tex, Y2-top,0.0)
 
-    #VERTEXARRAY= np.vstack( (VERTEXARRAY, np.array([ ( (X1+paddx1 + (j+1)*repeatx_tex, Y1+paddy1 + (i+1)*repeaty_tex,0.0), (X2-paddx2, Y1+paddy1 + (i+1)*repeaty_tex,0.0), (X2-paddx2, Y2-paddy2,0.0), (X1+paddx1 + (j+1)*repeatx_tex, Y2-paddy2,0.0) ) ], 'float').reshape(-1,3) ) )
-    yield (X1+paddx1 + (j+1)*repeatx_tex, Y1+paddy1 + (i+1)*repeaty_tex,0.0)
-    yield (X2-paddx2, Y1+paddy1 + (i+1)*repeaty_tex,0.0)
-    yield (X2-paddx2, Y2-paddy2,0.0)
-    yield (X1+paddx1 + (j+1)*repeatx_tex, Y2-paddy2,0.0)
+    #VERTEXARRAY= np.vstack( (VERTEXARRAY, np.array([ ( (X1+left + (j+1)*repeatx_tex, Y1+bottom + (i+1)*repeaty_tex,0.0), (X2-right, Y1+bottom + (i+1)*repeaty_tex,0.0), (X2-right, Y2-top,0.0), (X1+left + (j+1)*repeatx_tex, Y2-top,0.0) ) ], 'float').reshape(-1,3) ) )
+    yield (X1+left + (j+1)*repeatx_tex, Y1+bottom + (i+1)*repeaty_tex,0.0)
+    yield (X2-right, Y1+bottom + (i+1)*repeaty_tex,0.0)
+    yield (X2-right, Y2-top,0.0)
+    yield (X1+left + (j+1)*repeatx_tex, Y2-top,0.0)
+
 
 @wrapper(yield_single_value)
 def repeat_ninepatches_texcoords(texture, position, size):
-    paddx1,paddx2,paddy2,paddy1 = texture.border_padding
-
-    repeatwidth=size[0]-(paddx1+paddx2)  ; repeatx_tex=texture.size[0]-(paddx1+paddx2) ; repeatx=repeatwidth/repeatx_tex
-    repeatheight=size[1]-(paddy1+paddy2) ; repeaty_tex=texture.size[1]-(paddy1+paddy2) ; repeaty=repeatheight/repeaty_tex
 
 
-    tx1=paddx1/texture.size[0] ; tx2a=1.0-paddx2/texture.size[0] ; tx2b=(size[0]-(paddx1+paddx2) )/texture.size[0]
-    ty1=paddy1/texture.size[1] ; ty2a=1.0-paddy2/texture.size[1] ; ty2b=(size[1]-(paddy1+paddy2) )/texture.size[1]
+    s0, t0, s1, t1        = texture.texcoords
+    left,right,top,bottom = texture.border_padding
+    tex_width, tex_height = texture.size
+    t_width, t_height     = s1-s0, t1-t0
+
+    repeatwidth=size[0]-(left+right)  ; repeatx_tex=texture.size[0]-(left+right) ; repeatx=repeatwidth/repeatx_tex
+    repeatheight=size[1]-(bottom+top) ; repeaty_tex=texture.size[1]-(bottom+top) ; repeaty=repeatheight/repeaty_tex
+
+    tx1=s0 + t_width*float(left)/tex_width     ; tx2a=s1 - t_width*(float(right)/tex_width) ; tx2b=(size[0]-(left+right) )/texture.size[0]
+    ty1=t0 + t_height*float(bottom)/tex_height ; ty2a=t1 - t_height*(float(top)/tex_height)   ; ty2b=(size[1]-(bottom+top) )/texture.size[1]
 
     tys=ty1+(repeaty-int(repeaty))*(ty2a-ty1) ; txs=tx1+(repeatx-int(repeatx) )*(tx2a-tx1)
 
     i=0 ; j=0
 
-    for pos in ((0.0,0.0), (tx1,0.0), (tx1,ty1), (0.0,ty1),
-                (0.0,ty2a), (tx1,ty2a), (tx1,1.0), (0.0,1.0),
-                (tx2a,0.0), (1.0,0.0), (1.0,ty1), (tx2a,ty1),
-                (tx2a,ty2a), (1.0,ty2a), (1.0,1.0), (tx2a,1.0)):
+    for pos in ((s0,t0), (tx1,t0), (tx1,ty1), (s0,ty1),
+                (s0,ty2a), (tx1,ty2a), (tx1,t1), (s0,t1),
+                (tx2a,t0), (s1,t0), (s1,ty1), (tx2a,ty1),
+                (tx2a,ty2a), (s1,ty2a), (s1,t1), (tx2a,t1)):
         yield pos
 
-    #TEXTUREARRAY=np.vstack( (TEXTUREARRAY, np.array([  ( (0.0,ty1), (tx1,ty1), (tx1,ty2a), (0.0,ty2a) ) for i in range(int(repeaty)) ] + [ ((0.0,ty1), (tx1,ty1), (tx1,tys),(0.0,tys)) ],'float32' ).reshape(-1,2) ) )
+    #TEXTUREARRAY=np.vstack( (TEXTUREARRAY, np.array([  ( (s0,ty1), (tx1,ty1), (tx1,ty2a), (s0,ty2a) ) for i in range(int(repeaty)) ] + [ ((s0,ty1), (tx1,ty1), (tx1,tys),(s0,tys)) ],'float32' ).reshape(-1,2) ) )
     for i in range(int(repeaty)):
-        yield (0.0,ty1); yield (tx1,ty1); yield (tx1,ty2a); yield (0.0,ty2a)
+        yield (s0,ty1); yield (tx1,ty1); yield (tx1,ty2a); yield (s0,ty2a)
 
-    yield (0.0,ty1); yield (tx1,ty1); yield (tx1,tys); yield (0.0,tys)
+    yield (s0,ty1); yield (tx1,ty1); yield (tx1,tys); yield (s0,tys)
 
-    #TEXTUREARRAY=np.vstack( (TEXTUREARRAY, np.array([  ( (tx2a,ty1), (1.0,ty1), (1.0,ty2a), (tx2a,ty2a) ) for i in range(int(repeaty)) ] + [ ((tx2a,ty1), (1.0,ty1), (1.0,tys),(tx2a,tys)) ],'float32' ).reshape(-1,2) ) )
+    #TEXTUREARRAY=np.vstack( (TEXTUREARRAY, np.array([  ( (tx2a,ty1), (s1,ty1), (s1,ty2a), (tx2a,ty2a) ) for i in range(int(repeaty)) ] + [ ((tx2a,ty1), (s1,ty1), (s1,tys),(tx2a,tys)) ],'float32' ).reshape(-1,2) ) )
     for i in range(int(repeaty)):
-        yield (tx2a,ty1); yield (1.0,ty1); yield (1.0,ty2a); yield (tx2a,ty2a)
+        yield (tx2a,ty1); yield (s1,ty1); yield (s1,ty2a); yield (tx2a,ty2a)
 
-    yield (tx2a,ty1); yield (1.0,ty1); yield (1.0,tys); yield (tx2a,tys)
+    yield (tx2a,ty1); yield (s1,ty1); yield (s1,tys); yield (tx2a,tys)
 
-    #TEXTUREARRAY=np.vstack( (TEXTUREARRAY, np.array([  ( (tx1,0.0), (tx2a,0.0), (tx2a,ty1), (tx1,ty1) ) for j in range(int(repeatx)) ] + [( (tx1,0.0), (txs,0.0), (txs,ty1), (tx1,ty1) ) ],'float32' ).reshape(-1,2) ) )
+    #TEXTUREARRAY=np.vstack( (TEXTUREARRAY, np.array([  ( (tx1,t0), (tx2a,t0), (tx2a,ty1), (tx1,ty1) ) for j in range(int(repeatx)) ] + [( (tx1,t0), (txs,t0), (txs,ty1), (tx1,ty1) ) ],'float32' ).reshape(-1,2) ) )
     for j in range(int(repeatx)):
-        yield (tx1,0.0); yield (tx2a,0.0); yield (tx2a,ty1); yield (tx1,ty1)
+        yield (tx1,t0); yield (tx2a,t0); yield (tx2a,ty1); yield (tx1,ty1)
 
-    yield (tx1,0.0); yield (txs,0.0); yield (txs,ty1); yield (tx1,ty1)
+    yield (tx1,t0); yield (txs,t0); yield (txs,ty1); yield (tx1,ty1)
 
-    #TEXTUREARRAY=np.vstack( (TEXTUREARRAY, np.array([  ( (tx1,ty2a), (tx2a,ty2a), (tx2a,1.0), (tx1,1.0) ) for j in range(int(repeatx)) ] + [( (tx1,ty2a), (txs,ty2a), (txs,1.0), (tx1,1.0) ) ],'float32' ).reshape(-1,2) ) )
+    #TEXTUREARRAY=np.vstack( (TEXTUREARRAY, np.array([  ( (tx1,ty2a), (tx2a,ty2a), (tx2a,t1), (tx1,t1) ) for j in range(int(repeatx)) ] + [( (tx1,ty2a), (txs,ty2a), (txs,t1), (tx1,t1) ) ],'float32' ).reshape(-1,2) ) )
     for j in range(int(repeatx)):
-        yield(tx1,ty2a); yield (tx2a,ty2a); yield (tx2a,1.0); yield (tx1,1.0)
+        yield(tx1,ty2a); yield (tx2a,ty2a); yield (tx2a,t1); yield (tx1,t1)
 
-    yield (tx1,ty2a); yield (txs,ty2a); yield (txs,1.0); yield (tx1,1.0)
+    yield (tx1,ty2a); yield (txs,ty2a); yield (txs,t1); yield (tx1,t1)
 
     #TEXTUREARRAY=np.vstack( (TEXTUREARRAY, np.array([  ( (tx1,ty1), (tx2a,ty1), (tx2a,ty2a), (tx1,ty2a) ) for i in range(int(repeaty)) for j in range(int(repeatx)) ] + [ ( (tx1,ty1), (txs,ty1), (txs,ty2a), (tx1,ty2a) ) for i in range(int(repeaty)) ] + [ ( (tx1,ty1), (tx2a,ty1), (tx2a,tys), (tx1,tys) ) for j in range(int(repeatx)) ]  ,'float32' ).reshape(-1,2) ) )
     for i in range(int(repeaty)):

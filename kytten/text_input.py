@@ -14,7 +14,9 @@ from .base import string_to_unicode
 from . import pyperclip
 
 class Input(Control):
-    """A text input field."""
+    '''
+    A text input field.
+    '''
     def __init__(self, text="", length=20, max_length=None, padding=0,
                  on_input=None, name=None, disabled=False):
         Control.__init__(self, name=name, disabled=disabled)

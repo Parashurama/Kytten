@@ -11,13 +11,13 @@ from .layout import HALIGN_LEFT, HALIGN_RIGHT
 from .override import KyttenLabel
 
 class Checkbox(Control):
-    """
+    '''
     A two-state checkbox.
-    """
-    def __init__(self, text="", is_checked=False, name=None,
+    '''
+    def __init__(self, text=u"", is_checked=False, name=None,
                  align=HALIGN_RIGHT, padding=4, on_click=None,
                  disabled=False, color=None):
-        """
+        '''
         Creates a new checkbox.  The provided text will be used to caption the
         checkbox.
 
@@ -29,7 +29,7 @@ class Checkbox(Control):
         @param padding Space between checkbox and label
         @param on_click Callback for the checkbox
         @param disabled True if the checkbox should be disabled
-        """
+        '''
         assert align in [HALIGN_LEFT, HALIGN_RIGHT]
         Control.__init__(self, name=name, disabled=disabled)
         self.text = text
@@ -43,9 +43,9 @@ class Checkbox(Control):
         self.main_color=color
 
     def delete(self):
-        """
+        '''
         Clean up our graphic elements
-        """
+        '''
         Control.delete(self)
         if self.checkbox is not None:
             self.checkbox.delete()
@@ -64,12 +64,12 @@ class Checkbox(Control):
         return True
 
     def layout(self, x, y):
-        """
+        '''
         Places the Checkbox.
 
         @param x X coordinate of lower left corner
         @param y Y coordinate of lower left corner
-        """
+        '''
         Control.layout(self, x, y)
         if self.align == HALIGN_RIGHT:  # label goes on right
             self.checkbox.update(x, y + self.height/2 - self.checkbox.height/2,
@@ -117,11 +117,11 @@ class Checkbox(Control):
             self.saved_dialog.set_needs_layout()
 
     def size(self, dialog):
-        """
+        '''
         Sizes the Checkbox.  If necessary, creates the graphic elements.
 
         @param dialog Dialog which contains the Checkbox
-        """
+        '''
         if dialog is None:
             return
         Control.size(self, dialog)
@@ -152,8 +152,7 @@ class Checkbox(Control):
         # Treat the height of the label as ascent + descent
         font = self.label.document.get_font()
         height = font.ascent - font.descent  # descent is negative
-        self.width = self.checkbox.width + self.padding + \
-            self.label.content_width
+        self.width = self.checkbox.width + self.padding + self.label.content_width
         self.height = max(self.checkbox.height, height)
 
     def teardown(self):

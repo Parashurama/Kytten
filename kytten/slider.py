@@ -10,16 +10,16 @@ import pyglet
 from .widgets import Control
 
 class Slider(Control):
-    """
+    '''
     A horizontal slider.  Position is measured from 0.0 to 1.0.
-    """
+    '''
     IMAGE_BAR = ['slider', 'bar']
     IMAGE_KNOB = ['slider', 'knob']
     IMAGE_STEP = ['slider', 'step']
 
     def __init__(self, value=0.0, min_value=0.0, max_value=1.0, steps=None,
                  width=100, name=None, on_set=None, disabled=False):
-        """
+        '''
         Creates a new slider.
 
         @param min_value Minimum value
@@ -35,7 +35,7 @@ class Slider(Control):
         @param on_set Callback function for when the value of this slider
                       changes.
         @param diasbled True if the slider should be disabled
-        """
+        '''
         Control.__init__(self, name=name, disabled=disabled)
         self.min_value = min_value
         self.max_value = max_value
@@ -52,9 +52,9 @@ class Slider(Control):
         self.is_dragging = False
 
     def delete(self):
-        """
+        '''
         Delete all graphic elements used by the slider
-        """
+        '''
         if self.bar is not None:
             self.bar.delete()
             self.bar = None
@@ -81,12 +81,12 @@ class Slider(Control):
         return True
 
     def layout(self, x, y):
-        """
+        '''
         Lays out the slider components
 
         @param x X coordinate of lower left corner
         @param y Y coordinate of lower left corner
-        """
+        '''
         self.x, self.y = x, y
         if self.bar is not None:
             left, right, top, bottom = self.padding
@@ -159,9 +159,9 @@ class Slider(Control):
         self.set_value(current_value)
 
     def size(self, dialog):
-        """
+        '''
         Creates slider components.
-        """
+        '''
         if dialog is None:
             return
         Control.size(self, dialog)

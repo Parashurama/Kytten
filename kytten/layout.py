@@ -79,11 +79,11 @@ def GetRelativePoint(parent, parent_anchor, child, child_anchor, offset):
 
 
 class VerticalLayout(Widget,LayoutAssert):
-    """
+    '''
     Arranges Widgets on top of each other, from top to bottom.
-    """
+    '''
     def __init__(self, content=[], align=HALIGN_CENTER, padding=5, minwidth=0, minheight=0, name=None, group=None):
-        """
+        '''
         Creates a new VerticalLayout.
 
         @param content A list of Widgets to be arranged
@@ -91,7 +91,7 @@ class VerticalLayout(Widget,LayoutAssert):
                      HALIGN_CENTER if they should be centered, and
                      HALIGN_RIGHT if they are to be right-justified.
         @param padding This amount of padding is inserted between widgets.
-        """
+        '''
         assert isinstance(content, list) or isinstance(content, tuple)
         Widget.__init__(self,name=name, group=group)
         self.align = align
@@ -110,20 +110,20 @@ class VerticalLayout(Widget,LayoutAssert):
         self.expandable = []
 
     def _get_controls(self):
-        """
+        '''
         Returns Controls within the layout.
-        """
+        '''
         controls = []
         for item in self.content:
             controls += item._get_controls()
         return controls
 
     def add(self, item, position=None):
-        """
+        '''
         Adds a new Widget to the layout.
 
         @param item The Widget to be added
-        """
+        '''
         item.__parent__=weakref.proxy(self)
         if position is None:
             ITEM = item or Spacer()
@@ -182,17 +182,17 @@ class VerticalLayout(Widget,LayoutAssert):
         if Log.isLogging():  print "ReReference in Layout", self, item, item.name
 
     def delete(self):
-        """Deletes all graphic elements within the layout."""
+        '''Deletes all graphic elements within the layout.'''
         for item in self.content:
             item.delete()
 
         Widget.delete(self)
 
     def expand(self, width, height):
-        """
+        '''
         Expands to fill available vertical space.  We split available space
         equally between all spacers.
-        """
+        '''
         available = int((height - self.height) / len(self.expandable))
         remainder = height - self.height - len(self.expandable) * available
         for item in self.expandable:
@@ -205,15 +205,15 @@ class VerticalLayout(Widget,LayoutAssert):
         self.width = width
 
     def is_expandable(self):
-        """True if we contain expandable content."""
+        '''True if we contain expandable content.'''
         return len(self.expandable) > 0
 
     def remove(self, item, position=None):
-        """
+        '''
         Removes a Widget from the layout.
 
         @param item The Widget to be removed
-        """
+        '''
         if position is not None:
             item = self.content_cache[position]
 
@@ -235,12 +235,12 @@ class VerticalLayout(Widget,LayoutAssert):
 
 
     def layout(self, x, y):
-        """
+        '''
         Lays out the child Widgets, in order from top to bottom.
 
         @param x X coordinate of the lower left corner
         @param y Y coordinate of the lower left corner
-        """
+        '''
         Widget.layout(self, x, y)
 
         # Expand any expandable content to our width
@@ -265,11 +265,11 @@ class VerticalLayout(Widget,LayoutAssert):
                 top -= item.height + self.padding
 
     def set(self, content):
-        """
+        '''
         Sets an entirely new set of Widgets, discarding the old.
 
         @param content The new list of Widgets
-        """
+        '''
         self.delete()
         self.content = content[:]
         self.content_cache = content[:]
@@ -282,11 +282,11 @@ class VerticalLayout(Widget,LayoutAssert):
             self.saved_dialog.set_needs_layout()
 
     def size(self, dialog):
-        """
+        '''
         Calculates size of the layout, based on its children.
 
         @param dialog The Dialog which contains the layout
-        """
+        '''
         if dialog is None:
             return
         Widget.size(self, dialog)
@@ -315,7 +315,7 @@ class VerticalLayout(Widget,LayoutAssert):
     def teardown(self):
         self.clear()
         Widget.teardown(self)
-    """
+    '''
     def teardown(self):
 
         for item in self.content:
@@ -325,13 +325,13 @@ class VerticalLayout(Widget,LayoutAssert):
         self.content_cache = []
         self.hidden_content = []
         Widget.teardown(self)
-    """
+    '''
 class HorizontalLayout(VerticalLayout):
-    """
+    '''
     Arranges Widgets from left to right.
-    """
+    '''
     def __init__(self, content=[], align=VALIGN_CENTER, padding=5, name=None, group=None):
-        """
+        '''
         Creates a new HorizontalLayout.
 
         @param content A list of Widgets to be arranged
@@ -340,14 +340,14 @@ class HorizontalLayout(VerticalLayout):
                      VALIGN_BOTTOM if they should be aligned to the bottom.
         @param padding This amount of padding is inserted around the edge
                        of the widgets and between widgets.
-        """
+        '''
         VerticalLayout.__init__(self, content, align, padding, name=name, group=group)
 
     def expand(self, width, height):
-        """
+        '''
         Expands to fill available horizontal space.  We split available space
         equally between all spacers.
-        """
+        '''
         available = int((width - self.width) / len(self.expandable))
         remainder = height - self.height - len(self.expandable) * available
         for item in self.expandable:
@@ -359,12 +359,12 @@ class HorizontalLayout(VerticalLayout):
         self.width = width
 
     def layout(self, x, y):
-        """
+        '''
         Lays out the child Widgets, in order from left to right.
 
         @param x X coordinate of the lower left corner
         @param y Y coordinate of the lower left corner
-        """
+        '''
         Widget.layout(self, x, y)
 
         # Expand any expandable content to our height
@@ -387,11 +387,11 @@ class HorizontalLayout(VerticalLayout):
                 left += item.width + self.padding
 
     def size(self, dialog):
-        """
+        '''
         Calculates size of the layout, based on its children.
 
         @param dialog The Dialog which contains the layout
-        """
+        '''
         if dialog is None:
             return
         Widget.size(self, dialog)
@@ -472,11 +472,11 @@ class PaletteLayout(VerticalLayout):
         VerticalLayout.size(self, dialog)
 
     def add(self, item, position=None):
-        """
+        '''
         Adds a new Widget to the layout.
 
         @param item The Widget to be added
-        """
+        '''
         #item.__parent__=self
         if position is None: self.linear_content.append(item or Spacer())
         else: self.linear_content.insert(position, item)
@@ -484,11 +484,11 @@ class PaletteLayout(VerticalLayout):
         self.saved_dialog.set_needs_layout()
 
     def remove(self, item=None, position=None):
-        """
+        '''
         Removes a Widget from the layout.
 
         @param item The Widget to be removed
-        """
+        '''
         assert ( item is not None or position is not None), "Item or Position should be specified in 'remove' method of PaletteLayout"
 
         if not item: item = self.linear_content[position]
@@ -505,7 +505,7 @@ class PaletteLayout(VerticalLayout):
         self.linear_content = []
 
 class GridLayout(Widget, LayoutAssert):
-    """
+    '''
     Arranges Widgets in a table.  Each cell's height and width are set to
     the maximum width of any Widget in its column, or the maximum height of
     any Widget in its row.
@@ -513,17 +513,17 @@ class GridLayout(Widget, LayoutAssert):
     Widgets are by default aligned to the top left corner of their cells.
     Another anchor point may be specified, i.e. ANCHOR_CENTER will ensure
     that Widgets are centered within cells.
-    """
+    '''
     def __init__(self, content=[[]], anchor=ANCHOR_TOP_LEFT, padding=5,
                  offset=(0, 0)):
-        """
+        '''
         Defines a new GridLayout.
 
         @param content A list of rows, each of which is a list of cells
                        within that row.  'None' may be used for empty cells,
                        and rows do not need to all be the same length.
         @param anchor Alignment of
-        """
+        '''
         assert ((isinstance(content, list) or isinstance(content, tuple)) and
                 (len(content) == 0 or (isinstance(content[0], list) or
                                        isinstance(content[0], tuple))))
@@ -537,16 +537,16 @@ class GridLayout(Widget, LayoutAssert):
         self.offset = offset
         self.max_heights = []
         self.max_widths = []
-        """
+        '''
         for row in self.content:
             for item in row:
-                item.__parent__=weakref.proxy(self)"""
+                item.__parent__=weakref.proxy(self)'''
 
 
     def _get_controls(self):
-        """
+        '''
         Returns Controls within the layout.
-        """
+        '''
         controls = []
         for row in self.content:
             for cell in row:
@@ -555,11 +555,11 @@ class GridLayout(Widget, LayoutAssert):
         return controls
 
     def add_row(self, row):
-        """
+        '''
         Adds a new row to the layout
 
         @param row An array of widgets, or None for cells without widgets
-        """
+        '''
         assert isinstance(row, tuple) or isinstance(row, list)
         self.content.append(row)
         if self.saved_dialog is not None:
@@ -585,18 +585,18 @@ class GridLayout(Widget, LayoutAssert):
         if Log.isLogging():  print "ReReference in Layout", self, item, item.name
 
     def delete(self):
-        """Deletes all graphic elements within the layout."""
+        '''Deletes all graphic elements within the layout.'''
         for row in self.content:
             for cell in row:
                 cell.delete()
         Widget.delete(self)
 
     def delete_row(self, row):
-        """
+        '''
         Deletes a row from the layout
 
         @param row Index of row
-        """
+        '''
         if len(self.content) <= row:
             return
         row = self.content.pop(row)
@@ -607,12 +607,12 @@ class GridLayout(Widget, LayoutAssert):
             self.saved_dialog.set_needs_layout()
 
     def get(self, column, row):
-        """
+        '''
         Returns the widget located at a given column and row, or None.
 
         @param column Column of cell
         @param row Row of cell
-        """
+        '''
         if row >= len(self.content):
             return None
         row = self.content[row]
@@ -622,12 +622,12 @@ class GridLayout(Widget, LayoutAssert):
             return row[column]
 
     def layout(self, x, y):
-        """
+        '''
         Lays out all Widgets within this layout.
 
         @param x X coordinate of lower left corner
         @param y Y coordinate of lower left corner
-        """
+        '''
         Widget.layout(self, x, y)
 
         row_index = 0
@@ -651,13 +651,13 @@ class GridLayout(Widget, LayoutAssert):
             row_index += 1
 
     def set(self, column, row, item):
-        """
+        '''
         Sets the content of a cell within the grid.
 
         @param column The column of the cell to be set
         @param row The row of the cell to be set
         @param item The new Widget to be set in that cell
-        """
+        '''
         if len(self.content) <= row:
             self.content = list(self.content) + [] * (row - len(self.content) + 1)
         if len(self.content[row]) <= column:
@@ -674,11 +674,11 @@ class GridLayout(Widget, LayoutAssert):
             self.saved_dialog.set_needs_layout()
 
     def size(self, dialog):
-        """Recalculates our size and the maximum widths and heights of
+        '''Recalculates our size and the maximum widths and heights of
         each row and column in our table.
 
         @param dialog The Dialog within which we are contained
-        """
+        '''
         if dialog is None:
             return
         Widget.size(self, dialog)
@@ -726,7 +726,7 @@ class GridLayout(Widget, LayoutAssert):
     def teardown(self):
         self.clear()
         Widget.teardown(self)
-    """
+    '''
     def teardown(self):
         for row in self.content:
             for cell in row:
@@ -735,9 +735,9 @@ class GridLayout(Widget, LayoutAssert):
         self.content_cache = []
         self.hidden_content = []
         Widget.teardown(self)
-    """
+    '''
 class FreeLayout(Spacer, FreeLayoutAssert):
-    """
+    '''
     FreeLayout defines a rectangle on the screen where Widgets may be placed
     freely, in relation to one of its anchor points.  There is no constraints
     against the Widgets overlapping.
@@ -746,9 +746,9 @@ class FreeLayout(Spacer, FreeLayoutAssert):
     place a FreeLayout as one half of a VerticalLayout, lay out controls in
     the other half, and be assured the FreeLayout would be resized to the
     width of the overall Dialog.
-    """
+    '''
     def __init__(self, content=[], width=0, height=0, name=None):
-        """
+        '''
         Creates a new FreeLayout.
 
         @param width Minimum width of FreeLayout area
@@ -758,7 +758,7 @@ class FreeLayout(Spacer, FreeLayoutAssert):
                         (ANCHOR_TOP_RIGHT, 0, 0, YourWidget()),
                         (ANCHOR_CENTER, 30, -20, YourWidget())]
             where each tuple is (anchor, offset-x, offset-y, widget)
-        """
+        '''
         Spacer.__init__(self, width, height, spacer=False)
         self.content = content
         self.content_cache = self.content[:]
@@ -771,7 +771,7 @@ class FreeLayout(Spacer, FreeLayoutAssert):
             widget.__parent__=weakref.proxy(self)
 
     def _get_controls(self):
-        """Returns controls within the FreeLayout"""
+        '''Returns controls within the FreeLayout'''
         controls = []
         for anchor, x, y, item in self.content:
             controls += item._get_controls()
@@ -812,7 +812,7 @@ class FreeLayout(Spacer, FreeLayoutAssert):
             self.saved_dialog.set_needs_layout()
 
     def add(self, anchor, x, y, widget):
-        """
+        '''
         Adds a new Widget to the FreeLayout.
 
         @param dialog Dialog which contains the FreeLayout
@@ -821,7 +821,7 @@ class FreeLayout(Spacer, FreeLayoutAssert):
                  the right
         @param y Y-coordinate of offset from anchor point; positive is upward
         @param widget The Widget to be added
-        """
+        '''
         widget.__parent__=weakref.proxy(self)
         WIDGET = (anchor, x, y, widget)
         self.content.append( WIDGET )
@@ -830,13 +830,13 @@ class FreeLayout(Spacer, FreeLayoutAssert):
             self.saved_dialog.set_needs_layout()
 
     def layout(self, x, y):
-        """
+        '''
         Lays out Widgets within the FreeLayout.  We make no attempt to
         assure there's enough space for them.
 
         @param x X coordinate of lower left corner
         @param y Y coordinate of lower left corner
-        """
+        '''
         Spacer.layout(self, x, y)
         for anchor, offset_x, offset_y, widget in self.content:
             x, y = GetRelativePoint(self, anchor, widget, anchor,
@@ -845,12 +845,12 @@ class FreeLayout(Spacer, FreeLayoutAssert):
 
 
     def remove(self, widget):
-        """
+        '''
         Removes a widget from the FreeLayout.
 
         @param dialog Dialog which contains the FreeLayout
         @param widget The Widget to be removed
-        """
+        '''
         #self.content = [x for x in self.content if x[3] != widget]
         for x in self.content:
             if x[3]== widget:
@@ -861,11 +861,11 @@ class FreeLayout(Spacer, FreeLayoutAssert):
                 return x, i
 
     def size(self, dialog):
-        """
+        '''
         Calculate size of the FreeLayout and all Widgets inside
 
         @param dialog The Dialog which contains the FreeLayout
-        """
+        '''
 
         if dialog is None:
             return
@@ -920,7 +920,7 @@ class FreeLayout(Spacer, FreeLayoutAssert):
         if Log.isLogging(): print "ReReference in Free Layout", self, item, item.name
 
     def delete(self):
-        """Deletes all graphic elements within the layout."""
+        '''Deletes all graphic elements within the layout.'''
 
         for item in self.content:
             item[3].delete()
@@ -937,7 +937,7 @@ class FreeLayout(Spacer, FreeLayoutAssert):
         self.clear()
         Widget.teardown(self)
 
-    """
+    '''
     def teardown(self):
         for _, _, _, item in self.content:
             item.teardown()
@@ -946,7 +946,7 @@ class FreeLayout(Spacer, FreeLayoutAssert):
         self.hidden_content = []
 
         Widget.teardown(self)
-    """
+    '''
 
 class FreeForm(FreeLayout):
     def __init__(self, content=[], reference=None, width=0, height=0, on_drag_object=None, name=None):
@@ -984,11 +984,11 @@ class InteractiveLayout(HorizontalLayout, InteractiveLayoutAssert):
         GetObjectfromName('draggable_items').register(self)
 
     def add(self, item, position=None):
-        """
+        '''
         Adds a new Widget to the layout.
 
         @param item The Widget to be added
-        """
+        '''
         if self.slaved: item.__parent__=self.__parent__
         else: item.__parent__= weakref.proxy(self)
 
@@ -1004,11 +1004,11 @@ class InteractiveLayout(HorizontalLayout, InteractiveLayoutAssert):
             self.saved_dialog.set_needs_layout()
 
     def remove(self, item, replacing=True):
-        """
+        '''
         Removes a Widget from the layout.
 
         @param item The Widget to be removed
-        """
+        '''
         item.delete()
         if self.saved_dialog is not None:
             self.saved_dialog.set_needs_layout()
@@ -1025,13 +1025,13 @@ class InteractiveLayout(HorizontalLayout, InteractiveLayoutAssert):
         return (item,index)
 
     def set(self, item, position):
-        """
+        '''
         Replace a Widget in the layout.
 
         @param item The Widget to be added
 
         @param position Position of the Widget
-        """
+        '''
 
         if self.slaved: item.__parent__=self.__parent__
         else: item.__parent__= weakref.proxy(self)

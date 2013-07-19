@@ -13,15 +13,15 @@ from .override import KyttenIncrementalTextLayout
 from .base import string_to_unicode
 
 class Document(Control):
-    """
+    '''
     Allows you to embed a document within the GUI, which includes a
     vertical scrollbar as needed.
-    """
+    '''
     def __init__(self, document, formatted=False, width=1000, height=5000, name=None,
                  is_fixed_size=False, always_show_scrollbar=False, text_color=None, font=None, font_size=None, group = None):
-        """
+        '''
         Creates a new Document.
-        """
+        '''
         Control.__init__(self, width=width, height=height, name=name, group=group)
         self.max_height = height
         self.content_width = width
@@ -146,12 +146,12 @@ class Document(Control):
 
 
     def on_update(self, dt):
-        """
+        '''
         On updates, we update the scrollbar and then set our view offset
         if it has changed.
 
         @param dt Time passed since last update event (in seconds)
-        """
+        '''
         if self.scrollbar is not None:
             self.scrollbar.dispatch_event('on_update', dt)
 
@@ -271,13 +271,13 @@ class Document(Control):
                     callback_func()
 
     def hit_test(self, x, y):
-        """
+        '''
         True if the given point lies within our area.
 
         @param x X coordinate of point
         @param y Y coordinate of point
         @returns True if the point is within our area
-        """
+        '''
         if self.scrollbar is not None:
             return x >= self.x and x < self.x + self.width - self.scrollbar.width and \
                    y >= self.y and y < self.y + self.height

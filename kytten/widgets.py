@@ -25,7 +25,7 @@ from .base import GenId, ReferenceName, DereferenceName, GetObjectfromName, Disp
 from .theme import DefaultTextureGraphicElement
 
 class Widget(object):
-    """
+    '''
     The base of all Kytten GUI elements.  Widgets correspond to areas on the
     screen and may (in the form of Controls) respond to user input.
     A simple Widget can be used as a fixed-area spacer.
@@ -36,14 +36,14 @@ class Widget(object):
     layout() method to place them on the screen.  When their size is gotten
     for the first time, they initialize any requisite graphic elements
     that could not be done at creation time.
-    """
+    '''
     def __init__(self, width=0, height=0, name=None, group=None, spacer=False):
-        """
+        '''
         Creates a new Widget.
 
         @param width Initial width
         @param height Initial height
-        """
+        '''
         self.x = self.y = 0
         self.width = width
         self.height = height
@@ -65,17 +65,17 @@ class Widget(object):
         if self.name: ReferenceName(self,self.name)
 
     def _get_controls(self):
-        """
+        '''
         Return this widget if it is a Control, or any children which
         are Controls.
-        """
+        '''
         return []
 
     def delete(self):
-        """
+        '''
         Deletes any graphic elements we have constructed.  Note that
         we may be asked to recreate them later.
-        """
+        '''
 
         pass
 
@@ -84,60 +84,60 @@ class Widget(object):
             self.saved_dialog.ensure_visible(self)
 
     def expand(self, width, height):
-        """
+        '''
         Expands the widget to fill the specified space given.
 
         @param width Available width
         @param height Available height
-        """
+        '''
         assert False, "Widget does not support expand"
 
     def hit_test(self, x, y):
-        """
+        '''
         True if the given point lies within our area.
 
         @param x X coordinate of point
         @param y Y coordinate of point
         @returns True if the point is within our area
-        """
+        '''
         return x >= self.x and x < self.x + self.width and \
                y >= self.y and y < self.y + self.height
 
     def is_expandable(self):
-        """
+        '''
         Returns true if the widget can expand to fill available space.
-        """
+        '''
         return False
 
     def is_focusable(self):
-        """
+        '''
         Return true if the widget can be tabbed to and accepts keyboard
         input
-        """
+        '''
         return False
 
     def is_input(self):
-        """
+        '''
         Returns true if the widget accepts an input and can return a value
-        """
+        '''
         return False
 
     def layout(self, x, y):
-        """
+        '''
         Assigns a new location to this widget.
 
         @param x X coordinate of our lower left corner
         @param y Y coordinate of our lower left corner
-        """
+        '''
         self.x, self.y = x, y
 
     def size(self, dialog):
-        """
+        '''
         Constructs any graphic elements needed, and recalculates our size
         if necessary.
 
         @param dialog The Dialog which contains this Widget
-        """
+        '''
         if dialog != self and dialog is not None:
 
             if isinstance(dialog, weakref.ProxyType): dialog = dialog
@@ -149,9 +149,9 @@ class Widget(object):
                 self.saved_dialog = dialog
 
     def teardown(self):
-        """
+        '''
         Removes all resources and pointers to other GUI widgets.
-        """
+        '''
         self.delete()
         self.saved_dialog = None
         self.__parent__=None
@@ -162,88 +162,70 @@ class Widget(object):
         else:
             print "widget", self, "destroyed again"
 
-
-    """
-    def Set(self):
-        self.is_unset = False
-        if self.to_hide is True:
-            self.to_hide=False
-            self.Hide()
-
-            if self.saved_dialog is not None:
-                self.saved_dialog.set_needs_layout()
-                self.saved_dialog.EventHandled()"""
-
     def Hide(self):
-
+        '''
+        Hide Widget and delete graphic resources. Also dereference itself from its parent.
+        '''
         if Log.isLogging(): print "ShouldHide",self, self.name, self.visible
 
-        if self.visible:
+        if self.visible is True:
             self.visible=False
             self.delete()
 
-            if self.__parent__ :
+            if self.__parent__ is not None:
 
                 self.__parent__.__dereference_obj__(self) # Parent is Layout Instance (except GridLayout Not yet implemented)
 
-                if self.__parent__.saved_dialog:
+                if self.__parent__.saved_dialog is not None:
                     self.__parent__.saved_dialog.set_needs_layout()
 
                 elif hasattr(self.__parent__,'set_needs_layout'): # Top Level Wrapper
                     self.__parent__.set_needs_layout()
-
-                #else: print "???HIDING???",self, "Parent", self.__parent__, self.__parent__.saved_dialog
-
-            else:
-                """
-                if not isinstance(self, DialogAssert ) :
-                    for i,j in vars(self).iteritems():
-                        print '{}:{}'.format(i,j)
-                """
-                if not isinstance(self, DialogAssert ) : print "HIDE",self.name, self.__class__
-                #assert isinstance(self, DialogAssert ), "Error: Should be a Kytten Dialog Instance.\nIs instead {0} named '{1}'".format(self, self.name)
 
     def Show(self):
+        '''
+        Show Widget and recreate graphic resources as needed. Also reference itself to its parent.
+        '''
         if Log.isLogging(): print "ShouldShow",self, self.name, self.visible
-        if not self.visible:
+
+        if self.visible is False:
             self.visible=True
 
-            if self.__parent__:
+            if self.__parent__ is not None:
                 self.__parent__.__rereference_obj__(self) # Parent is Layout Instance (except GridLayout Not yet implemented)
 
-                if self.__parent__.saved_dialog:
+                if self.__parent__.saved_dialog is not None:
                     self.__parent__.saved_dialog.set_needs_layout()
 
                 elif hasattr(self.__parent__,'set_needs_layout'): # Top Level Wrapper
                     self.__parent__.set_needs_layout()
-
-                #else: print "???SHOWING???",self, "Parent", self.__parent__
-
-            else:
-                if not isinstance(self, DialogAssert ) : print "SHOW",self.name, self.__class__
-
-                #assert isinstance(self, DialogAssert ), "Error: Should be a Kytten Dialog Instance.\nIs instead {0} named '{1}'".format(self, self.name)
 
 
     def ToggleVisibility(self):
+        '''
+        Toggle widget visibility.
+        '''
         if not self.visible: self.Show()
         else: self.Hide()
 
     def _self(self):
+        '''
+        Return a strong reference to itself. Used mainly with weak references
+        '''
         return self
 
 class Control(Widget, KyttenEventDispatcher):
-    """
+    '''
     Controls are widgets which can accept events.
 
     Dialogs will search their children for a list of controls, and will
     then dispatch events to whichever control is currently the focus of
     the user's attention.
-    """
+    '''
     on_gain_hover_func=None
     on_lose_hover_func=None
     def __init__(self, name=None, on_gain_hover=None, on_lose_hover=None, value=None, width=0, height=0, disabled=False, noId=False, group=None):
-        """
+        '''
         Creates a new Control.
 
         @param id Controls may have ids, which can be used to identify
@@ -256,7 +238,7 @@ class Control(Widget, KyttenEventDispatcher):
         @param width Initial width
         @param height Initial height
         @param disabled True if control should be disabled
-        """
+        '''
         Widget.__init__(self, width, height, name, spacer=noId, group=group)
         KyttenEventDispatcher.__init__(self)
 
@@ -271,11 +253,17 @@ class Control(Widget, KyttenEventDispatcher):
         if on_lose_hover is not None: self.on_lose_hover_func=on_lose_hover
 
     def _get_controls(self):
+        '''
+        Creates a new Control.
+        '''
         return [(self, self.x, self.x + self.width,    # control, left, right,
                        self.y + self.height, self.y)]  # top, bottom
 
     def disable(self):
-        if self.disabled_flag: return
+        '''
+        Disable Control.
+        '''
+        if self.disabled_flag is True: return
 
         self.disabled_flag = True
         self.delete()
@@ -283,7 +271,10 @@ class Control(Widget, KyttenEventDispatcher):
             self.saved_dialog.set_needs_layout()
 
     def enable(self):
-        if not self.disabled_flag: return
+        '''
+        Enable Control.
+        '''
+        if self.disabled_flag is False: return
 
         self.disabled_flag = False
         self.delete()
@@ -316,13 +307,14 @@ class Control(Widget, KyttenEventDispatcher):
 
     def on_gain_hover(self,*args):
         self.hover_flag=True
-        if self.on_gain_hover_func: self.on_gain_hover_func(self)
+        if self.on_gain_hover_func is not None:
+            self.on_gain_hover_func(self)
 
     def on_lose_hover(self,*args):
         self.hover_flag=False
-        if self.on_lose_hover_func: self.on_lose_hover_func(self)
+        if self.on_lose_hover_func is not None:
+            self.on_lose_hover_func(self)
 
-        #print "on_lose_hover", self, args, self.on_lose_hover_func
     def on_mouse_double_click(self, *args):
         pass
 
@@ -344,38 +336,38 @@ Control.register_event_type('on_hide')
 Control.register_event_type('on_mouse_double_click')
 
 class Spacer(Widget):
-    """
+    '''
     A Spacer is an empty widget that expands to fill space in layouts.
     Use Widget if you need a fixed-sized spacer.
-    """
+    '''
     def __init__(self, width=0, height=0, spacer=True):
-        """
+        '''
         Creates a new Spacer.  The width and height given are the minimum
         area that we must cover.
 
         @param width Minimum width
         @param height Minimum height
-        """
+        '''
         Widget.__init__(self, spacer=spacer)
         self.min_width, self.min_height = width, height
 
     def expand(self, width, height):
-        """
+        '''
         Expand the spacer to fill the maximum space.
 
         @param width Available width
         @param height Available height
-        """
+        '''
         self.width, self.height = width, height
 
     def is_expandable(self):
-        """Indicates the Spacer can be expanded"""
+        '''Indicates the Spacer can be expanded'''
         return True
 
     def size(self, dialog):
-        """Spacer shrinks down to the minimum size for placement.
+        '''Spacer shrinks down to the minimum size for placement.
 
-        @param dialog Dialog which contains us"""
+        @param dialog Dialog which contains us'''
         if dialog is None:
             return
 
@@ -384,9 +376,9 @@ class Spacer(Widget):
         self.width, self.height = self.min_width, self.min_height
 
 class Graphic(Widget):
-    """
+    '''
     Lays out a graphic from the theme, i.e. part of a title bar.
-    """
+    '''
     def __init__(self, path, is_expandable=False, group=None, color=None):
         Widget.__init__(self, group=group)
         self.path = path
@@ -436,6 +428,21 @@ class Image(Widget):
     Lays out a graphic widget from a texture.
     '''
     def __init__(self, texture, color=[255,255,255,255], flag='default', size=None, name=None, is_expandable=False, group=None):
+        '''
+        Creates a new Image.  The texture is the image that will be displayed.
+        The Texture object must expose the following attributes:
+            - id  : opengl texture ID (can be 0, which disable texturing)
+            - size: texture size (width, height)
+            - texcoords : texture coordinates of region to display , formatting (s0,t0, s1, t1)
+
+        @param texture Texture object to be displayed
+        @param color Color to apply to Texture
+        @param flag
+        @param size  Image widget size
+        @param name  WidgetName for the widget
+        @param is_expandable True to enable expansion if possible
+        @param group  WidgetGroup for the widget
+        '''
         Widget.__init__(self, name=name, group=group)
         self.texture    = texture
         self.expandable = is_expandable
@@ -448,6 +455,16 @@ class Image(Widget):
         self.width, self.height = size or self.texture.size
 
     def set_bitmap(self, texture, size=None):
+        '''
+        Set a new texture for the Image.
+        The Texture object must expose the following attributes:
+            - id  : opengl texture ID (can be 0, which disable texturing)
+            - size: texture size (width, height)
+            - texcoords : texture coordinates of region to display , formatting (s0,t0, s1, t1)
+
+        @param texture Texture object to be displayed
+        @param size  Image widget size
+        '''
         self.texture = texture
 
         self.width, self.height = size or self.texture.size
@@ -496,7 +513,9 @@ class TextStyle(object):
         self.color=color
 
 class Label(Widget):
-    """A wrapper around a simple text label."""
+    '''
+    A wrapper around a simple text label.
+    '''
     def __init__(self, text="", name=None, style=None, bold=False, italic=False,
                  font_name=None, font_size=None, color=None, multiline=False, width=None, path=[], group=None):
         Widget.__init__(self, name=name, group=group)
@@ -536,7 +555,7 @@ class Label(Widget):
     def set_text(self, text):
         self.text = string_to_unicode(text)
 
-        if self.visible:
+        if self.visible is True:
             self.delete()
             if self.saved_dialog is not None:
                 self.saved_dialog.set_needs_layout()

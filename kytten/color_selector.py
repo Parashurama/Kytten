@@ -17,9 +17,9 @@ from .text_input import Input
 from .widgets import Control, Label
 
 class ColorWheel(Control):
-    """
+    '''
     Depicts a circle which can be used to select an RGB color.
-    """
+    '''
     path = ['colorselector', 'crosshair']
 
     RADIUS = 164
@@ -454,10 +454,10 @@ class ColorWheel(Control):
                 dialog.highlight_group)
 
 class ColorSelector(Control):
-    """
+    '''
     Depicts a small color-filled box.  When clicked upon, creates a pop-up
     dialog which can be used to set the color.
-    """
+    '''
     path = ['colorselector', 'swatch']
 
     def __init__(self, color, width=16, height=16, name=None, on_select=None):

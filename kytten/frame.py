@@ -21,20 +21,20 @@ from .base import DisplayGroup, Log
 from .theme import Repeat_NinePatchTextureGraphicElement, Stretch_NinePatchTextureGraphicElement, DefaultTextureGraphicElement
 
 class Wrapper(Widget):
-    """
+    '''
     Wrapper is simply a wrapper around a widget.  While the default
     Wrapper does nothing more interesting, subclasses might decorate the
     widget in some fashion, i.e. Panel might place the widget onto a
     panel, or Scrollable might provide scrollbars to let the widget
     be panned about within its display area.
-    """
+    '''
     def __init__(self, content=None, name=None,
                  is_expandable=False, anchor=ANCHOR_CENTER, offset=(0, 0), group=None):
-        """
+        '''
         Creates a new Wrapper around an included Widget.
 
         @param content The Widget to be wrapped.
-        """
+        '''
         Widget.__init__(self, name=name, group=group)
         self.content = content
         self.hidden_content=None
@@ -47,7 +47,7 @@ class Wrapper(Widget):
         if self.content is not None: self.content.__parent__=weakref.proxy(self)
 
     def _get_controls(self):
-        """Returns Controls contained by the Wrapper."""
+        '''Returns Controls contained by the Wrapper.'''
         if self.content: return self.content._get_controls()
 
     def set_content(self, content):
@@ -71,7 +71,7 @@ class Wrapper(Widget):
             self.hidden_content = None
 
     def delete(self):
-        """Deletes graphic elements within the Wrapper."""
+        '''Deletes graphic elements within the Wrapper.'''
         if self.content is not None:
             self.content.delete()
 
@@ -90,12 +90,12 @@ class Wrapper(Widget):
         return self.expandable
 
     def layout(self, x, y):
-        """
+        '''
         Assigns a new position to the Wrapper.
 
         @param x X coordinate of the Wrapper's lower left corner
         @param y Y coordinate of the Wrapper's lower left corner
-        """
+        '''
         Widget.layout(self, x, y)
         if self.content is not None:
             x, y = GetRelativePoint(
@@ -104,12 +104,12 @@ class Wrapper(Widget):
             self.content.layout(x, y)
 
     def set(self, dialog, content):
-        """
+        '''
         Sets a new Widget to be contained in the Wrapper.
 
         @param dialog The Dialog which contains the Wrapper
         @param content The new Widget to be wrapped
-        """
+        '''
         if self.content is not None:
             self.content.delete()
 
@@ -117,11 +117,11 @@ class Wrapper(Widget):
         dialog.set_needs_layout()
 
     def size(self, dialog):
-        """
+        '''
         The default Wrapper wraps up its Widget snugly.
 
         @param dialog The Dialog which contains the Wrapper
-        """
+        '''
         if dialog is None:
             return
         Widget.size(self, dialog)
@@ -132,10 +132,10 @@ class Wrapper(Widget):
             self.width, self.height = self.content.width, self.content.height
         else:
             self.width = self.height = 0
-    """
+    '''
     def Set(self):
         Widget.Set(self)
-        self.to_refresh=True"""
+        self.to_refresh=True'''
 
     def Hide(self):
         if self.visible:
@@ -214,15 +214,15 @@ class Wrapper(Widget):
         Widget.teardown(self)
 
 class Frame(Wrapper):
-    """
+    '''
     Frame draws an untitled frame which encloses the dialog's content.
-    """
+    '''
     def __init__(self, content=None, path=['frame'], image_name='image',
                  is_expandable=False, anchor=ANCHOR_CENTER,
                  use_bg_group=False, color=None, group=None, name=None):
-        """
+        '''
         Creates a new Frame surrounding a widget or layout.
-        """
+        '''
         Wrapper.__init__(self, content,
                          is_expandable=is_expandable, anchor=anchor, group=group, name=name)
         self.frame = None
@@ -246,9 +246,9 @@ class Frame(Wrapper):
         self.set_needs_layout()
 
     def delete(self):
-        """
+        '''
         Removes the Frame's graphical elements.
-        """
+        '''
         if self.frame is not None:
             self.frame.delete()
             self.frame = None
@@ -263,12 +263,12 @@ class Frame(Wrapper):
         self.width, self.height = width, height
 
     def layout(self, x, y):
-        """
+        '''
         Positions the Frame.
 
         @param x X coordinate of lower left corner
         @param y Y coordinate of lower left corner
-        """
+        '''
         if not self.visible or not self.content: return
 
         self.x, self.y = x, y
@@ -285,11 +285,11 @@ class Frame(Wrapper):
         self.content.layout(x, y)
 
     def size(self, dialog):
-        """
+        '''
         Determine minimum size of the Frame.
 
         @param dialog Dialog which contains the Frame
-        """
+        '''
         if dialog is None:
             return
 
@@ -331,8 +331,21 @@ class TransparentFrame(Frame):
         return False
 
 class GuiFrame(Frame):
+    '''
+    GuiFrame draws a textured frame which encloses the dialog's content.
+    '''
     def __init__(self, content=None, texture=None, is_expandable=False, anchor=ANCHOR_CENTER, use_bg_group=False, group=None, name=None, flag='default'):
+        '''
+        Creates a new textured Frame surrounding a widget or layout.
 
+        The Texture object must expose the following attributes:
+            - id  : opengl texture ID (can be 0, which disable texturing)
+            - size: texture size (width, height)
+            - texcoords : texture coordinates of region to display , formatting (s0,t0, s1, t1)
+            - header_bar: Dragging bar region coordinates exemple: (0,0,None,None)
+            - content_padding : minimum internal padding around content. (left, right, top, bottom)
+            - border_padding : used for the 9-patches formatting. (left, right, top, bottom)
+        '''
         Wrapper.__init__(self, content, is_expandable=is_expandable, anchor=anchor, group=group, name=name)
 
         self.frame = None
@@ -349,18 +362,29 @@ class GuiFrame(Frame):
         self.width, self.height = width, height
 
     def set_texture(self, texture, flag='default'):
+        '''
+        Set a new texture for the GuiFrame.
+
+        The Texture object must expose the following attributes:
+            - id  : opengl texture ID (can be 0, which disable texturing)
+            - size: texture size (width, height)
+            - texcoords : texture coordinates of region to display , formatting (s0,t0, s1, t1)
+            - header_bar: Dragging bar region coordinates exemple: (0,0,None,None)
+            - content_padding : minimum internal padding around content. (left, right, top, bottom)
+            - border_padding : used for the 9-patches formatting. (left, right, top, bottom)
+        '''
         self._header_bar=texture.header_bar
         self._texture = texture
         self._flag = flag
         if not flag in ('repeat', 'stretch', 'default'):
-            raise ValueError("Invalid Texture Flag Declaration in GUIFRame: must be 'repeat','stretch' or 'default' ")
+            raise ValueError("Invalid Texture Flag Declaration in GuiFrame: must be 'repeat','stretch' or 'default' ")
 
     def size(self, dialog):
-        """
+        '''
         Determine minimum size of the Frame.
 
         @param dialog Dialog which contains the Frame
-        """
+        '''
         if dialog is None:
             return
 
@@ -397,11 +421,11 @@ class GuiFrame(Frame):
         self.x, self.y = x, y
         self.frame.update(x, y, self.width, self.height)
 
-        '''
+
         # In some cases the frame graphic element may allocate more space for
         # the content than the content actually fills, due to repeating
         # texture constraints.  Always center the content.
-        '''
+
         x, y, width, height = self.frame.get_content_region()
 
         interior = Widget(width, height, spacer=True)

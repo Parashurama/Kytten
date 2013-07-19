@@ -9,6 +9,7 @@ import pyglet
 import pyglet.gl as gl
 import inspect
 #print "STACK\n",inspect.stack()[1]
+from .tools import string_to_unicode
 
 KYTTEN_LAYOUT_GROUPS = {}
 KYTTEN_LAYOUT_GROUP_REFCOUNTS = {}
@@ -206,6 +207,13 @@ class KyttenIncrementalTextLayout(pyglet_IncrementalTextLayout):
         return (self.selection_start, self.selection_end)
 
 class KyttenLabel(pyglet.text.Label):
+    def __init__(self, text, *args, **kwargs):
+        pyglet.text.Label.__init__(self, string_to_unicode(text), *args, **kwargs)
+
+    def _set_text(self, text):
+        self.document.text = string_to_unicode(text)
+    text = property(pyglet.text.Label._get_text, _set_text)
+
     def _init_groups(self, group):
         if not group:
             return # use the default groups

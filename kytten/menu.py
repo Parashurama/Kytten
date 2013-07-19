@@ -19,11 +19,11 @@ from .override import KyttenLabel
 from .scrollable import Scrollable
 
 class MenuOption(Control):
-    """
+    '''
     MenuOption is a choice within a menu.  When selected, it inverts
     (inverted color against text-color background) to indicate that it
     has been chosen.
-    """
+    '''
     def __init__(self, text="", anchor=ANCHOR_CENTER, menu=None,
                  disabled=False):
         Control.__init__(self, disabled=disabled)
@@ -183,11 +183,11 @@ class MenuOption(Control):
         Control.teardown(self)
 
 class Menu(VerticalLayout):
-    """
+    '''
     Menu is a VerticalLayout of MenuOptions.  Moving the mouse across
     MenuOptions highlights them; clicking one selects it and causes Menu
     to send an on_click event.
-    """
+    '''
     def __init__(self, options=[], align=HALIGN_CENTER, padding=4, minwidth=0, minheight=0, is_multiline=False, label_width=0, name=None, on_select=None):
         self.align = align
         self.is_multiline=is_multiline
@@ -322,7 +322,7 @@ class MenuList(Menu):
         if self.saved_dialog is not None:
             self.saved_dialog.set_needs_layout()
 
-    """
+    '''
     def remove_choice(self, text=None, index=None):
 
         if not text in self.menu_options_dict:
@@ -335,7 +335,7 @@ class MenuList(Menu):
 
         if self.saved_dialog is not None:
             self.saved_dialog.set_needs_layout()
-    """
+    '''
 class Dropdown(Control):
     def __init__(self, options=[], selected=None, fixed_width=0,
                  max_height=400, align=VALIGN_TOP, on_select=None,

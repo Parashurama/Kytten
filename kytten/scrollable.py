@@ -15,27 +15,27 @@ from .scrollbar import HScrollbar, VScrollbar
 from .widgets import Widget, ScrollableAssert
 
 class ScrollableGroup(pyglet.graphics.Group):
-    """
+    '''
     We restrict what's shown within a Scrollable by performing a scissor
     test.
-    """
+    '''
     def __init__(self, x, y, width, height, parent=None):
-        """Create a new ScrollableGroup
+        '''Create a new ScrollableGroup
 
         @param x X coordinate of lower left corner
         @param y Y coordinate of lower left corner
         @param width Width of scissored region
         @param height Height of scissored region
         @param parent Parent group
-        """
+        '''
         pyglet.graphics.Group.__init__(self, parent)
         self.x, self.y, self.width, self.height = x, y, width, height
         self.was_scissor_enabled = False
 
     def set_state(self):
-        """
+        '''
         Enables a scissor test on our region
-        """
+        '''
         gl.glPushAttrib(gl.GL_ENABLE_BIT | gl.GL_TRANSFORM_BIT |
                         gl.GL_CURRENT_BIT)
         self.was_scissor_enabled = gl.glIsEnabled(gl.GL_SCISSOR_TEST)
@@ -44,22 +44,22 @@ class ScrollableGroup(pyglet.graphics.Group):
                      int(self.width), int(self.height))
 
     def unset_state(self):
-        """
+        '''
         Disables the scissor test
-        """
+        '''
         if not self.was_scissor_enabled:
             gl.glDisable(gl.GL_SCISSOR_TEST)
         gl.glPopAttrib()
 
 class Scrollable(Wrapper, ScrollableAssert):
-    """
+    '''
     Wraps a layout or widget and limits it to a maximum, or fixed, size.
     If the layout exceeds the viewable limits then it is truncated and
     scrollbars will be displayed so the user can pan around.
-    """
+    '''
     def __init__(self, content=None, width=None, height=None,
                  is_fixed_size=False, always_show_scrollbars=False, name=None, child_anchor=ANCHOR_CENTER):
-        """
+        '''
         Creates a new Scrollable.
 
         @param content The layout or Widget to be scrolled
@@ -68,7 +68,7 @@ class Scrollable(Wrapper, ScrollableAssert):
         @param is_fixed_size True if we should always be at maximum size;
                              otherwise we shrink to match our content
         @param always_show_scrollbars True if we should always show scrollbars
-        """
+        '''
         if is_fixed_size:
             assert width is not None and height is not None
         Wrapper.__init__(self, content, name=name)
@@ -99,10 +99,10 @@ class Scrollable(Wrapper, ScrollableAssert):
         self.needs_layout = False
 
     def _get_controls(self):
-        """
+        '''
         We represent ourself as a Control to the Dialog, but we pass through
         the events we receive from Dialog.
-        """
+        '''
         base_controls = Wrapper._get_controls(self)
         controls = []
         our_left = self.content_x
@@ -122,9 +122,9 @@ class Scrollable(Wrapper, ScrollableAssert):
         return controls
 
     def delete(self):
-        """
+        '''
         Delete all graphical elements associated with the Scrollable
-        """
+        '''
         Wrapper.delete(self)
         if self.hscrollbar is not None:
             self.hscrollbar.delete()
@@ -139,9 +139,9 @@ class Scrollable(Wrapper, ScrollableAssert):
         self.highlight_group = None
 
     def ensure_visible(self, control):
-        """
+        '''
         Make sure a control is visible.
-        """
+        '''
         offset_x = 0
         if self.hscrollbar:
             offset_x = self.hscrollbar.get(self.content_width,
@@ -185,10 +185,10 @@ class Scrollable(Wrapper, ScrollableAssert):
             return self
 
     def hit_test(self, x, y):
-        """
+        '''
         We only intercept events for the content region, not for
         our scrollbars.  They can handle themselves!
-        """
+        '''
         return x >= self.content_x and y >= self.content_y and \
                x < self.content_x + self.content_width and \
                y < self.content_y + self.content_height
@@ -197,12 +197,12 @@ class Scrollable(Wrapper, ScrollableAssert):
         return True
 
     def layout(self, x, y):
-        """
+        '''
         Reposition the Scrollable
 
         @param x X coordinate of lower left corner
         @param y Y coordinate of lower left corner
-        """
+        '''
         self.x, self.y = x, y
 
         virtual_content = Virtual(width=self.content_width, height=self.content_height)
@@ -243,11 +243,11 @@ class Scrollable(Wrapper, ScrollableAssert):
         self.needs_layout = False
 
     def on_update(self, dt):
-        """
+        '''
         On updates, we redo the layout if scrollbars have changed position
 
         @param dt Time passed since last update event (in seconds)
-        """
+        '''
         if self.needs_layout:
             width, height = self.width, self.height
             self.size(self.saved_dialog)
@@ -268,11 +268,11 @@ class Scrollable(Wrapper, ScrollableAssert):
             self.saved_dialog.set_wheel_target(control)
 
     def size(self, dialog):
-        """
+        '''
         Recalculate the size of the Scrollable.
 
         @param dialog Dialog which contains us
-        """
+        '''
         if dialog is None:
             return
         Widget.size(self, dialog)

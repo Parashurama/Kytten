@@ -61,11 +61,11 @@ def get_default_anchor_flag(anchor):
 
 class DialogEventManager(Control):
     def __init__(self, name=None):
-        """
+        '''
         Creates a new event manager for a dialog.
 
         @param content The Widget which we wrap
-        """
+        '''
         Control.__init__(self, name=name, noId=True)
         self.controls = weakref.WeakSet()
         self.control_areas = {}
@@ -100,14 +100,14 @@ class DialogEventManager(Control):
             return False
 
     def on_key_press(self, symbol, modifiers):
-        """
+        '''
         TAB and ENTER will move us between fields, holding shift will
         reverse the direction of our iteration.  We don't handle ESCAPE.
         Otherwise, we pass keys to our child elements.
 
         @param symbol Key pressed
         @param modifiers Modifiers for key press
-        """
+        '''
         if not self.visible : return
 
         if symbol in [pyglet.window.key.TAB]: #[pyglet.window.key.TAB, pyglet.window.key.ENTER]:
@@ -147,11 +147,11 @@ class DialogEventManager(Control):
                     return self.EventHandled()
 
     def on_key_release(self, symbol, modifiers):
-        """Pass key release events to the focus
+        '''Pass key release events to the focus
 
         @param symbol Key released
         @param modifiers Modifiers for key released
-        """
+        '''
 
         if not self.visible : return
 
@@ -167,7 +167,7 @@ class DialogEventManager(Control):
                     if member.dispatch_event(event_type, *args): return pyglet.event.EVENT_HANDLED
 
     def on_mouse_drag(self, x, y, dx, dy, buttons, modifiers):
-        """
+        '''
         Handles mouse dragging.  If we have a focus, pass it in.
 
         @param x X coordinate of mouse
@@ -176,13 +176,13 @@ class DialogEventManager(Control):
         @param dy Delta Y
         @param buttons Buttons held while moving
         @param modifiers Modifiers to apply to buttons
-        """
+        '''
         if self.focus is not None:
             self.focus.dispatch_event('on_mouse_drag', x, y, dx, dy, buttons, modifiers)
             return self.EventHandled()
 
     def on_mouse_motion(self, x, y, dx, dy):
-        """
+        '''
         Handles mouse motion.  We highlight controls that we are hovering
         over.
 
@@ -190,7 +190,7 @@ class DialogEventManager(Control):
         @param y Y coordinate of mouse
         @param dx Delta X
         @param dy Delta Y
-        """
+        '''
 
         if self.check_for_always_on_top_dialog('on_mouse_motion', x, y, dx, dy):
             return pyglet.event.EVENT_HANDLED
@@ -222,7 +222,7 @@ class DialogEventManager(Control):
         return pyglet.event.EVENT_HANDLED
 
     def on_mouse_press(self, x, y, button, modifiers):
-        """
+        '''
         If the focus is set, and the target lies within the focus, pass the
         message down.  Otherwise, check if we need to assign a new focus.
         If the mouse was pressed within our frame but no control was targeted,
@@ -232,7 +232,7 @@ class DialogEventManager(Control):
         @param y Y coordinate of mouse
         @param button Button pressed
         @param modifiers Modifiers to apply to button
-        """
+        '''
         if not self.visible: return
 
         DOUBLE_CLICK = False
@@ -264,7 +264,7 @@ class DialogEventManager(Control):
                 self.set_focus(None)
 
     def on_mouse_release(self, x, y, button, modifiers):
-        """
+        '''
         Button was released.  We pass this along to the focus, then we
         generate an on_mouse_motion to handle changing the highlighted
         Control if necessary.
@@ -273,7 +273,7 @@ class DialogEventManager(Control):
         @param y Y coordinate of mouse
         @param button Button released
         @param modifiers Modifiers to apply to button
-        """
+        '''
         if not self.visible: return
 
         self.is_dragging = False
@@ -287,7 +287,7 @@ class DialogEventManager(Control):
         return RETVALUE #pyglet.event.EVENT_HANDLED
 
     def on_mouse_scroll(self, x, y, scroll_x, scroll_y):
-        """
+        '''
         Mousewheel was scrolled.  See if we have a wheel target, or
         failing that, a wheel hint.
 
@@ -295,7 +295,7 @@ class DialogEventManager(Control):
         @param y Y coordinate of mouse
         @param scroll_x Number of clicks horizontally mouse was moved
         @param scroll_y Number of clicks vertically mouse was moved
-        """
+        '''
 
         if self.check_for_always_on_top_dialog('on_mouse_scroll', x, y, scroll_x, scroll_y):
             return pyglet.event.EVENT_HANDLED
@@ -340,23 +340,23 @@ class DialogEventManager(Control):
         return pyglet.event.EVENT_UNHANDLED
 
     def on_update(self, dt):
-        """
+        '''
         We update our layout only when it's time to construct another frame.
         Since we may receive several resize events within this time, this
         ensures we don't resize too often.
 
         @param dialog The Dialog containing the controls
         @param dt Time passed since last update event (in seconds)
-        """
+        '''
         for control in self.controls:
             control.dispatch_event('on_update', dt)
 
     def set_focus(self, focus):
-        """
+        '''
         Sets a new focus, dispatching lose and gain focus events appropriately
 
         @param focus The new focus, or None if no focus
-        """
+        '''
 
         if not self.visible: return
 
@@ -374,12 +374,12 @@ class DialogEventManager(Control):
         return self.EventHandled()
 
     def set_hover(self, hover):
-        """
+        '''
         Sets a new highlight, dispatching lose and gain highlight events
         appropriately
 
         @param hover The new highlight, or None if no highlight
-        """
+        '''
         if not self.visible: return
 
         if self.hover == hover:
@@ -417,7 +417,7 @@ class DialogEventManager(Control):
         self.wheel_target = None
 
     def update_controls(self):
-        """Update our list of controls which may respond to user input."""
+        '''Update our list of controls which may respond to user input.'''
         controls = self._get_controls()
         if not controls: return
         self.controls = weakref.WeakSet()
@@ -447,17 +447,17 @@ def GetNextDialogOrderId():
     return __int__.kytten_next_dialog_order_id
 
 class DialogGroup(pyglet.graphics.OrderedGroup):
-    """
+    '''
     Ensure that all Widgets within a Dialog can be drawn with
     blending enabled, and that our Dialog will be drawn in a particular
     order relative to other Dialogs.
-    """
+    '''
     def __init__(self, parent=None, dialog=None, always_on_top=False):
-        """
+        '''
         Creates a new DialogGroup.  By default we'll be on top.
 
         @param parent Parent group
-        """
+        '''
         t_order=GetNextDialogOrderId()
         if not always_on_top:
             __int__.kytten_mundane_top_dialog=t_order
@@ -474,10 +474,10 @@ class DialogGroup(pyglet.graphics.OrderedGroup):
             __int__.kytten_always_on_top_dialog_order.insert(0, dialog)
 
     def __lt__(self, other):
-        """
+        '''
         When compared with other DialogGroups, we'll return our real order
         compared against theirs; otherwise use the OrderedGroup comparison.
-        """
+        '''
         if isinstance(other, DialogGroup):
             return self.real_order< other.real_order
         else:
@@ -487,7 +487,7 @@ class DialogGroup(pyglet.graphics.OrderedGroup):
         return (self.__class__ is other.__class__ and
             self.real_order == other.real_order and
             self.parent == other.parent)
-    """
+    '''
     #used in old version of pyglet (1.1.4)
     def __cmp__(self, other):
 
@@ -496,11 +496,11 @@ class DialogGroup(pyglet.graphics.OrderedGroup):
             return cmp(self.real_order, other.real_order)
         else:
             return pyglet.graphics.OrderedGroup.__cmp__(self, other)
-    """
+    '''
     def is_on_top(self):
-        """
+        '''
         Are we the top dialog group?
-        """
+        '''
 
         if self.dialog.always_on_top:
             return self.real_order == __int__.kytten_next_dialog_order_id
@@ -508,9 +508,9 @@ class DialogGroup(pyglet.graphics.OrderedGroup):
             return self.real_order == __int__.kytten_mundane_top_dialog
 
     def pop_to_top(self):
-        """
+        '''
         Put us on top of other dialog groups.
-        """
+        '''
         if not self.dialog.always_on_top:
             self.real_order = GetNextDialogOrderId()
             __int__.kytten_mundane_top_dialog = self.real_order
@@ -526,29 +526,29 @@ class DialogGroup(pyglet.graphics.OrderedGroup):
 
 
     def set_state(self):
-        """
+        '''
         Ensure that blending is set.
-        """
+        '''
         gl.glPushAttrib(gl.GL_ENABLE_BIT | gl.GL_CURRENT_BIT)
         #gl.glEnable(gl.GL_BLEND)
         #gl.glBlendFunc(gl.GL_SRC_ALPHA, gl.GL_ONE_MINUS_SRC_ALPHA)
 
     def unset_state(self):
-        """
+        '''
         Restore previous blending state.
-        """
+        '''
         gl.glPopAttrib()
 
 
 class Dialog(Wrapper, DialogEventManager, DialogAssert):
-    """
+    '''
     Defines a new GUI.  By default it can contain only one element, but that
     element can be a Layout of some kind which can contain multiple elements.
     Pass a Theme in to set the graphic appearance of the Dialog.
 
     The Dialog is always repositioned in relationship to the window, and
     handles resize events accordingly.
-    """
+    '''
     def __init__(self, content=None,
                        window=None,
                        batch=None,
@@ -571,7 +571,7 @@ class Dialog(Wrapper, DialogEventManager, DialogAssert):
                        attached_to=None,
                        anchor_flag=None,
                        display_group=None):
-        """
+        '''
         Creates a new dialog.
 
         @param content The Widget which we wrap
@@ -596,7 +596,7 @@ class Dialog(Wrapper, DialogEventManager, DialogAssert):
         @param on_enter Callback for when user presses enter on the last
                         input within this dialog, i.e. form submit
         @param on_escape Callback for when user presses escape
-        """
+        '''
         assert isinstance(theme, dict)
         DialogEventManager.__init__(self)
         Wrapper.__init__(self, content=content, name=name, group=display_group)
@@ -800,10 +800,10 @@ class Dialog(Wrapper, DialogEventManager, DialogAssert):
             child_dialog.needs_layout = True
 
     def do_layout(self):
-        """
+        '''
         We lay out the Dialog by first determining the size of all its
         child Widgets, then laying ourself out relative to the parent window.
-        """
+        '''
         if not self.screen: self.needs_layout = False ; return
 
         # Determine size of all components
@@ -862,17 +862,17 @@ class Dialog(Wrapper, DialogEventManager, DialogAssert):
         self.batch.draw()
 
     def ensure_visible(self, control):
-        """
+        '''
         Ensure a control is visible.  For Dialog, this doesn't matter
         since we don't scroll.
-        """
+        '''
         pass
 
     def get_root(self):
         return self
 
     def on_key_press(self, symbol, modifiers):
-        """
+        '''
         We intercept TAB, ENTER, and ESCAPE events.  TAB and ENTER will
         move us between fields, holding shift will reverse the direction
         of our iteration.  ESCAPE may cause us to send an on_escape
@@ -882,7 +882,7 @@ class Dialog(Wrapper, DialogEventManager, DialogAssert):
 
         @param symbol Key pressed
         @param modifiers Modifiers for key press
-        """
+        '''
         if not self.visible: return
 
         retval = DialogEventManager.on_key_press(self, symbol, modifiers)
@@ -905,7 +905,7 @@ class Dialog(Wrapper, DialogEventManager, DialogAssert):
         return retval
 
     def on_mouse_drag(self, x, y, dx, dy, buttons, modifiers):
-        """
+        '''
         Handles mouse dragging.  If we have a focus, pass it in.  Otherwise
         if we are movable, and we were being dragged, move the window.
 
@@ -915,7 +915,7 @@ class Dialog(Wrapper, DialogEventManager, DialogAssert):
         @param dy Delta Y
         @param buttons Buttons held while moving
         @param modifiers Modifiers to apply to buttons
-        """
+        '''
 
         if self.check_for_always_on_top_dialog('on_mouse_drag', x, y, dx, dy, buttons, modifiers):
             return pyglet.event.EVENT_HANDLED
@@ -939,7 +939,7 @@ class Dialog(Wrapper, DialogEventManager, DialogAssert):
 
 
     def on_mouse_press(self, x, y, button, modifiers):
-        """
+        '''
         If the focus is set, and the target lies within the focus, pass the
         message down.  Otherwise, check if we need to assign a new focus.
         If the mouse was pressed within our frame but no control was targeted,
@@ -949,7 +949,7 @@ class Dialog(Wrapper, DialogEventManager, DialogAssert):
         @param y Y coordinate of mouse
         @param button Button pressed
         @param modifiers Modifiers to apply to button
-        """
+        '''
         if self.check_for_always_on_top_dialog('on_mouse_press', x, y, button, modifiers ):
             return pyglet.event.EVENT_HANDLED
 
@@ -979,7 +979,7 @@ class Dialog(Wrapper, DialogEventManager, DialogAssert):
         return retval
 
     def on_mouse_release(self, x, y, button, modifiers):
-        """
+        '''
         Button was released.  We pass this along to the focus, then we
         generate an on_mouse_motion to handle changing the highlighted
         Control if necessary.
@@ -988,7 +988,7 @@ class Dialog(Wrapper, DialogEventManager, DialogAssert):
         @param y Y coordinate of mouse
         @param button Button released
         @param modifiers Modifiers to apply to button
-        """
+        '''
         #if self.check_for_always_on_top_dialog('on_mouse_release', x, y, button, modifiers):
         #    return pyglet.event.EVENT_HANDLED
         if self.parent_dialog: self.parent_dialog.is_dragging = False
@@ -1008,12 +1008,12 @@ class Dialog(Wrapper, DialogEventManager, DialogAssert):
             self.on_mouse_leave_func(x, y)
 
     def on_resize(self, width, height):
-        """
+        '''
         Update our knowledge of the window's width and height.
 
         @param width Width of the window
         @param height Height of the window
-        """
+        '''
         if self.screen.width != width or self.screen.height != height:
             self.screen.width, self.screen.height = width, height
             self.needs_layout = True
@@ -1023,23 +1023,23 @@ class Dialog(Wrapper, DialogEventManager, DialogAssert):
 
 
     def on_update(self, dt):
-        """
+        '''
         We update our layout only when it's time to construct another frame.
         Since we may receive several resize events within this time, this
         ensures we don't resize too often.
 
         @param dt Time passed since last update event (in seconds)
-        """
+        '''
         if self.needs_layout:
             self.do_layout()
         DialogEventManager.on_update(self, dt)
 
     def pop_to_top(self):
-        """
+        '''
         Pop our dialog group to the top, and force our batch to re-sort
         the groups.  Also, puts our event handler on top of the window's
         event handler stack.
-        """
+        '''
         self.root_group.pop_to_top()
         self.batch._draw_list_dirty = True  # forces resorting groups
         if self.window is not None:
@@ -1064,9 +1064,9 @@ class Dialog(Wrapper, DialogEventManager, DialogAssert):
             self.focus=None
 
     def set_needs_layout(self):
-        """
+        '''
         True if we should redo the Dialog layout on our next update.
-        """
+        '''
         self.needs_layout = True
         self.EventHandled()
 
@@ -1310,10 +1310,10 @@ class ToolTip(GuiElement):
             self.secondary = None
 
     def do_layout(self):
-        """
+        '''
         We lay out the Dialog by first determining the size of all its
         child Widgets, then laying ourself out relative to the parent window.
-        """
+        '''
         if not self.screen: self.needs_layout = False ; return
         # Determine size of all components
         self.size(self)
@@ -1377,10 +1377,10 @@ class ToolTip(GuiElement):
 
 
     def doo_layout(self):
-        """
+        '''
         We lay out the Dialog by first determining the size of all its
         child Widgets, then laying ourself out relative to the parent window.
-        """
+        '''
         if not self.screen: self.needs_layout = False ; return
 
         # Determine size of all components
@@ -1538,7 +1538,7 @@ class Drag_n_Drop(Dialog):
             return self.EventHandled()
 
 class PopupMessage(Dialog):
-    """A simple fire-and-forget dialog."""
+    '''A simple fire-and-forget dialog.'''
 
     def __init__(self, text="", window=None, batch=None, group=None,
                  theme=None, on_escape=None):
@@ -1557,7 +1557,7 @@ class PopupMessage(Dialog):
             on_enter=on_ok, on_escape=on_ok)
 
 class PopupConfirm(Dialog):
-    """An ok/cancel-style dialog.  Escape defaults to cancel."""
+    '''An ok/cancel-style dialog.  Escape defaults to cancel.'''
 
     def __init__(self, text="", ok="Ok", cancel="Cancel",
                  window=None, batch=None, group=None, theme=None,
@@ -1587,13 +1587,13 @@ class PopupConfirm(Dialog):
 
 
 class PropertyDialog(Dialog):
-    """
+    '''
     An ok/cancel-style dialog for editing properties. Options must be a
     dictionary of name/values. Escape defaults to cancel.
 
     @ has_remove allows for deleting options and returns
     @ _REMOVE_PRE+option id = True for get_values()
-    """
+    '''
     _id_count = 0
     REMOVE_PRE = '_X!'
     TYPE_PRE = '_T!'
