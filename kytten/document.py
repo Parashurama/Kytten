@@ -166,7 +166,7 @@ class Document(Control):
         Control.size(self, dialog)
 
         if not self.set_document_style:
-            # Set Document Styloe for unformatted Documment
+            # Set Document Style for unformatted Documment
             self.do_set_document_style(dialog)
 
         if self.content is None:
@@ -215,7 +215,7 @@ class Document(Control):
 
     def set_text(self, text, formatted=False):
 
-        if self.visible:
+        if self.visible is True:
 
             if formatted != self.isFormatted or self.document is None:
                 self.set_document(self.create_document(text, formatted))
@@ -227,8 +227,8 @@ class Document(Control):
         else: print("Hidden Document cannot be modified")
 
     def insert_text(self, start, text, formatted=False):
-        if self.visible:
-            if self.document:
+        if self.visible is True:
+            if self.document is not None:
 
                 text = string_to_unicode(text)
 
@@ -252,6 +252,9 @@ class Document(Control):
         else: print("Hidden Document cannot be modified")
 
     def append_text(self, text, formatted=False):
+        '''
+        Append Text to the end of the document
+        '''
         self.insert_text(len(self.document.text), text, formatted)
 
     def set_links(self, link_reference):

@@ -521,14 +521,9 @@ class Label(Widget):
         Widget.__init__(self, name=name, group=group)
 
         self.text = string_to_unicode(text)
-        if style is not None:
-            assert isinstance(style,TextStyle)
 
-            self.bold = style.bold or bold
-            self.italic = style.italic or italic
-            self.font_name = style.font_name or font_name
-            self.font_size = style.font_size or font_size
-            self.color = style.color or color
+        if style is not None:
+            self.set_style(style)
         else:
             self.bold = bold
             self.italic = italic
@@ -543,7 +538,7 @@ class Label(Widget):
 
     def delete(self):
         if self.label is not None:
-            self.label.delete()
+            self.label.teardown()
             self.label = None
 
     def layout(self, x, y):
@@ -552,10 +547,48 @@ class Label(Widget):
         self.label.x = int(x)
         self.label.y = int(y + self.height - font.ascent)
 
-    def set_text(self, text):
-        self.text = string_to_unicode(text)
 
+    def set_text(self, text):
+        '''
+        Set Label text
+        '''
+        self.text = string_to_unicode(text)
+        #if self.label is not None:
+        #    self.label.text = self.text
+
+        self._update_display()
+
+    def set_text_style(self, style):
+        '''
+        Set Label text style
+        '''
+        self.bold = style.bold
+        self.italic = style.italic
+        self.font_name = style.font_name
+        self.font_size = style.font_size
+        self.color = style.color
+
+    def set_text_attributes(self, **kwargs):
+        '''
+        Set Label text attributes.
+            - bold True to set font weight to bold
+            - italic True to set font style to italic
+            - color to set text color. color format: (255,255,255,255)
+            - font_size  To set text size
+            - font_name To set text font
+        '''
+        for attr, value in kwargs.iteritems():
+            setattr(self, attr, value)
+
+            # also modify attributes on interal pyglet Label (TextLayout)
+            #if self.label is not None:
+            #    setattr(self.label, attr, value)
+
+        self._update_display()
+
+    def _update_display(self):
         if self.visible is True:
+
             self.delete()
             if self.saved_dialog is not None:
                 self.saved_dialog.set_needs_layout()
@@ -577,13 +610,14 @@ class Label(Widget):
                 multiline = self.is_multiline,
                 width = self.label_width)
 
-            font = self.label.document.get_font()
-            self.width = self.label.content_width
+        font = self.label.document.get_font()
+        self.width = self.label.content_width
 
-            if not self.is_multiline:
-                self.height = font.ascent - font.descent
-            else:
-                self.height = self.label.content_height  - font.descent #font.ascent - font.descent  # descent is negative
+        if not self.is_multiline:
+            self.height = font.ascent - font.descent
+        else:
+            self.height = self.label.content_height  - font.descent #font.ascent - font.descent  # descent is negative
+
 
 
 class LayoutAssert:

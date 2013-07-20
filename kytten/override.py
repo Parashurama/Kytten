@@ -221,7 +221,7 @@ class KyttenLabel(pyglet.text.Label):
             self.foreground_decoration_group = GetKyttenLayoutGroups(group)
 
     def teardown(self):
-        pyglet.text.Label.teardown(self)
+        pyglet.text.Label.delete(self)
         group = self.top_group.parent
         if group is not None:
             ReleaseKyttenLayoutGroups(group)
