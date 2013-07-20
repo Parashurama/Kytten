@@ -108,6 +108,7 @@ class Document(Control):
 
     def teardown(self):
         Control.teardown(self)
+
         if self.document is not None:
             self.document.delete_text(0, len(self.document.text))
             self.document = None
@@ -215,41 +216,35 @@ class Document(Control):
 
     def set_text(self, text, formatted=False):
 
-        if self.visible is True:
+        if formatted != self.isFormatted or self.document is None:
+            self.set_document(self.create_document(text, formatted))
+        else:
+            self.document.text = string_to_unicode(text)
 
-            if formatted != self.isFormatted or self.document is None:
-                self.set_document(self.create_document(text, formatted))
-            else:
-                self.document.text = string_to_unicode(text)
+        self.needs_layout = True
 
-            self.needs_layout = True
-
-        else: print("Hidden Document cannot be modified")
 
     def insert_text(self, start, text, formatted=False):
-        if self.visible is True:
-            if self.document is not None:
 
-                text = string_to_unicode(text)
+        if self.document is not None:
 
-                if formatted is not False:
+            text = string_to_unicode(text)
 
-                    doc = pyglet.text.decode_attributed(text)
+            if formatted is not False:
 
-                    self.content.begin_update()
-                    self.document.insert_text(start, doc.text)
-                    for attribute, runlist in doc._style_runs.iteritems():
-                        for s, st, value in runlist:
-                            self.document.set_style(start+s, start+st, {attribute:value})
-                    self.content.end_update()
+                doc = pyglet.text.decode_attributed(text)
 
-                else:
-                    self.document.insert_text(start, text)
+                self.content.begin_update()
+                self.document.insert_text(start, doc.text)
+                for attribute, runlist in doc._style_runs.iteritems():
+                    for s, st, value in runlist:
+                        self.document.set_style(start+s, start+st, {attribute:value})
+                self.content.end_update()
+
+            else:
+                self.document.insert_text(start, text)
 
                 self.needs_layout = True
-
-
-        else: print("Hidden Document cannot be modified")
 
     def append_text(self, text, formatted=False):
         '''

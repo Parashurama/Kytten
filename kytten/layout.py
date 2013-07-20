@@ -17,7 +17,7 @@ import pyglet
 import weakref
 from pyglet import gl
 
-from .widgets import Widget, Control, Spacer, Graphic, Label, LayoutAssert, FreeLayoutAssert, InteractiveLayoutAssert
+from .widgets import Widget, Control, Spacer, Graphic, Image, Label, LayoutAssert, FreeLayoutAssert, InteractiveLayoutAssert
 from .button import ImageButton
 from .base import ReferenceName, Log, GetObjectfromName, CVars
 
@@ -968,6 +968,7 @@ class FreeForm(FreeLayout):
 
 
 class InteractiveLayout(HorizontalLayout, InteractiveLayoutAssert):
+    slaved=False
     def __init__(self, *args, **kwargs):
 
         self.default_slot = kwargs.pop('default_slot')
@@ -975,7 +976,6 @@ class InteractiveLayout(HorizontalLayout, InteractiveLayoutAssert):
         self.on_drag_object = kwargs.pop('on_drag_object', None)
 
         HorizontalLayout.__init__(self, *args, **kwargs)
-        self.slaved=False
 
         DRAG_N_DROP = GetObjectfromName('draggable_items')
 
@@ -1016,7 +1016,7 @@ class InteractiveLayout(HorizontalLayout, InteractiveLayoutAssert):
         index=self.content_cache.index(item)
 
         if replacing :
-            self.set(ImageButton(self.default_slot, padding=0),index)
+            self.set(Image(self.default_slot),index)
         else :
             try :               self.content.remove(item)
             except ValueError:  self.hidden_content.remove(item)
@@ -1033,8 +1033,10 @@ class InteractiveLayout(HorizontalLayout, InteractiveLayoutAssert):
         @param position Position of the Widget
         '''
 
-        if self.slaved: item.__parent__=self.__parent__
-        else: item.__parent__= weakref.proxy(self)
+        if self.slaved is True:
+            item.__parent__ = weakref.proxy(self.__parent__)
+        else:
+            item.__parent__ = weakref.proxy(self)
 
         self.content[position].delete()
         self.content[position]=item
@@ -1043,9 +1045,16 @@ class InteractiveLayout(HorizontalLayout, InteractiveLayoutAssert):
         if self.saved_dialog is not None:
             self.saved_dialog.set_needs_layout()
 
-    def addSlot(self, position=None):
-        slot=ImageButton(self.default_slot, padding=0)
-        self.add(slot, position)
+    def addDefaultSlot(self, position=None):
+        if isinstance(self.default_slot, Image):
+            slot = self.default_slot.copy()
+        else:
+            slot = Image(self.default_slot)
+        self.set(slot, position)
+
+    def teardown(self):
+        HorizontalLayout.teardown(self)
+        self.default_slot=None
 
 class InteractivePaletteLayout(PaletteLayout, InteractiveLayoutAssert):
     RowLayout = InteractiveLayout

@@ -131,11 +131,9 @@ def GetKyttenLayoutGroups(group):
     if not group in  KYTTEN_LAYOUT_GROUPS:
         top_group = TextLayoutGroup_KYTTEN_OVERRIDE(group)
         background_group = pyglet.graphics.OrderedGroup(0, top_group)
-        foreground_group = \
-            pyglet.text.layout.TextLayoutForegroundGroup(1, top_group)
-        foreground_decoration_group = \
-            pyglet.text.layout.TextLayoutForegroundDecorationGroup(
-                2, top_group)
+        foreground_group = pyglet.text.layout.TextLayoutForegroundGroup(1, top_group)
+        foreground_decoration_group = pyglet.text.layout.TextLayoutForegroundDecorationGroup(2, top_group)
+
         KYTTEN_LAYOUT_GROUPS[group] = (top_group,
                                        background_group,
                                        foreground_group,
@@ -217,16 +215,14 @@ class KyttenLabel(pyglet.text.Label):
     def _init_groups(self, group):
         if not group:
             return # use the default groups
-        self.top_group, self.background_group, self.foreground_group, \
-            self.foreground_decoration_group = GetKyttenLayoutGroups(group)
+        self.top_group, self.background_group, self.foreground_group,  self.foreground_decoration_group = GetKyttenLayoutGroups(group)
 
     def teardown(self):
         pyglet.text.Label.delete(self)
         group = self.top_group.parent
         if group is not None:
             ReleaseKyttenLayoutGroups(group)
-            self.top_group = self.background_self = self.foreground_group \
-                = self.foreground_decoration_group = None
+            self.top_group = self.background_self = self.foreground_group = self.foreground_decoration_group = None
 
 class KyttenInputLabel(KyttenLabel):
     def _get_left(self):

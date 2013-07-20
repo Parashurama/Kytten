@@ -486,6 +486,15 @@ class Image(Widget):
     def is_expandable(self):
         return self.expandable
 
+    def copy(self):
+        """
+        Returns copy of Image widget with identical atributes.
+        """
+        return Image(texture=self.texture,
+                     color=self.color,
+                     flag=self.flag,
+                     size=self.size )
+
     def layout(self, x, y):
         self.x, self.y = x, y
 
@@ -523,7 +532,7 @@ class Label(Widget):
         self.text = string_to_unicode(text)
 
         if style is not None:
-            self.set_style(style)
+            self.set_text_style(style)
         else:
             self.bold = bold
             self.italic = italic
