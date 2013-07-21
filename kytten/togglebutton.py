@@ -29,19 +29,11 @@ class ToggleButton(Button):
 
     def select(self):
         self.is_pressed = True
-
-        # Delete the button to force it to be redrawn
-        self.delete()
-        if self.saved_dialog is not None:
-            self.saved_dialog.set_needs_layout()
+        self._force_refresh()
 
     def unselect(self):
         self.is_pressed = False
-
-        # Delete the button to force it to be redrawn
-        self.delete()
-        if self.saved_dialog is not None:
-            self.saved_dialog.set_needs_layout()
+        self._force_refresh()
 
     def on_mouse_press(self, x, y, button, modifiers):
 
@@ -79,9 +71,7 @@ class ToggleImageButton(ImageButton, ToggleButton):
         if not self.is_pressed: self.image = self.hover_image
         Button.on_gain_highlight(self)
 
-        self.delete()
-        if self.saved_dialog is not None:
-            self.saved_dialog.set_needs_layout()
+        self._force_refresh()
 
     def on_lose_highlight(self):
         Button.on_lose_highlight(self)
@@ -89,6 +79,4 @@ class ToggleImageButton(ImageButton, ToggleButton):
         if not self.is_pressed:
             self.image = self.default_image
 
-        self.delete()
-        if self.saved_dialog is not None:
-            self.saved_dialog.set_needs_layout()
+        self._force_refresh()

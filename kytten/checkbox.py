@@ -105,16 +105,11 @@ class Checkbox(Control):
             if self.on_click is not None:
                 self.on_click(self,self.is_checked)
 
-            # Delete the button to force it to be redrawn
-            self.delete()
-            if self.saved_dialog is not None:
-                self.saved_dialog.set_needs_layout()
+            self._force_refresh()
 
     def SetState(self,checked=True):
         self.is_checked=checked
-        self.delete()
-        if self.saved_dialog is not None:
-            self.saved_dialog.set_needs_layout()
+        self._force_refresh()
 
     def size(self, dialog):
         '''

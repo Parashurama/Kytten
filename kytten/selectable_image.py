@@ -65,10 +65,7 @@ class Selectable(Control, Image):
             self.current_position2 = None#self.start_position2
 
         if button in (1, 2, 4):
-            # Delete the button to force it to be redrawn
-            self.delete()
-            if self.saved_dialog is not None:
-                self.saved_dialog.set_needs_layout()
+            self._force_refresh()
 
     def on_mouse_release(self, x, y, button, *args):
         if self.on_select is not None: self.on_select(self.texture_sub_rect0, self.texture_sub_rect1, self.texture_sub_rect2 )
@@ -85,10 +82,7 @@ class Selectable(Control, Image):
             self.current_position2 = (int(x-self.x)/self.step2[0]*self.step2[0], int(y-self.y)/self.step2[1]*self.step2[1])
 
         if button in (1, 2, 4):
-            # Delete the button to force it to be redrawn
-            self.delete()
-            if self.saved_dialog is not None:
-                self.saved_dialog.set_needs_layout()
+            self._force_refresh()
             self.wasDragged=True
 
         return pyglet.event.EVENT_HANDLED
@@ -186,9 +180,8 @@ class Selectable(Control, Image):
         self.start_position2 = preset[4]
         self.current_position2 = preset[5]
         self.wasDragged=True
-        self.delete()
-        if self.saved_dialog is not None:
-            self.saved_dialog.set_needs_layout()
+
+        self._force_refresh()
 
         return preset
 
@@ -202,9 +195,8 @@ class Selectable(Control, Image):
         self.selection_rect0=None
         self.selection_rect1=None
         self.selection_rect2=None
-        self.delete()
-        if self.saved_dialog is not None:
-            self.saved_dialog.set_needs_layout()
+
+        self._force_refresh()
 
     def calc_real_selection_rect0(self):
 

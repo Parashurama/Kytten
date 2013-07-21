@@ -79,6 +79,15 @@ class Widget(object):
 
         pass
 
+    def _force_refresh(self):
+        '''
+        Forces recreation of any graphic elements we have constructed.
+        '''
+        # Delete the button to force it to be redrawn
+        self.delete()
+        if self.saved_dialog is not None:
+            self.saved_dialog.set_needs_layout()
+
     def ensure_visible(self):
         if self.saved_dialog is not None:
             self.saved_dialog.ensure_visible(self)
@@ -266,9 +275,7 @@ class Control(Widget, KyttenEventDispatcher):
         if self.disabled_flag is True: return
 
         self.disabled_flag = True
-        self.delete()
-        if self.saved_dialog is not None:
-            self.saved_dialog.set_needs_layout()
+        self._force_refresh()
 
     def enable(self):
         '''
@@ -277,9 +284,7 @@ class Control(Widget, KyttenEventDispatcher):
         if self.disabled_flag is False: return
 
         self.disabled_flag = False
-        self.delete()
-        if self.saved_dialog is not None:
-            self.saved_dialog.set_needs_layout()
+        self._force_refresh()
 
     def get_cursor(self, x, y):
         return self.cursor
@@ -469,9 +474,7 @@ class Image(Widget):
 
         self.width, self.height = size or self.texture.size
 
-        self.delete()
-        if self.saved_dialog is not None:
-            self.saved_dialog.set_needs_layout()
+        self._force_refresh()
 
     def delete(self):
         if self.graphic is not None:
@@ -565,7 +568,7 @@ class Label(Widget):
         #if self.label is not None:
         #    self.label.text = self.text
 
-        self._update_display()
+        self._force_refresh()
 
     def set_text_style(self, style):
         '''
@@ -593,14 +596,7 @@ class Label(Widget):
             #if self.label is not None:
             #    setattr(self.label, attr, value)
 
-        self._update_display()
-
-    def _update_display(self):
-        if self.visible is True:
-
-            self.delete()
-            if self.saved_dialog is not None:
-                self.saved_dialog.set_needs_layout()
+        self._force_refresh()
 
     def size(self, dialog):
         if dialog is None:

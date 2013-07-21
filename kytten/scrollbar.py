@@ -140,9 +140,7 @@ class HScrollbar(Control):
         elif pos_x + pos_width < right:
             self.pos = (right - pos_width) / max_width  # Shift to the right
         self.pos = min(max(self.pos, 0.0), 1.0 - self.bar_width)
-        self.delete()
-        if self.saved_dialog is not None:
-            self.saved_dialog.set_needs_layout()
+        self._force_refresh()
 
     def get(self, width, max_width):
         '''
@@ -189,9 +187,7 @@ class HScrollbar(Control):
         '''
         if self.is_dragging:
             self.drag_bar(dx, dy)
-            self.delete()
-            if self.saved_dialog is not None:
-                self.saved_dialog.set_needs_layout()
+            self._force_refresh()
             return pyglet.event.EVENT_HANDLED
 
     def on_mouse_press(self, x, y, button, modifiers):
@@ -210,9 +206,7 @@ class HScrollbar(Control):
            y >= space_y and y < space_y + space_height:
             self.set_bar_pos(x, y)
             self.is_dragging = True
-            self.delete()
-            if self.saved_dialog is not None:
-                self.saved_dialog.set_needs_layout()
+            self._force_refresh()
         else:
             left_x, left_y, left_width, left_height = self._get_left_region()
             if x >= left_x and x < left_x + left_width and \
@@ -250,9 +244,7 @@ class HScrollbar(Control):
         @param scroll_y Number of clicks vertically mouse was moved
         '''
         self.drag_bar(scroll_y * 10, 0)
-        self.delete()
-        if self.saved_dialog is not None:
-            self.saved_dialog.set_needs_layout()
+        self._force_refresh()
 
     def on_update(self, dt):
         '''
@@ -430,9 +422,7 @@ class VScrollbar(HScrollbar):
             # Shift downward
             self.pos = 1.0 - float(bottom) / max_height - self.bar_width
         self.pos = min(max(self.pos, 0.0), 1.0 - self.bar_width)
-        self.delete()
-        if self.saved_dialog is not None:
-            self.saved_dialog.set_needs_layout()
+        self._force_refresh()
 
     def on_mouse_scroll(self, x, y, scroll_x, scroll_y):
         '''
@@ -444,9 +434,7 @@ class VScrollbar(HScrollbar):
         @param scroll_y Number of clicks vertically mouse was moved
         '''
         self.drag_bar(0, scroll_y * 10)
-        self.delete()
-        if self.saved_dialog is not None:
-            self.saved_dialog.set_needs_layout()
+        self._force_refresh()
 
     def on_update(self, dt):
         '''

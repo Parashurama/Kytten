@@ -43,9 +43,7 @@ class Button(Control):
         Set Text for the button
         '''
         self.text=string_to_unicode(text)
-        self.delete()
-        if self.saved_dialog is not None:
-            self.saved_dialog.set_needs_layout()
+        self._force_refresh()
 
     def delete(self):
         '''
@@ -106,11 +104,7 @@ class Button(Control):
         if not self.is_pressed and not self.is_disabled():
             self.is_pressed = True
 
-            # Delete the button to force it to be redrawn
-            self.delete()
-            if self.saved_dialog is not None:
-                self.saved_dialog.set_needs_layout()
-
+            self._force_refresh()
 
     def on_mouse_release(self, x, y, button, modifiers):
         '''
@@ -119,13 +113,10 @@ class Button(Control):
         @param button Button pressed
         @param modifiers Modifiers to apply to button
         '''
-        if self.is_pressed:
+        if self.is_pressed is True:
             self.is_pressed = False
 
-            # Delete the button to force it to be redrawn
-            self.delete()
-            if self.saved_dialog is not None:
-                self.saved_dialog.set_needs_layout()
+            self._force_refresh()
 
             # Now, if mouse is still inside us, signal on_click
             if self.on_click is not None and self.hit_test(x, y):
@@ -277,7 +268,7 @@ class ImageButton(Button):
         self.bitmap = None
 
         if style is not None:
-            self.set_button_style(style)
+            self.set_button_style(style, False)
             if image: self.default_image=image
         else:
             self.default_image = image
@@ -296,7 +287,7 @@ class ImageButton(Button):
         if on_gain_hover is not None: self.on_gain_hover_func = on_gain_hover
         if on_lose_hover is not None: self.on_lose_hover_func = on_lose_hover
 
-    def set_button_style(self, button_style):
+    def set_button_style(self, button_style, force_refresh=True):
         '''
         Assign Button Style to ImageButton
         '''
@@ -311,23 +302,27 @@ class ImageButton(Button):
         self.on_lose_hover_func = button_style.on_lose_hover_func
         self.text_style=button_style.text_style
 
+        if force_refresh is True: self._force_refresh()
+
     def set_color(self, color=(255,255,255,255)):
+        '''
+        Set texture color to button
+        '''
         self.color = color
 
-        self.delete()
-        if self.saved_dialog is not None:
-            self.saved_dialog.set_needs_layout()
+        self._force_refresh()
 
     def set_bitmaps(self, default_image=None, hover_image=None, clicked_image=None):
+        '''
+        Set button bitmaps
+        '''
         if default_image is not None: self.default_image = default_image
         if hover_image   is not None: self.hover_image   = hover_image
         if clicked_image is not None: self.clicked_image = clicked_image
 
         self.image = default_image
 
-        self.delete()
-        if self.saved_dialog is not None:
-            self.saved_dialog.set_needs_layout()
+        self._force_refresh()
 
     def layout(self,x, y):
 
@@ -463,17 +458,13 @@ class ImageButton(Button):
         self.image = self.hover_image
         Button.on_gain_highlight(self)
 
-        self.delete()
-        if self.saved_dialog is not None:
-            self.saved_dialog.set_needs_layout()
+        self._force_refresh()
 
     def on_lose_highlight(self):
         self.image = self.default_image
         Button.on_lose_highlight(self)
 
-        self.delete()
-        if self.saved_dialog is not None:
-            self.saved_dialog.set_needs_layout()
+        self._force_refresh()
 
     def on_mouse_press(self, x, y, button, modifiers):
         self.image = self.clicked_image

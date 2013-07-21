@@ -179,7 +179,7 @@ class Scrollable(Wrapper, ScrollableAssert):
         self.width, self.height = width, height
 
     def get_root(self):
-        if self.saved_dialog:
+        if self.saved_dialog is not None:
             return self.saved_dialog.get_root()
         else:
             return self

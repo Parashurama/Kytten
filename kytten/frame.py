@@ -144,7 +144,7 @@ class Wrapper(Widget):
                 self.content.Hide()
 
             self.delete()
-            if self.saved_dialog:
+            if self.saved_dialog is not None:
                 self.saved_dialog.set_needs_layout()
             else: # Top Level Wrapper
                 if hasattr(self,'set_needs_layout'): self.set_needs_layout()
@@ -162,7 +162,7 @@ class Wrapper(Widget):
             elif self.hidden_content:
                 self.hidden_content.Show()
 
-            if self.saved_dialog:
+            if self.saved_dialog is not None:
                 self.saved_dialog.set_needs_layout()
             else: # Top Level Wrapper
                 if hasattr(self,'set_needs_layout'): self.set_needs_layout()
@@ -179,7 +179,7 @@ class Wrapper(Widget):
 
         if Log.isLogging(): print "ReReference in Wrapper", self, self.content, self.hidden_content#, self.content.name
 
-        if self.saved_dialog:
+        if self.saved_dialog is not None:
             self.saved_dialog.set_needs_layout()
         else: # Top Level Wrapper
             if hasattr(self,'set_needs_layout'): self.set_needs_layout()
@@ -192,7 +192,7 @@ class Wrapper(Widget):
 
         if Log.isLogging(): print "DeReference in Wrapper", self, self.hidden_content, self.hidden_content.name
 
-        if self.saved_dialog:
+        if self.saved_dialog is not None:
             self.saved_dialog.set_needs_layout()
         else: # Top Level Wrapper
             if hasattr(self,'set_needs_layout'): self.set_needs_layout()
