@@ -234,12 +234,18 @@ class Document(Control):
 
                 doc = pyglet.text.decode_attributed(text)
 
-                self.content.begin_update()
-                self.document.insert_text(start, doc.text)
-                for attribute, runlist in doc._style_runs.iteritems():
-                    for s, st, value in runlist:
-                        self.document.set_style(start+s, start+st, {attribute:value})
-                self.content.end_update()
+                if self.visible is True:
+                    self.content.begin_update()
+                    self.document.insert_text(start, doc.text)
+                    for attribute, runlist in doc._style_runs.iteritems():
+                        for s, st, value in runlist:
+                            self.document.set_style(start+s, start+st, {attribute:value})
+                    self.content.end_update()
+                else:
+                    self.document.insert_text(start, doc.text)
+                    for attribute, runlist in doc._style_runs.iteritems():
+                        for s, st, value in runlist:
+                            self.document.set_style(start+s, start+st, {attribute:value})
 
             else:
                 self.document.insert_text(start, text)
