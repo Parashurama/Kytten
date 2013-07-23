@@ -43,13 +43,13 @@ class GuiManager(pyglet.graphics.Batch):
     def Render(self, kytten_buffered=True):
 
         if   self.is_buffered and kytten_buffered is True :
-            self._render(kytten_buffered)
+            self._render_buffered()
         elif kytten_buffered == 'bypass':
             self._render_from_buffer()
         else:
             self._render_unbuffered()
 
-    def _render(self, fbo_allowed=True):
+    def _render_buffered(self):
         with GuiRenderContext(*self._window_size):
             if self._update_gui() or self.force_refresh is True:
 
@@ -60,7 +60,6 @@ class GuiManager(pyglet.graphics.Batch):
                 for dialog in self._dialogs: dialog.to_refresh=False
 
             self._buffer.render()
-
 
     def _render_unbuffered(self):
         with GuiRenderContext(*self._window_size):
@@ -84,58 +83,64 @@ class GuiManager(pyglet.graphics.Batch):
 
 
 class PageManager:
-    current_page_id=-1
+    _current_page_id=-1
 
     PageReference={}
     PageDialogs={}
 
     @staticmethod
-    def UpdateDisplay():
-        if PageManager.current_page_id in PageManager.PageReference:
-            PageManager.PageReference[ PageManager.current_page_id ]()
-            return 1
-        #else: raise AttributeError("Page {0} not in __root__".format(PageManager.current_page_id))
+    def _update_display():
+        page = PageManager._current_page_id
 
+        if not page in PageManager.PageDialogs:
+            print PageManager.PageDialogs
+            print AttributeError("Page {0} not Registered".format(page))
+            return False # Page does not exists
 
-    @staticmethod
-    def Display(page):
-        if not page in PageManager.PageDialogs: raise AttributeError("Page {0} nor Regsitered".format(page))
+        WidgetsToShow, WidgetsToHide, constructor, callback = PageManager.PageDialogs[page]
+
+        if constructor is not None: constructor()
 
         for dialog in GetActiveDialogs():
-            if not dialog.name in PageManager.PageDialogs[page][0]+['draggable_items']:
+            if not dialog.name in WidgetsToShow+['draggable_items']:
                 dialog.Hide()
 
         if page in PageManager.PageDialogs:
             try:
-                for element in PageManager.PageDialogs[page][0]:
+                for element in WidgetsToShow:
                     GetObjectfromName(element).Show()
             except AttributeError: raise AttributeError("Show: No Dialog named '{0}' in '{1}'".format(element,page) )
 
             try:
-                for element in PageManager.PageDialogs[page][1]:
+                for element in WidgetsToHide:
                     GetObjectfromName(element).Hide()
             except AttributeError: raise AttributeError("Hide: No Dialog named '{0}' in '{1}'".format(element,page) )
 
+        if callback is not None: callback()
+
+        PageManager.PageDialogs[page] = WidgetsToShow, WidgetsToHide, None, callback #discard constructor once done
+
+        return True # Page does exists
 
     @staticmethod
-    def RegisterPage(page, to_show=[], to_hide=[], function=(dummy, ())):
-        PageManager.PageDialogs[page]=( to_show, to_hide, function)
+    def RegisterPage(page, to_show=[], to_hide=[], constructor=None, callback=None):
+        PageManager.PageDialogs[page]=( to_show, to_hide, constructor, callback)
 
 
     @staticmethod
     def next_page(*args):
-        PageManager.current_page_id+=1
-        if not PageManager.UpdateDisplay():
-            PageManager.current_page_id-=1
+        PageManager._current_page_id+=1
+        if not PageManager._update_display():
+            PageManager._current_page_id-=1
 
     @staticmethod
     def prev_page(*args):
 
-        PageManager.current_page_id-=1
-        if not PageManager.UpdateDisplay():
-            PageManager.current_page_id+=1
+        PageManager._current_page_id-=1
+        if not PageManager._update_display():
+            PageManager._current_page_id+=1
 
     @staticmethod
     def goto_page(page):
-        PageManager.current_page_id=page
-        PageManager.UpdateDisplay()
+        PageManager._current_page_id=page
+        PageManager._update_display()

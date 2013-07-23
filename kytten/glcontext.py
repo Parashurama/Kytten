@@ -119,6 +119,7 @@ class GuiInternalBuffer(object):
 
         gl.glBlendFunc(gl.GL_SRC_ALPHA, gl.GL_ONE_MINUS_SRC_ALPHA)
         gl.glBindTexture(gl.GL_TEXTURE_2D, self.rgb_texture)
+        gl.glEnable(gl.GL_TEXTURE_2D)
 
         width, height = self.render_target_size
 
@@ -132,6 +133,7 @@ class GuiInternalBuffer(object):
         gl.glEnd()
 
         gl.glBindTexture(gl.GL_TEXTURE_2D, 0)
+        gl.glDisable(gl.GL_TEXTURE_2D)
 
     def delete(self):
         '''
