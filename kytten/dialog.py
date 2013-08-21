@@ -1540,8 +1540,8 @@ class Drag_n_Drop(Dialog):
 class PopupMessage(Dialog):
     '''A simple fire-and-forget dialog.'''
 
-    def __init__(self, text="", window=None, batch=None, group=None,
-                 theme=None, on_escape=None):
+    def __init__(self, text="", window=None, batch=None, group=None, movable=False,
+                 theme=None, on_escape=None, anchor=ANCHOR_CENTER):
         def on_ok(dialog=None):
             if on_escape is not None:
                 on_escape(self)
@@ -1553,15 +1553,15 @@ class PopupMessage(Dialog):
                 Button("Ok", on_click=on_ok),
             ])),
             window=window, batch=batch, group=group,
-            theme=theme, movable=True,
-            on_enter=on_ok, on_escape=on_ok)
+            theme=theme, movable=movable,
+            on_enter=on_ok, on_escape=on_ok, anchor=anchor)
 
 class PopupConfirm(Dialog):
     '''An ok/cancel-style dialog.  Escape defaults to cancel.'''
 
     def __init__(self, text="", ok="Ok", cancel="Cancel",
-                 window=None, batch=None, group=None, theme=None,
-                 on_ok=None, on_cancel=None):
+                 window=None, batch=None, group=None, theme=None, movable=False,
+                 anchor=ANCHOR_CENTER, on_ok=None, on_cancel=None):
         def on_ok_click(dialog=None):
             if on_ok is not None:
                 on_ok(self)
@@ -1579,10 +1579,10 @@ class PopupConfirm(Dialog):
                     Button(ok, on_click=on_ok_click),
                     None,
                     Button(cancel, on_click=on_cancel_click)
-                ]),
+                ], align=HALIGN_CENTER),
             ])),
             window=window, batch=batch, group=group,
-            theme=theme, movable=True,
+            theme=theme, movable=movable, anchor=anchor,
             on_enter=on_ok_click, on_escape=on_cancel_click)
 
 

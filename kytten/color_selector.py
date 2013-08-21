@@ -26,24 +26,24 @@ class ColorWheel(Control):
     INNER_RADIUS = 132
     BORDER = 4
     VECTORS = []
-    NUM_SEGMENTS = int(2 * math.pi * (RADIUS + BORDER) / 24) * 6
+    NUM_SEGMENTS = int(2 * math.pi * (RADIUS + BORDER) // 24) * 6
     for x in xrange(0, NUM_SEGMENTS):
         angle = float(x) * 2.0 * math.pi / float(NUM_SEGMENTS)
         VECTORS.append((math.cos(angle), math.sin(angle)))
-    NUM_ARC_SEGMENTS = NUM_SEGMENTS / 6
+    NUM_ARC_SEGMENTS = NUM_SEGMENTS // 6
     COLORS = []
     for x in xrange(0, NUM_ARC_SEGMENTS):
-        COLORS.append([255, x * 255 / NUM_ARC_SEGMENTS, 0])
+        COLORS.append([255, x * 255 // NUM_ARC_SEGMENTS, 0])
     for x in xrange(0, NUM_ARC_SEGMENTS):
-        COLORS.append([255 - (x * 255 / NUM_ARC_SEGMENTS), 255, 0])
+        COLORS.append([255 - (x * 255 // NUM_ARC_SEGMENTS), 255, 0])
     for x in xrange(0, NUM_ARC_SEGMENTS):
-        COLORS.append([0, 255, x * 255 / NUM_ARC_SEGMENTS])
+        COLORS.append([0, 255, x * 255 // NUM_ARC_SEGMENTS])
     for x in xrange(0, NUM_ARC_SEGMENTS):
-        COLORS.append([0, 255 - (x * 255 / NUM_ARC_SEGMENTS), 255])
+        COLORS.append([0, 255 - (x * 255 // NUM_ARC_SEGMENTS), 255])
     for x in xrange(0, NUM_ARC_SEGMENTS):
-        COLORS.append([x * 255 / NUM_ARC_SEGMENTS, 0, 255])
+        COLORS.append([x * 255 // NUM_ARC_SEGMENTS, 0, 255])
     for x in xrange(0, NUM_ARC_SEGMENTS):
-        COLORS.append([255, 0, 255 - (x * 255 / NUM_ARC_SEGMENTS)])
+        COLORS.append([255, 0, 255 - (x * 255 // NUM_ARC_SEGMENTS)])
 
     def __init__(self, color, name=None, on_select=None):
         Control.__init__(self, name=name)

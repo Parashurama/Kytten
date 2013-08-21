@@ -523,7 +523,7 @@ class Repeat_NinePatchTextureGraphicElement(object):
 
             self.width, self.height = self.size = (width, height)
             vertices = self._get_vertices()
-            n_vertexes = len(vertices)/3
+            n_vertexes = len(vertices)//3
 
             self._vertex_list = self._batch.add (n_vertexes, gl.GL_QUADS, self._group,
                                                 ('v3f/dynamic',vertices),

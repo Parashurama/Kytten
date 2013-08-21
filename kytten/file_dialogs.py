@@ -13,7 +13,7 @@ from .button import Button
 from .dialog import Dialog
 from .frame import Frame, SectionHeader
 from .layout import VerticalLayout, HorizontalLayout
-from .layout import ANCHOR_CENTER, HALIGN_LEFT, VALIGN_BOTTOM
+from .layout import ANCHOR_CENTER, HALIGN_LEFT, VALIGN_BOTTOM, HALIGN_CENTER
 from .menu import Menu, Dropdown
 from .scrollable import Scrollable
 from .text_input import Input
@@ -39,6 +39,8 @@ def cmp_to_key(mycmp):
     return K
 
 class FileLoadDialog(Dialog):
+    select_button=None
+    cancel_button=None
     def __init__(self, path=os.getcwd(), extensions=[], title="Select File",
                  width=540, height=300, window=None, batch=None, group=None, name=None, parent=None,
                  anchor=ANCHOR_CENTER, offset=(0, 0),
@@ -49,6 +51,11 @@ class FileLoadDialog(Dialog):
         self.on_select = on_select
         self.selected_file = None
         self._set_files()
+
+        if on_select is None:
+            # Set up buttons to be shown in our contents only if on_select is not set
+            self.select_button = Button("Select", on_click=on_enter)
+            self.cancel_button = Button("Cancel", on_click=on_escape)
 
         def on_parent_menu_select(choice, choice_index=None):
             self._select_file(self.parents_dict[choice])
@@ -76,7 +83,10 @@ class FileLoadDialog(Dialog):
             VerticalLayout([
                 SectionHeader(self.title),
                 self.scrollable,
-            ], align=HALIGN_LEFT)
+                HorizontalLayout([
+                    self.select_button, None, self.cancel_button
+                ]),
+            ], align=HALIGN_CENTER, padding=15)
         )
 
     def _select_file(self, filename):
@@ -225,11 +235,11 @@ class DirectorySelectDialog(FileLoadDialog):
         self.text_input = Input()
 
         # Set up buttons to be shown in our contents
-        def on_select_button():
+        def on_select_button(btn):
             self._do_select()
         self.select_button = Button("Select", on_click=on_select_button)
 
-        def on_cancel_button():
+        def on_cancel_button(btn):
             self._do_cancel()
         self.cancel_button = Button("Cancel", on_click=on_cancel_button)
 
@@ -245,11 +255,18 @@ class DirectorySelectDialog(FileLoadDialog):
             self.text_input.set_text(filename)
         self.on_select = on_select
 
-        def on_parent_menu_select( id, choice):
+        def on_parent_menu_select(choice, choice_index):
             self.text_input.set_text(self.parents_dict[choice])
             self._do_open()
-        self.dropdown.on_select = on_parent_menu_select
 
+        def on_menu_select(choice, choice_index=None):
+            if choice in self.files_dict:
+                self._select_file(self.files_dict[choice])
+            else:
+                self._select_file(self.files_dict['-'+choice])
+
+        self.dropdown.on_select = on_parent_menu_select
+        self.menu.on_select = on_menu_select
     def _do_cancel(self):
         if self.on_escape is not None:
             self.on_escape(self)
@@ -334,7 +351,7 @@ class DirectorySelectDialog(FileLoadDialog):
                 if os.path.isfile(filename):
                     ext = os.path.splitext(filename)[1]
                     if ext in self.extensions:
-                        files.append(('-%s' % os.path.basename(filename),
+                        files.append(('%s' % os.path.basename(filename),
                                       filename))
         else:
             files.extend([('-%s' % os.path.basename(x), x) for x in filenames

@@ -189,6 +189,7 @@ class ButtonStyle(object):
                         size=None, square=True,
                         has_border=True,
                         text_style={},
+                        is_expandable=False,
                         on_click=None,
                         on_gain_hover=None,
                         on_lose_hover=None ):
@@ -218,17 +219,18 @@ class ButtonStyle(object):
         self.on_gain_hover_func = on_gain_hover
         self.on_lose_hover_func = on_lose_hover
 
-        self.text_style=text_style
+        self.square  = square
+        self.text_style = text_style
         self.fixed_size = size
-        self.square = square
         self.has_border = has_border
+        self.expandable = is_expandable
 
 class ImageButton(Button):
     '''
     A simple class to manage styles for ImageButton
     '''
     padding = 8
-
+    expandable = False
     def  __init__(self, image=None,
                         color=(255,255,255,255),
                         style=None,
@@ -270,6 +272,8 @@ class ImageButton(Button):
         if style is not None:
             self.set_button_style(style, False)
             if image: self.default_image=image
+            self.text_style = self.text_style.copy()
+            self.text_style.update(text_style)
         else:
             self.default_image = image
             self.hover_image = image
@@ -277,9 +281,9 @@ class ImageButton(Button):
             self.fixed_size = size
             self.square = square
             self.has_border = has_border
+            self.text_style = text_style
 
         self.padding=padding
-        self.text_style = text_style
         self.image = self.default_image
         self.color = color
 
@@ -297,6 +301,7 @@ class ImageButton(Button):
         self.fixed_size = button_style.fixed_size
         self.square = button_style.square
         self.has_border = button_style.has_border
+        self.expandable = button_style.expandable
         self.on_click = button_style.on_click
         self.on_gain_hover_func = button_style.on_gain_hover_func
         self.on_lose_hover_func = button_style.on_lose_hover_func
@@ -334,10 +339,10 @@ class ImageButton(Button):
 
         # put the graphic into the button center
         if self.bitmap is not None:
-            x = self.x + (self.width - self.bitmap.width) / 2
-            y = self.y + (self.height - self.bitmap.height) / 2
+            x = self.x + (self.width - self.bitmap.width) // 2
+            y = self.y + (self.height - self.bitmap.height) // 2
 
-            widget_width, widget_height = self.bitmap_width, self.bitmap_height
+            widget_width, widget_height = self.bitmap.width, self.bitmap.height
             self.bitmap.update(x,y)
         else:
             x = self.x
@@ -382,6 +387,8 @@ class ImageButton(Button):
     def size(self, dialog):
         Control.size(self, dialog)
 
+        content_width, content_height = 0, 0
+
         if self.is_pressed:  path = ['button', 'down']
         else:                path = ['button', 'up']
 
@@ -393,7 +400,7 @@ class ImageButton(Button):
             if self.button is None:
                 self.button = dialog.theme[path]['image'].generate( color, dialog.batch, dialog.bg_group)
 
-        if self.text and self.label is None:
+        if self.text and self.label is None: #if label is None and button has text, recreate label
             self.label = KyttenLabel(self.text,
                                      font_name=self.text_style.get('font', None) or dialog.theme[path]['font'],
                                      font_size=self.text_style.get('font_size', None) or dialog.theme[path]['font_size'],
@@ -401,19 +408,18 @@ class ImageButton(Button):
                                      bold = self.text_style.get('bold', False),
                                      batch=dialog.batch, group=dialog.fg_group)
 
-        if self.visible is True and self.bitmap is None:
+        if self.label is not None: #if button has text, get label size
+            font = self.label.document.get_font()
+            height = font.ascent - font.descent # descent is negative
+            left_padding, right_padding, top_padding, bottom_padding = self.text_style.get('text_padding', (0,0,0,0))
 
-            if self.image is not None:
+            content_width = max(content_width, self.label.content_width + left_padding + right_padding)
+            content_height= max(content_height, height + top_padding + bottom_padding)
+
+        if self.visible is True and self.image is not None:
+            if self.bitmap is None:
                 self.bitmap = DefaultTextureGraphicElement(texture=self.image, batch=dialog.batch, group=dialog.bg_group, color=self.color)
 
-            else:
-                font = self.label.document.get_font()
-                height = font.ascent - font.descent # descent is negative
-                left_padding, right_padding, top_padding, bottom_padding = self.text_style.get('text_padding', (0,0,0,0))
-
-                self.width = self.label.content_width + left_padding + right_padding
-                self.height= height + top_padding + bottom_padding
-                return
 
             if self.fixed_size:
                 if self.square is True or self.image.height == self.image.width:
@@ -429,30 +435,36 @@ class ImageButton(Button):
                         self.bitmap.height=float(self.fixed_size)
                     else:
                         self.bitmap.height=self.bitmap.width=float(self.fixed_size)
-
             else:
-                self.bitmap.width = self.image.width
-                self.bitmap.height = self.image.height
+                self.bitmap.width  = float(self.image.width)
+                self.bitmap.height = float(self.image.height)
+
+            content_width = max(content_width, self.bitmap.width)
+            content_height= max(content_height, self.bitmap.height)
+
+            self.bitmap.width, self.bitmap.height  = self.bitmap.get_needed_size(content_width, content_height)
+
 
             if self.square is True :
-                self.width = self.height =\
-                self.bitmap_width = self.bitmap_height = max(self.bitmap.width, self.bitmap.height)
+                self.width = self.height = content_width = content_height = max(self.bitmap.width, self.bitmap.height)
             else:
-                self.width = self.bitmap_width = self.bitmap.width
-                self.height = self.bitmap_height = self.bitmap.height
-
+                self.width, self.height = content_width,content_height  = self.bitmap.width,self.bitmap.height
 
         if self.has_border is True:
-            if self.label is not None:
-                font = self.label.document.get_font()
-                height = font.ascent - font.descent # descent is negative
-
-                self.width, self.height = self.button.get_needed_size(max( self.label.content_width, self.bitmap_width ), max( height,self.bitmap_height))
-            else:
-                self.width, self.height = self.button.get_needed_size(self.bitmap_width, self.bitmap_height)
+            self.width, self.height = self.button.get_needed_size(content_width, content_height)
 
             self.width+=self.padding * 2
             self.height+=self.padding * 2
+        else:
+            self.width, self.height = content_width, content_height
+
+    def is_expandable(self):
+        return self.expandable
+
+    def expand(self, width, height):
+        if self.expandable:
+            self.width, self.height = width, height
+            self.bitmap.update(self.x, self.y, self.width, self.height)
 
     def on_gain_highlight(self):
         self.image = self.hover_image

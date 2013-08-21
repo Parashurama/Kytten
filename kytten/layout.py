@@ -379,7 +379,7 @@ class HorizontalLayout(VerticalLayout):
                 left += item.width + self.padding
         elif self.align == VALIGN_CENTER:
             for item in self.content:
-                item.layout(left, y + self.height/2 - item.height/2)
+                item.layout(left, y + self.height//2 - item.height//2)
                 left += item.width + self.padding
         else: # VALIGN_BOTTOM
             for item in self.content:

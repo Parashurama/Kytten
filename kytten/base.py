@@ -88,7 +88,7 @@ class DisplayGroup:
         else: self.members=weakref.WeakSet()
 
     def __iter__(self,*args):
-        return self.members.__iter__()
+        return iter(self.members)
 
     def add(self,member):
         self.members.add(member)
