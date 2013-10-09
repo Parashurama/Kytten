@@ -3,6 +3,7 @@
 
 # kytten/glcontext.py
 # Copyrighted (C) 2013 by "Parashurama"
+from __future__ import unicode_literals, print_function
 
 from ctypes import c_ulong
 import pyglet.gl as gl
@@ -64,13 +65,14 @@ class GuiInternalBuffer(object):
 
         status = gl.glCheckFramebufferStatusEXT(gl.GL_FRAMEBUFFER_EXT)
         if status != gl.GL_FRAMEBUFFER_COMPLETE_EXT:
-            print "ERROR on FRAMEBUFFER"
+            print("ERROR on FRAMEBUFFER")
             return
         gl.glBindFramebufferEXT(gl.GL_FRAMEBUFFER_EXT, 0)
 
-    def recreate_texture(self, (width, height)):
-        self.rgb_texture = self._create_texture(textureID=self.rgb_texture, texture_size=(width, height))
-        self.render_target_size = width, height
+    def recreate_texture(self, texture_size):
+        #(width, height) = texture_size
+        self.rgb_texture = self._create_texture(textureID=self.rgb_texture, texture_size=texture_size)
+        self.render_target_size = texture_size
 
     @staticmethod
     def _create_texture(textureID=None, texture_size=None):

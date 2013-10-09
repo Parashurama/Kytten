@@ -3,6 +3,7 @@
 
 # kytten/file_dialogs.py
 # Copyrighted (C) 2009 by Conrad "Lynx" Wong
+from __future__ import unicode_literals, print_function
 
 import glob
 import os

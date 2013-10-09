@@ -7,6 +7,7 @@ kytten - a skinnable, easily constructed GUI toolkit for pyglet
 Inspired by simplui (Tristam MacDonald) and many other GUI projects.
 Thanks to Gary Herron and Steve Johnson for debugging assistance!
 '''
+from __future__ import unicode_literals, print_function
 
 # GUI public constants
 

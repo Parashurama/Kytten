@@ -4,6 +4,7 @@
 # kytten/button.py
 # Copyrighted (C) 2009 by Conrad "Lynx" Wong
 # Copyrighted (C) 2013 by "Parashurama"
+from __future__ import unicode_literals, print_function
 
 import pyglet
 import weakref
@@ -355,31 +356,31 @@ class ImageButton(Button):
             LEFT, RIGHT, TOP, BOTTOM = self.text_style.get('text_padding', (0,0,0,0))
 
             if   TEXT_ANCHOR is CVars.ANCHOR_CENTER:
-                self.label.x = x + widget_width/2 - self.label.content_width/2
-                self.label.y = y + widget_height/2 - (font.ascent + font.descent )/2
+                self.label.x = x + widget_width//2 - self.label.content_width//2
+                self.label.y = y + widget_height//2 - (font.ascent + font.descent )//2
             elif TEXT_ANCHOR is CVars.ANCHOR_BOTTOM_RIGHT:
                 self.label.x = x + widget_width - self.label.content_width - RIGHT
                 self.label.y = y + BOTTOM
             elif TEXT_ANCHOR is CVars.ANCHOR_RIGHT:
                 self.label.x = x + widget_width - self.label.content_width - RIGHT
-                self.label.y = y + widget_height/2 - (font.ascent + font.descent )/2
+                self.label.y = y + widget_height//2 - (font.ascent + font.descent )//2
             elif TEXT_ANCHOR is CVars.ANCHOR_TOP_RIGHT:
                 self.label.x = x + widget_width - self.label.content_width - RIGHT
                 self.label.y = y + widget_height - (font.ascent + font.descent ) - TOP
             elif TEXT_ANCHOR is CVars.ANCHOR_TOP:
-                self.label.x = x + widget_width/2 - self.label.content_width/2
+                self.label.x = x + widget_width//2 - self.label.content_width//2
                 self.label.y = y + widget_height - (font.ascent + font.descent ) - TOP
             elif TEXT_ANCHOR is CVars.ANCHOR_TOP_LEFT:
                 self.label.x = x + LEFT
                 self.label.y = y + widget_height - (font.ascent + font.descent ) - TOP
             elif TEXT_ANCHOR is CVars.ANCHOR_LEFT:
                 self.label.x = x + LEFT
-                self.label.y = y + widget_height/2 - (font.ascent + font.descent )/2
+                self.label.y = y + widget_height//2 - (font.ascent + font.descent )//2
             elif TEXT_ANCHOR is CVars.ANCHOR_BOTTOM_LEFT:
                 self.label.x = x + LEFT
                 self.label.y = y + BOTTOM
             elif TEXT_ANCHOR is CVars.ANCHOR_BOTTOM:
-                self.label.x = x + widget_width/2 - self.label.content_width/2
+                self.label.x = x + widget_width//2 - self.label.content_width//2
                 self.label.y = y + BOTTOM
             else:
                 raise TypeError

@@ -4,13 +4,16 @@
 # kytten/document.py
 # Copyrighted (C) 2009 by Conrad "Lynx" Wong
 # Copyrighted (C) 2013 by "Parashurama"
+from __future__ import unicode_literals, print_function
 
 import pyglet
 
 from .widgets import Control
 from .scrollbar import VScrollbar
 from .override import KyttenIncrementalTextLayout
-from .base import string_to_unicode
+from .base import string_to_unicode, iteritems
+
+class KyttenDocumentError(Exception):pass
 
 class Document(Control):
     '''
@@ -27,7 +30,7 @@ class Document(Control):
         self.content_width = width
         self.document =None
 
-        if isinstance(document, basestring):
+        if hasattr(document, 'startswith'): # document is a string
             self.set_document(self.create_document(document, formatted))
         else:
             self.set_document(document)
@@ -160,12 +163,21 @@ class Document(Control):
             self.needs_layout = False
             self.saved_dialog.set_needs_layout()
 
+    def _force_refresh(self):
+        '''
+        Forces recreation of any graphic elements we have constructed.
+        Overriden to avoid needlessly recreating pyglet text elements.
+        '''
+        # Delete the button to force it to be redrawn
+
+        if self.saved_dialog is not None:
+            self.saved_dialog.set_needs_layout()
+
     def size(self, dialog):
         if dialog is None:
             return
 
         Control.size(self, dialog)
-
         if not self.set_document_style:
             # Set Document Style for unformatted Documment
             self.do_set_document_style(dialog)
@@ -188,6 +200,10 @@ class Document(Control):
             self.scrollbar.size(dialog)
             self.scrollbar.set(self.max_height, self.content.content_height)
 
+        elif self.scrollbar is not None and (self.max_height and self.content.content_height < self.max_height):
+            self.scrollbar.delete()
+            self.scrollbar = None
+
         if self.scrollbar is not None:
             self.width = self.content_width + self.scrollbar.width
             if self.scrollbar_to_ensure_visible is not None:
@@ -205,14 +221,13 @@ class Document(Control):
                 self.scrollbar.ensure_visible(line.y,line.y+line.ascent-line.descent, line.ascent-line.descent)
             else:
                 self.scrollbar_to_ensure_visible = (line.y,line.y+line.ascent-line.descent, line.ascent-line.descent)
-                if self.saved_dialog is not None:
-                    self.saved_dialog.set_needs_layout()
+                self._force_refresh()
 
     def set_content_width(self, width):
         self.content_width = width
         if self.content is not None:
             self.content.width = width
-        self.needs_layout = True
+        self._force_refresh()
 
     def set_text(self, text, formatted=False):
 
@@ -221,7 +236,7 @@ class Document(Control):
         else:
             self.document.text = string_to_unicode(text)
 
-        self.needs_layout = True
+        self._force_refresh()#self.saved_dialog.set_needs_layout()#
 
 
     def insert_text(self, start, text, formatted=False):
@@ -237,20 +252,20 @@ class Document(Control):
                 if self.visible is True:
                     self.content.begin_update()
                     self.document.insert_text(start, doc.text)
-                    for attribute, runlist in doc._style_runs.iteritems():
+                    for attribute, runlist in iteritems(doc._style_runs):
                         for s, st, value in runlist:
                             self.document.set_style(start+s, start+st, {attribute:value})
                     self.content.end_update()
                 else:
                     self.document.insert_text(start, doc.text)
-                    for attribute, runlist in doc._style_runs.iteritems():
+                    for attribute, runlist in iteritems(doc._style_runs):
                         for s, st, value in runlist:
                             self.document.set_style(start+s, start+st, {attribute:value})
 
             else:
                 self.document.insert_text(start, text)
 
-                self.needs_layout = True
+            self.needs_layout = True
 
     def append_text(self, text, formatted=False):
         '''
@@ -259,7 +274,7 @@ class Document(Control):
         self.insert_text(len(self.document.text), text, formatted)
 
     def set_links(self, link_reference):
-        self.link_reference=link_reference
+        self.link_reference.update(link_reference)
 
     def on_mouse_press(self, x, y, *args):
 
@@ -267,12 +282,16 @@ class Document(Control):
         position = self.content.get_position_on_line(line, x)
         CALLBACK = self.document.get_style('link',position)
         if CALLBACK:
-            CALLBACK_FUNC = self.link_reference[CALLBACK]
-            if not hasattr(CALLBACK_FUNC, '__iter__'):
-                CALLBACK_FUNC()
+            try:
+                CALLBACK_FUNC = self.link_reference[CALLBACK]
+            except KeyError:
+                raise KyttenDocumentError("In Formatted Document '{}' link reference '{}' is Invalid!".format(self.name, CALLBACK))
             else:
-                for callback_func in CALLBACK_FUNC:
-                    callback_func()
+                if not hasattr(CALLBACK_FUNC, '__iter__'):
+                    CALLBACK_FUNC()
+                else:
+                    for callback_func in CALLBACK_FUNC:
+                        callback_func()
 
     def hit_test(self, x, y):
         '''

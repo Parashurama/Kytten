@@ -11,6 +11,7 @@
 # Frame: positions its contained Widget within a graphic, which it stretches
 #        to cover the Widget's area, or the space within which it is contained.
 # TitleFrame: like Frame, but has a title region on top as well.
+from __future__ import unicode_literals, print_function
 
 import weakref
 from .widgets import Widget, Control, Graphic, Label, Spacer
@@ -177,7 +178,7 @@ class Wrapper(Widget):
         self.content = self.hidden_content
         self.hidden_content = None
 
-        if Log.isLogging(): print "ReReference in Wrapper", self, self.content, self.hidden_content#, self.content.name
+        if Log.isLogging(): print("ReReference in Wrapper", self, self.content, self.hidden_content)
 
         if self.saved_dialog is not None:
             self.saved_dialog.set_needs_layout()
@@ -190,7 +191,7 @@ class Wrapper(Widget):
         self.hidden_content = self.content
         self.content = None
 
-        if Log.isLogging(): print "DeReference in Wrapper", self, self.hidden_content, self.hidden_content.name
+        if Log.isLogging(): print("DeReference in Wrapper", self, self.hidden_content, self.hidden_content.name)
 
         if self.saved_dialog is not None:
             self.saved_dialog.set_needs_layout()

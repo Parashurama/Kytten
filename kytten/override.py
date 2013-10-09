@@ -4,12 +4,13 @@
 # kytten/override.py
 # Copyrighted (C) 2009 by Conrad "Lynx" Wong
 # Copyrighted (C) 2013 by "Parashurama"
+from __future__ import unicode_literals, print_function
 
 import pyglet
 import pyglet.gl as gl
-import inspect
-#print "STACK\n",inspect.stack()[1]
+
 from .tools import string_to_unicode
+from .base import xrange
 
 KYTTEN_LAYOUT_GROUPS = {}
 KYTTEN_LAYOUT_GROUP_REFCOUNTS = {}

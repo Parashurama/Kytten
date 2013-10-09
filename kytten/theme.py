@@ -4,13 +4,14 @@
 # kytten/theme.py
 # Copyrighted (C) 2009 by Conrad "Lynx" Wong
 # Copyrighted (C) 2013 by "Parashurama"
+from __future__ import unicode_literals, print_function
 
 import os
 
 import pyglet
 import ctypes as c
 from pyglet import gl
-from .tools import wrapper, yield_single_value
+from .tools import wrapper, yield_single_value, iteritems
 
 try:
     import json
@@ -615,7 +616,7 @@ class ScopedDict(dict):
     '''
     def __init__(self, arg={}, parent=None):
         self.parent = parent
-        for k, v in arg.iteritems():
+        for k, v in iteritems(arg):
             if isinstance(v, dict):
                 self[k] = ScopedDict(v, self)
             else:
@@ -679,7 +680,7 @@ class ScopedDict(dict):
     def write(self, f, indent=0):
         f.write('{\n')
         first = True
-        for k, v in self.iteritems():
+        for k, v in iteritems(self):
             if not first:
                 f.write(',\n')
             else:
@@ -689,7 +690,7 @@ class ScopedDict(dict):
                 v.write(f, indent + 2)
             elif isinstance(v, UndefinedGraphicElementTemplate):
                 v.write(f, indent + 2)
-            elif isinstance(v, basestring):
+            elif hasattr(v, 'startswith'):# string bytes or unicode
                 f.write('"%s"' % v)
             elif isinstance(v, tuple):
                 f.write('%s' % repr(list(v)))
@@ -725,7 +726,7 @@ class Theme(ScopedDict):
 
         if isinstance(arg, Theme):
             self.textures = arg.textures
-            for k, v in arg.iteritems():
+            for k, v in iteritems(arg):
                 self.__setitem__(k, v)
             self.update(override)
             return
@@ -795,7 +796,7 @@ class Theme(ScopedDict):
         @param target The ScopedDict which is to be populated
         @param input The input dictionary
         '''
-        for k, v in input.iteritems():
+        for k, v in iteritems(input):
             if k.startswith('image'):
                 if isinstance(v, dict):
                     width = height = None

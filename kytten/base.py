@@ -3,6 +3,7 @@
 
 # kytten/base.py
 # Copyrighted (C) 2013 by "Parashurama"
+from __future__ import unicode_literals, print_function
 
 import weakref
 
@@ -121,4 +122,4 @@ class Virtual(object):
     def __init__(self, **kwargs):
         self.__dict__.update(kwargs)
 
-from .tools import yield_single_value, wrapper, string_to_unicode
+from .tools import yield_single_value, wrapper, string_to_unicode, iteritems, xrange

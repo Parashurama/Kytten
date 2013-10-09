@@ -4,6 +4,7 @@
 # kytten/checkbox.py
 # Copyrighted (C) 2009 by Conrad "Lynx" Wong
 # Copyrighted (C) 2013 by "Parashurama"
+from __future__ import unicode_literals, print_function
 
 import pyglet
 from .widgets import Control
@@ -14,7 +15,7 @@ class Checkbox(Control):
     '''
     A two-state checkbox.
     '''
-    def __init__(self, text=u"", is_checked=False, name=None,
+    def __init__(self, text="", is_checked=False, name=None,
                  align=HALIGN_RIGHT, padding=4, on_click=None,
                  disabled=False, color=None):
         '''

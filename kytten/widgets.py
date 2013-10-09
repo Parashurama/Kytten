@@ -16,12 +16,13 @@
 #         push other Widgets in a layout to the far right or bottom.
 # Graphic: a Widget with a texture drawn over its surface.  Can be expanded.
 # Label: a Widget which wraps a simple text label.
+from __future__ import unicode_literals, print_function
 
 import pyglet
 import weakref
 from pyglet import gl
 from .override import KyttenLabel, KyttenEventDispatcher
-from .base import GenId, ReferenceName, DereferenceName, GetObjectfromName, DisplayGroup, Log, string_to_unicode
+from .base import GenId, ReferenceName, DereferenceName, GetObjectfromName, DisplayGroup, Log, string_to_unicode, iteritems
 from .theme import DefaultTextureGraphicElement
 
 class Widget(object):
@@ -169,13 +170,13 @@ class Widget(object):
             if self.name is not None:
                 DereferenceName(self.name)
         else:
-            print "widget", self, "destroyed again"
+            print("widget", self, "destroyed again")
 
     def Hide(self):
         '''
         Hide Widget and delete graphic resources. Also dereference itself from its parent.
         '''
-        if Log.isLogging(): print "ShouldHide",self, self.name, self.visible
+        if Log.isLogging(): print("ShouldHide",self, self.name, self.visible)
 
         if self.visible is True:
             self.visible=False
@@ -195,7 +196,7 @@ class Widget(object):
         '''
         Show Widget and recreate graphic resources as needed. Also reference itself to its parent.
         '''
-        if Log.isLogging(): print "ShouldShow",self, self.name, self.visible
+        if Log.isLogging(): print("ShouldShow",self, self.name, self.visible)
 
         if self.visible is False:
             self.visible=True
@@ -589,7 +590,7 @@ class Label(Widget):
             - font_size  To set text size
             - font_name To set text font
         '''
-        for attr, value in kwargs.iteritems():
+        for attr, value in iteritems(kwargs):
             setattr(self, attr, value)
 
             # also modify attributes on interal pyglet Label (TextLayout)

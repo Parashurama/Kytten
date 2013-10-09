@@ -5,6 +5,7 @@
 # Copyrighted (C) Michael Spencer
 #
 # Source: http://code.activestate.com/recipes/364469/
+from __future__ import unicode_literals, print_function
 
 import compiler
 

@@ -3,6 +3,7 @@
 
 # kytten/spin_button.py
 # Copyrighted (C) 2013 by "Parashurama"
+from __future__ import unicode_literals, print_function
 
 import pyglet
 
@@ -11,14 +12,14 @@ from .widgets import Control, Label
 from .layout import VALIGN_CENTER, HALIGN_CENTER, VerticalLayout, HorizontalLayout
 
 class SpinControlGroup(object):
-    def __init__(self, value=None, min=0.0, max=100.0, step=1.0, credit=10, text_style=None):
+    def __init__(self, value=None, minv=0.0, maxv=100.0, step=1.0, credit=10, text_style=None):
 
-        if value is None: self.value=(max-min)/2+min
+        if value is None: self.value=(maxv-minv)/2+minv
         else: self.value=value
 
         self.text_style = text_style
-        self.min_value=min
-        self.max_value=max
+        self.minv_value=minv
+        self.maxv_value=maxv
         self.step=step
         self.initial_credit=credit
         self.remaining_credit=credit
@@ -106,22 +107,22 @@ class SpinButton(Button):
         self.width, self.height = 8, 7 #self.button.get_needed_size( 0, 0)
 
 class SpinControl(HorizontalLayout, Control):
-    def __init__(self, name=None, value=None, min=0.0, max=100.0, step=1.0, on_spin=None, ctrlgroup=None, disabled=False, style=None):
+    def __init__(self, name=None, value=None, minv=0.0, maxv=100.0, step=1.0, on_spin=None, ctrlgroup=None, disabled=False, style=None):
 
         self.control_group=ctrlgroup
         if ctrlgroup:
             self.value     = self.control_group.value
-            self.min_value = self.control_group.min_value
-            self.max_value = self.control_group.max_value
+            self.minv_value = self.control_group.minv_value
+            self.maxv_value = self.control_group.maxv_value
             self.step      = self.control_group.step
             self.text_style=self.control_group.text_style
             self.control_group.add(self)
         else:
-            if value is None: self.value=(max-min)/2+min
+            if value is None: self.value=(maxv-minv)/2+minv
             else: self.value=value
 
-            self.min_value=min
-            self.max_value=max
+            self.minv_value=minv
+            self.maxv_value=maxv
             self.step=step
             self.text_style = text_style
 

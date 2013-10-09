@@ -3,6 +3,7 @@
 
 # kytten/color_selector.py
 # Copyrighted (C) 2009 by Conrad "Lynx" Wong
+from __future__ import unicode_literals, print_function
 
 import math
 import pyglet
@@ -15,6 +16,7 @@ from .layout import ANCHOR_CENTER, VerticalLayout, HorizontalLayout
 from .slider import Slider
 from .text_input import Input
 from .widgets import Control, Label
+from .base import xrange
 
 class ColorWheel(Control):
     '''
@@ -549,19 +551,19 @@ class ColorSelector(Control):
 
         def on_red_set(red):
             red = min(max(int(red), 0), 255)
-            print "red = %s" % red
+            print("red = {}".format(red))
             self.color = [red] + self.color[1:]
             self.wheel.set_color(self.color)
 
         def on_green_set(green):
             green = min(max(int(green), 0), 255)
-            print "green = %s" % green
+            print("green = {}".format(green))
             self.color = [self.color[0], green] + self.color[2:]
             self.wheel.set_color(self.color)
 
         def on_blue_set(blue):
             blue = min(max(int(blue), 0), 255)
-            print "blue = %s" % blue
+            print("blue = {}".format(blue))
             self.color = self.color[:2] + [blue, self.color[3]]
             self.wheel.set_color(self.color)
 

@@ -3,6 +3,7 @@
 
 # kytten/toggle_button.py
 # Copyrighted (C) 2013 by "Parashurama"
+from __future__ import unicode_literals, print_function
 
 from .button import Button, ImageButton
 

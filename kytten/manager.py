@@ -3,6 +3,7 @@
 
 # kytten/manager.py
 # Copyrighted (C) 2013 by "Parashurama"
+from __future__ import unicode_literals, print_function
 
 import weakref
 import pyglet
@@ -93,8 +94,7 @@ class PageManager:
         page = PageManager._current_page_id
 
         if not page in PageManager.PageDialogs:
-            print PageManager.PageDialogs
-            print AttributeError("Page {0} not Registered".format(page))
+            print(AttributeError("Page {0} not Registered".format(page)))
             return False # Page does not exists
 
         WidgetsToShow, WidgetsToHide, constructor, callback = PageManager.PageDialogs[page]

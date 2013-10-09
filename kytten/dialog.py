@@ -4,6 +4,7 @@
 # kytten/dialog.py
 # Copyrighted (C) 2009 by Conrad "Lynx" Wong
 # Copyrighted (C) 2013 by "Parashurama"
+from __future__ import unicode_literals, print_function
 
 import pyglet
 import weakref
@@ -36,8 +37,8 @@ def SetMinMaxDialogOffsets(anchor, screen, g_width, g_height, m_width, m_height)
         min_y = -height+g_height
         max_y = 0
     elif valign == VALIGN_CENTER:
-        min_y = -height/2+g_height/2
-        max_y =  height/2-m_height/2# -g_height/2 +m_height/2
+        min_y = -height//2+g_height//2
+        max_y =  height//2-m_height//2
     else: # VALIGN_BOTTOM
         min_y = 0
         max_y = height-g_height
@@ -46,8 +47,8 @@ def SetMinMaxDialogOffsets(anchor, screen, g_width, g_height, m_width, m_height)
         min_x = 0
         max_x = width-g_width
     elif halign == HALIGN_CENTER:
-        min_x = -width/2+g_width/2
-        max_x =  width/2-m_width/2
+        min_x = -width//2+g_width//2
+        max_x =  width//2-m_width//2
     else: # HALIGN_RIGHT
         min_x = -width+g_width
         max_x = 0
@@ -142,7 +143,7 @@ class DialogEventManager(Control):
                     return self.EventHandled()
                 elif hasattr(self.focus, 'on_text'):
                     if symbol == pyglet.window.key.ENTER:
-                        self.focus.on_text(u'\n')
+                        self.focus.on_text('\n')
 
                     return self.EventHandled()
 
@@ -313,7 +314,7 @@ class DialogEventManager(Control):
             return self.EventHandled()
 
     def on_text(self, text):
-        if self.focus is not None and text != u'\r':
+        if self.focus is not None and text != '\r':
             try:
                 if self.focus.on_text(text):
                     return self.EventHandled()
@@ -348,6 +349,7 @@ class DialogEventManager(Control):
         @param dialog The Dialog containing the controls
         @param dt Time passed since last update event (in seconds)
         '''
+
         for control in self.controls:
             control.dispatch_event('on_update', dt)
 
@@ -487,11 +489,13 @@ class DialogGroup(pyglet.graphics.OrderedGroup):
         return (self.__class__ is other.__class__ and
             self.real_order == other.real_order and
             self.parent == other.parent)
+
+    def __hash__(self):
+        return hash((self.order, self.parent))
     '''
     #used in old version of pyglet (1.1.4)
     def __cmp__(self, other):
 
-        print "DialogGroup.__cmp__", self.dialog.name, other.dialog.name
         if isinstance(other, DialogGroup):
             return cmp(self.real_order, other.real_order)
         else:
@@ -519,7 +523,9 @@ class DialogGroup(pyglet.graphics.OrderedGroup):
                 member.root_group.real_order = GetNextDialogOrderId()
         else:
             try: __int__.kytten_always_on_top_dialog_order.remove(self.dialog._self())
-            except: print __int__.kytten_always_on_top_dialog_order, self.dialog ; raise
+            except:
+                print(__int__.kytten_always_on_top_dialog_order, self.dialog)
+                raise
 
             __int__.kytten_always_on_top_dialog_order.insert(0, self.dialog._self())
             self.dialog.root_group.real_order = GetNextDialogOrderId()
@@ -631,8 +637,8 @@ class Dialog(Wrapper, DialogEventManager, DialogAssert):
         self.always_on_top = always_on_top
         self.dont_pop_to_top=False
         self.child_dialogs = weakref.WeakSet()
-
-        try: self.parent_dialog = GetObjectfromName(attached_to) if isinstance(attached_to, basestring) else None
+                                                                                            #string: bytes or unicode
+        try: self.parent_dialog = GetObjectfromName(attached_to) if hasattr(attached_to, 'startswith') else None
         except AssertionError:
             raise AssertionError("Invalid 'attached_to' parameter : {0} in Dialog instance {1} named '{2}'".format(attached_to, self, self.name) )
 
@@ -744,7 +750,8 @@ class Dialog(Wrapper, DialogEventManager, DialogAssert):
 
         return (WIDTH, HEIGHT),(OFF_WIDTH,OFF_HEIGHT)
 
-    def TranslateOffset(self, (OFFSET_X,OFFSET_Y), PARENT, DIALOG, SCREEN, ANCHOR):
+    def TranslateOffset(self, OFFSET, PARENT, DIALOG, SCREEN, ANCHOR):
+        (OFFSET_X,OFFSET_Y) = OFFSET
 
         if   ANCHOR == ANCHOR_TOP_LEFT:
             if   DIALOG.anchor_flag == 'NE':
@@ -959,8 +966,6 @@ class Dialog(Wrapper, DialogEventManager, DialogAssert):
         if self.visible and self.hit_test(x, y):
             cliked_time = time.time()
 
-            #if cliked_time-self.last_clicked_time< 0.25 : print "DOUBLE CLICK"
-
             self.last_clicked_time = cliked_time
 
             if not self.root_group.is_on_top() and not self.dont_pop_to_top:
@@ -1048,7 +1053,7 @@ class Dialog(Wrapper, DialogEventManager, DialogAssert):
 
         self.EventHandled()
 
-    def set_position(self, (x, y)):
+    def set_position(self, pos):
 
         self.set_needs_layout()
 
@@ -1084,8 +1089,7 @@ class Dialog(Wrapper, DialogEventManager, DialogAssert):
             try:
                 __int__.kytten_always_on_top_dialog_order.remove(self)
             except ValueError:
-                #print __int__.kytten_always_on_top_dialog_order
-                print "always_on_top but not in __int__.kytten_always_on_top_dialog_order",self
+                print("always_on_top but not in __int__.kytten_always_on_top_dialog_order",self)
         #else                 : __int__.kytten_mundane_top_dialog.remove(self)#  Int not List of mundane Dialog Instance
         #if self.name is not None:
         #    DereferenceName(self.name)
@@ -1218,9 +1222,9 @@ class GuiElement(Dialog):
 
         self.set_needs_layout()
 
-    def set_position(self, (x, y)):
+    def set_position(self, pos):
         if self.anchor == ANCHOR_BOTTOM_LEFT:
-            self.set_offset((x, y))
+            self.set_offset(pos)
         else:
             raise NotImplementedError("Setting Position Only for Dialog with 'ANCHOR_BOTTOM_LEFT'")
         #self.set_needs_layout()
@@ -1255,9 +1259,9 @@ class ToolTip(GuiElement):
 
         if self.parent_widget.tooltip:
             self.parent_widget.tooltip.tearing_down_tooltip()
-
-        if isinstance(text, basestring): content=Label(text)
-        else:                            content=text
+                                    #string: bytes or unicode
+        if hasattr(text, 'startswith'): content=Label(text)
+        else:                           content=text
 
         GuiElement.__init__(self,   content=content,
                                     window=parent_dialog.window,
@@ -1276,8 +1280,8 @@ class ToolTip(GuiElement):
 
         if secondary is not None:
             secondary_doc, secondary_name = secondary
-
-            if isinstance(secondary_doc, basestring): content=Label(secondary_doc)
+                                        #string: bytes or unicode
+            if hasattr(secondary_doc, 'startswith'): content=Label(secondary_doc)
             else:                                     content=secondary_doc
 
             self.secondary = ToolTipProxy(content=content,
@@ -1502,7 +1506,7 @@ class Drag_n_Drop(Dialog):
 
         LIST =  sorted(((dialog.root_group.real_order,dialog, self.interactive_layouts[dialog]) for dialog in __int__.__ListOfExtantDialog__ if dialog in self.interactive_layouts), reverse=True)
 
-        for order, dialog, ilayouts in LIST:#self.interactive_layouts.iteritems():
+        for order, dialog, ilayouts in LIST:
 
             if not dialog.hit_test(x, y): continue
 

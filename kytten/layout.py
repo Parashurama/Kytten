@@ -12,6 +12,7 @@
 # GridLayout: a table of Widgets.
 # FreeLayout: an open area within which Widgets may be positioned freely,
 #             relative to one of its anchor points.
+from __future__ import unicode_literals, print_function
 
 import pyglet
 import weakref
@@ -47,14 +48,14 @@ def GetRelativePoint(parent, parent_anchor, child, child_anchor, offset):
     if valign == VALIGN_TOP:
         y = parent.y + parent.height
     elif valign == VALIGN_CENTER:
-        y = parent.y + parent.height / 2
+        y = parent.y + parent.height // 2
     else: # VALIGN_BOTTOM
         y = parent.y
 
     if halign == HALIGN_LEFT:
         x = parent.x
     elif halign == HALIGN_CENTER:
-        x = parent.x + parent.width / 2
+        x = parent.x + parent.width // 2
     else: # HALIGN_RIGHT
         x = parent.x + parent.width
 
@@ -64,14 +65,14 @@ def GetRelativePoint(parent, parent_anchor, child, child_anchor, offset):
     if valign == VALIGN_TOP:
         y += offset_y - child.height
     elif valign == VALIGN_CENTER:
-        y += offset_y - child.height/2
+        y += offset_y - child.height// 2
     else: # VALIGN_BOTTOM
         y += offset_y
 
     if halign == HALIGN_LEFT:
         x += offset_x
     elif halign == HALIGN_CENTER:
-        x += offset_x - child.width / 2
+        x += offset_x - child.width // 2
     else: # HALIGN_RIGHT
         x += offset_x - child.width
 
@@ -167,10 +168,9 @@ class VerticalLayout(Widget,LayoutAssert):
             self.content.remove(item)
             self.hidden_content.append(item)
         except ValueError:
-            print self, self.__parent__
             assert item in self.hidden_content
 
-        if Log.isLogging():  print "DeReference in Layout", self, item, item.name
+        if Log.isLogging():  print("DeReference in Layout", self, item, item.name)
 
     def __rereference_obj__(self, item):
         try:
@@ -179,7 +179,7 @@ class VerticalLayout(Widget,LayoutAssert):
         except ValueError:
             assert item in self.content
 
-        if Log.isLogging():  print "ReReference in Layout", self, item, item.name
+        if Log.isLogging():  print("ReReference in Layout", self, item, item.name)
 
     def delete(self):
         '''Deletes all graphic elements within the layout.'''
@@ -256,7 +256,7 @@ class VerticalLayout(Widget,LayoutAssert):
                 top -= item.height + self.padding
         elif self.align == HALIGN_CENTER:
             for item in self.content:
-                item.layout(x + self.width/2 - item.width/2,
+                item.layout(x + self.width//2 - item.width//2,
                                 top - item.height)
                 top -= item.height + self.padding
         else: # HALIGN_LEFT
@@ -570,10 +570,9 @@ class GridLayout(Widget, LayoutAssert):
             self.content.remove(item)
             self.hidden_content.append(item)
         except ValueError:
-            print self, self.__parent__
             assert item in self.hidden_content
 
-        if Log.isLogging():  print "DeReference in Layout", self, item, item.name
+        if Log.isLogging():  print("DeReference in Layout", self, item, item.name)
 
     def __rereference_obj__(self, item):
         try:
@@ -582,7 +581,7 @@ class GridLayout(Widget, LayoutAssert):
         except ValueError:
             assert item in self.content
 
-        if Log.isLogging():  print "ReReference in Layout", self, item, item.name
+        if Log.isLogging():  print("ReReference in Layout", self, item, item.name)
 
     def delete(self):
         '''Deletes all graphic elements within the layout.'''
@@ -803,11 +802,13 @@ class FreeLayout(Spacer, FreeLayoutAssert):
     def get_widget(self, position):
         return self.content_cache[position]
 
-    def add_widget(self, (anchor, x, y, widget), position):
+    def add_widget(self, WIDGET, position):
+        (anchor, x, y, widget) = WIDGET
         widget.__parent__=weakref.proxy(self)
-        WIDGET = (anchor, x, y, widget)
+
         self.content.insert(position, WIDGET)
         self.content_cache.insert(position, WIDGET)
+
         if self.saved_dialog is not None:
             self.saved_dialog.set_needs_layout()
 
@@ -909,7 +910,7 @@ class FreeLayout(Spacer, FreeLayoutAssert):
             if item in data:
                 self.content.pop(i)
                 self.hidden_content.append(data)
-        if Log.isLogging(): print "DeReference in Free Layout", self, item, item.name
+        if Log.isLogging(): print("DeReference in Free Layout", self, item, item.name)
 
     def __rereference_obj__(self, item):
 
@@ -917,7 +918,7 @@ class FreeLayout(Spacer, FreeLayoutAssert):
             if item in data:
                 self.hidden_content.pop(i)
                 self.content.insert( self.content_cache.index(data), data)
-        if Log.isLogging(): print "ReReference in Free Layout", self, item, item.name
+        if Log.isLogging(): print("ReReference in Free Layout", self, item, item.name)
 
     def delete(self):
         '''Deletes all graphic elements within the layout.'''

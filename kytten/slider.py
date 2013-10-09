@@ -4,10 +4,12 @@
 # kytten/slider.py
 # Copyrighted (C) 2009 by Conrad "Lynx" Wong
 # Copyrighted (C) 2013 by "Parashurama"
+from __future__ import unicode_literals, print_function
 
 
 import pyglet
 from .widgets import Control
+from .base import xrange
 
 class Slider(Control):
     '''
