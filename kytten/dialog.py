@@ -78,20 +78,20 @@ class DialogEventManager(Control):
         self.last_clicked_time =0.
         self.mouse_in = False
 
-    def get_value(self, id):
-        widget = self.get_widget(id)
+    def get_value(self, name):
+        widget = self.get_widget(name)
         if widget is not None:
             return widget.get_value()
 
     def get_values(self):
         retval = {}
         for widget in self.controls:
-            if widget.is_input() and widget.id is not None:
-                retval[widget.id] = widget.get_value()
+            if widget.is_input() and widget.name is not None:
+                retval[widget.name] = widget.get_value()
         return retval
 
-    def get_widget(self, id):
-        return self.control_map.get(id)
+    def get_widget(self, name):
+        return self.control_map.get(name)
 
     def hit_control(self, x, y, control):
         left, right, top, bottom = self.control_areas[str(control)]
@@ -428,8 +428,8 @@ class DialogEventManager(Control):
         for control, left, right, top, bottom in controls:
             self.controls.add(control)
             self.control_areas[str(control)] = (left, right, top, bottom)
-            if control.id is not None:
-                self.control_map[control.id] = control
+            if control.name is not None:
+                self.control_map[control.name] = control
 
         if self.hover is not None and self.hover not in self.controls:
             self.set_hover(None)
@@ -1142,12 +1142,15 @@ class GuiElement(Dialog):
         if ix0<0: ix0=self.width+ix0
         if iy0<0: iy0=self.height+iy0
 
-        if ix1 is None: ix1=self.width
-        if iy1 is None: iy1=self.height
+        if   ix1 is None: ix1=self.width
+        elif ix1<0:       ix1=self.width+ix1
 
-        dx = x-self.x-ix0 ; dy = y-self.y-iy0
+        if   iy1 is None: iy1=self.height
+        elif iy1<0:       iy1=self.height+iy1
 
-        return ( 0 <= dx < ix1) and ( 0 <= dy < iy1)
+        dx = x-self.x ; dy = y-self.y
+
+        return ( ix0 <= dx < ix1) and ( iy0 <= dy < iy1)
 
     def on_mouse_drag(self, x, y, dx, dy, buttons, modifiers):
 

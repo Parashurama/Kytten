@@ -17,7 +17,7 @@ class Background:
         @param batch Batch to which to add our background
         @param group Group to which to add our background
         """
-        filenames = glob.glob(os.path.join(loc, '*.jpg'))
+        filenames = glob.glob(os.path.join(loc, 'images', '*.jpg'))
         images = [pyglet.image.load(x) for x in filenames]
         self.textures = [x.get_texture() for x in images]
         self.texture = None
@@ -80,8 +80,8 @@ class Background:
         else:
             our_height = self.texture.height * self.width / self.texture.width
             our_width = self.width
-        x1 = int(self.width/2 - our_width/2)
-        y1 = int(self.height/2 - our_height/2)
+        x1 = int(self.width//2 - our_width//2)
+        y1 = int(self.height//2 - our_height//2)
         x2 = int(x1 + our_width)
         y2 = int(y1 + our_height)
         self.group = pyglet.graphics.TextureGroup(

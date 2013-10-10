@@ -4,6 +4,7 @@
 # Test dialog using the Kytten GUI
 
 import os
+import sys
 import pyglet
 # Disable error checking for increased performance
 pyglet.options['debug_gl'] = False
@@ -11,11 +12,14 @@ from pyglet import gl
 
 VERSION = '5.9'
 
+sys.path.extend(['.','..']) # allow import from parent folder (1 level up)
+import kytten
+
 import kytten
 from background import Background
 
 # Default theme, gold-colored
-theme = kytten.Theme(os.path.join(os.getcwd(), 'theme'), override={
+theme = kytten.Theme(os.path.join(os.getcwd(), '../theme'), override={
     "gui_color": [64, 128, 255, 255],
     "font_size": 14
 })
@@ -66,9 +70,9 @@ def create_form_dialog():
         for key, value in dialog.get_values().items():
             print("  %s=%s" % (key, value))
         on_escape(dialog)
-    def on_submit():
+    def on_submit(btn):
         on_enter(dialog)
-    def on_cancel():
+    def on_cancel(btn):
         print("Form canceled.")
         on_escape(dialog)
     dialog = kytten.Dialog(
@@ -82,26 +86,26 @@ def create_form_dialog():
                                     "automatically",
                                     width=500),
                     kytten.GridLayout([
-                        [kytten.Label("Name"), kytten.Input("name", "Lynx",
+                        [kytten.Label("Name"), kytten.Input("Lynx", name="name",
                                                             max_length=20)],
-                        [kytten.Label("Job"), kytten.Input("job", "Cat",
+                        [kytten.Label("Job"), kytten.Input("Cat", name="job",
                                                            max_length=80)],
                         [kytten.Label("Hobby"),
-                             kytten.Input("hobby", "Programming")],
+                             kytten.Input("Programming", name="hobby")],
                         [kytten.Label("Class"),
-                             kytten.Input("class", "Druid")],
+                             kytten.Input("Druid", name="class")],
                         [kytten.Label("Disabled"),
-                             kytten.Input("disabled", "Disabled input",
+                             kytten.Input("Disabled input", name="disabled",
                                           disabled=True)],
                         [kytten.Label("Sign"),
-                             kytten.Input("sign", "Free to good home")],
+                             kytten.Input("Free to good home", name="sign")],
                         [kytten.Label("Blood Type"),
-                             kytten.Input("bloodtype", "Red")],
+                             kytten.Input("Red", name="bloodtype")],
                         [kytten.Label("Favored Weapon"),
-                             kytten.Input("weapon", "Claws")],
+                             kytten.Input("Claws", name="weapon")],
                     ]),
-                    kytten.Checkbox("Full-Time", id="fulltime"),
-                    kytten.Checkbox("Married", id="married", disabled=True),
+                    kytten.Checkbox("Full-Time"),
+                    kytten.Checkbox("Married", disabled=True),
                     kytten.SectionHeader("Actions",
                                          align=kytten.HALIGN_LEFT),
                     kytten.HorizontalLayout([
@@ -118,10 +122,10 @@ def create_form_dialog():
         theme=theme2, on_enter=on_enter, on_escape=on_escape)
 
 def create_scrollable_dialog():
-    def on_select(choice):
+    def on_select(choice, index):
         print("Kytten is %s" % choice)
 
-    def on_set(value):
+    def on_set(slider, value):
         print("Kytten rating is %0.0f" % value)
 
     dialog = kytten.Dialog(
@@ -200,7 +204,7 @@ And wait for the Jellicle moon to rise
         theme=theme2, on_escape=on_escape)
 
 def create_dropdown_dialog():
-    def on_select(choice):
+    def on_select(choice, index):
         print("Selected: %s" % choice)
 
     dialog = kytten.Dialog(
@@ -224,7 +228,7 @@ def create_dropdown_dialog():
 def create_file_load_dialog():
     dialog = None
 
-    def on_select(filename):
+    def on_select(filename, index):
         print("File load: %s" % filename)
         on_escape(dialog)
 
@@ -259,7 +263,7 @@ def create_directory_select_dialog():
         anchor=kytten.ANCHOR_CENTER,
         theme=theme2, on_escape=on_escape, on_select=on_select)
 
-def on_select(choice):
+def on_select(choice, index):
     if choice == 'Document':
         create_document_dialog()
     elif choice == 'Form':
@@ -280,18 +284,18 @@ def on_select(choice):
         print("Unexpected menu selection: %s" % choice)
 
 if __name__ == '__main__':
-    window = pyglet.window.Window(
-        640, 480, caption='Kytten Test %s' % VERSION,
-        resizable=True, vsync=False)
-    batch = pyglet.graphics.Batch()
-    bg_group = pyglet.graphics.OrderedGroup(0)
-    fg_group = pyglet.graphics.OrderedGroup(1)
+    window = pyglet.window.Window( 640, 480, caption='Kytten Test %s' % VERSION, resizable=True, vsync=False)
+    kytten.SetWindow(window)
+
+    batch = kytten.KyttenManager
+    bg_group = kytten.KyttenManager.backgroup
+    fg_group = kytten.KyttenManager.foregroup
     fps = pyglet.clock.ClockDisplay()
 
     @window.event
     def on_draw():
         window.clear()
-        batch.draw()
+        kytten.KyttenRenderGUI()
         fps.draw()
 
     # Update as often as possible (limited by vsync, if not disabled)

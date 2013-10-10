@@ -211,10 +211,6 @@ class FileSaveDialog(FileLoadDialog):
         elif not path:
             filename = os.path.join(self.path, filename)
         if self.real_on_select is not None:
-            #if self.id is not None:
-            #    self.real_on_select(self.id, filename)
-            #else:
-            #    self.real_on_select(filename)
             if self.real_on_select(filename):
                 self.teardown()
 
@@ -292,10 +288,9 @@ class DirectorySelectDialog(FileLoadDialog):
         elif not path:
             filename = os.path.join(self.path, filename)
         if self.real_on_select is not None:
-            if self.id is not None:
-                self.real_on_select(self.id, filename)
-            else:
-                self.real_on_select(filename)
+            if self.real_on_select(filename):
+                self.teardown()
+
 
     def _get_content(self):
         return Frame(

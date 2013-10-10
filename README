@@ -64,8 +64,10 @@ Dialogs can be anchored to each others.
 Controls have hover and double_click callback support.
 Documents have clickable links with callback support
 
+You can use the included PageManager class to manage navigation in your application or roll your own.
+
 Requirements
 
-You'll need to update to pyglet 1.1.3 if you haven't already!
+You'll need to update to pyglet 1.1.4 if you haven't already!
 
 If you use a version of Python older than 2.6, simplejson will not be included in Python. kytten will try to use a safe_eval routine to process .json files.

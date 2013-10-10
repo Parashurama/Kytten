@@ -39,8 +39,8 @@ class Slider(Control):
         @param diasbled True if the slider should be disabled
         '''
         Control.__init__(self, name=name, disabled=disabled)
-        self.min_value = min_value
-        self.max_value = max_value
+        self.min_value = float(min_value)
+        self.max_value = float(max_value)
         self.steps = steps
         self.min_width = width
         self.on_set = on_set

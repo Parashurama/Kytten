@@ -1,0 +1,5 @@
+{
+"header_bar": [0,-40, null,-20],
+"content_padding": [30, 30, 45, 30],
+"border_padding": [60, 60, 50, 50]
+}

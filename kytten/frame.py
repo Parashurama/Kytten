@@ -342,10 +342,15 @@ class GuiFrame(Frame):
         The Texture object must expose the following attributes:
             - id  : opengl texture ID (can be 0, which disable texturing)
             - size: texture size (width, height)
-            - texcoords : texture coordinates of region to display , formatting (s0,t0, s1, t1)
-            - header_bar: Dragging bar region coordinates exemple: (0,0,None,None)
-            - content_padding : minimum internal padding around content. (left, right, top, bottom)
-            - border_padding : used for the 9-patches formatting. (left, right, top, bottom)
+            - texcoords : texture coordinates of region to display , formatting [s0,t0, s1, t1]
+            - header_bar: x0,y0 : bottom_left ; x1, y1 = top_right
+                Dragging bar region coordinates: [x0, y0, x1, y1],  defaults to [0,0,None,None] (all widget area)
+                None means widget's max dimension and negative value are relative so [0, -40, None, None] means [0, height-40, width, height]
+                exemple with texture size :(256, 256)
+                exemple with basic value: [0, -40, None, None],  header_bar area is [0, 216, 256, 256]
+                exemple with negative value: [0, -40, None, -20],  header_bar area is [0, 216, 256, 236]
+            - content_padding : minimum internal padding around content. [left, right, top, bottom]
+            - border_padding : used for the 9-patches formatting. [left, right, top, bottom]
         '''
         Wrapper.__init__(self, content, is_expandable=is_expandable, anchor=anchor, group=group, name=name)
 

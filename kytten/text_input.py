@@ -21,9 +21,9 @@ class Input(Control):
                  on_input=None, name=None, disabled=False):
         Control.__init__(self, name=name, disabled=disabled)
         self.text = string_to_unicode(text)
-        self.length = length
-        self.max_length = max_length
-        self.padding = padding
+        self.length = int(length)
+        self.max_length = int(max_length) if max_length is not None else None
+        self.padding = int(padding)
         self.on_input = on_input
         self.document = pyglet.text.document.UnformattedDocument(text)
         self.document_style_set = False

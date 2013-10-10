@@ -3,10 +3,10 @@
 GUI Framework for Pyglet
 """
 
-__author__ = "Conrad 'Lynx' Wong(originator) Raymond Chandler III(forker)"
+__author__ = "Conrad 'Lynx' Wong(originator) Raymond Chandler III(forker) Parashurama (forker)"
 __author_email__ = "raymondchandleriii@gmail.com"
-__version__ = "6.0.0"
-__date__ = "2011 07 31"
+__version__ = "6.0.1"
+__date__ = "2013 10 9"
 
 try:
     import setuptools
@@ -23,7 +23,7 @@ f.close()
 setup(
     name = "kytten",
     version = __version__,
-    author = "Conrad 'Lynx' Wong(originator) Raymond Chandler III(fork)",
+    author = "Conrad 'Lynx' Wong(originator) Raymond Chandler III(fork)  Parashurama (forker)",
     license="BSD",
     description = "GUI Framework for Pyglet",
     long_description=long_description,
@@ -44,7 +44,7 @@ setup(
         ("Topic :: Software Development :: Libraries :: Python Modules"),
         ("Topic :: Games/Entertainment"),
         ],
- 
+
     packages = find_packages(),
 
     install_requires=['pyglet>=1.1.4'],

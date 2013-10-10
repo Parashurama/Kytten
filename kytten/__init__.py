@@ -1,6 +1,9 @@
 #! /usr/bin/env python
 # *-* coding: UTF-8 *-*
 
+# kytten/__init__.py
+# Copyrighted (C) 2009 by Conrad "Lynx" Wong
+# Copyrighted (C) 2013 by "Parashurama"
 '''
 kytten - a skinnable, easily constructed GUI toolkit for pyglet
 
@@ -39,13 +42,14 @@ from .base import GetObjectfromId, GetObjectfromName, ReferenceName, DisplayGrou
 from .base import InvalidWidgetNameError
 from .manager import GuiManager, PageManager
 from .selectable_image import Selectable
+from .images import LoadImage
 
-def SetWindow(window, manager=None):
+def SetWindow(window, manager=None, isBuffered=True):
     global KyttenManager, KyttenRenderGUI
 
     if manager is not None and not isinstance(manager, GuiManager):
-        raise TypeError('Invalid Gui Manager instance')
-    base.KyttenManager = manager is not None or GuiManager(window, isBuffered=True)
+        raise TypeError('Invalid Gui Manager instance. Only GuiManager instance or subclass are supported.')
+    base.KyttenManager = manager is not None or GuiManager(window, isBuffered=isBuffered)
 
     KyttenManager = base.KyttenManager
     KyttenRenderGUI = base.KyttenManager.Render

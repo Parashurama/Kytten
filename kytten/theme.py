@@ -734,8 +734,7 @@ class Theme(ScopedDict):
         if isinstance(arg, dict):
             self.loader = pyglet.resource.Loader(os.getcwd())
             input = arg
-        else:
-            if os.path.isfile(arg) or os.path.isdir(arg):
+        elif os.path.isfile(arg) or os.path.isdir(arg):
                 self.loader = pyglet.resource.Loader(path=arg)
                 try:
                     theme_file = self.loader.file(name)
@@ -743,8 +742,8 @@ class Theme(ScopedDict):
                     theme_file.close()
                 except pyglet.resource.ResourceNotFoundException:
                     input = {}
-            else:
-                input = {}
+        else:
+            raise IOError("Invalid path. Theme folder '{}' couldn't be found!".format(os.path.abspath(arg)))
 
         self.textures = {}
         self._update_with_images(self, input)
@@ -754,7 +753,7 @@ class Theme(ScopedDict):
         try:
             return ScopedDict.__getitem__(self, key)
         except KeyError as e:
-            if key.startswith('image'):
+            if hasattr(key,"startswith") and key.startswith('image'):
                 return UndefinedGraphicElementTemplate(self)
             else:
                 raise e

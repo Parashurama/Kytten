@@ -112,7 +112,7 @@ class GuiInternalBuffer(object):
     def deactivate(self, *args):
 
         gl.glBindFramebufferEXT(gl.GL_FRAMEBUFFER_EXT, 0)
-        gl.glPopAttrib(gl.GL_VIEWPORT_BIT)
+        gl.glPopAttrib()
 
     __enter__ = activate
     __exit__ = deactivate
