@@ -18,8 +18,8 @@ class SpinControlGroup(object):
         else: self.value=value
 
         self.text_style = text_style
-        self.minv_value=minv
-        self.maxv_value=maxv
+        self.min_value=minv
+        self.max_value=maxv
         self.step=step
         self.initial_credit=credit
         self.remaining_credit=credit
@@ -43,7 +43,11 @@ class SpinControlGroup(object):
         if not member in self.members:
             self.members[member]=member.value
 
-    def ResetAll(self):
+    def set_credit(self, credit):
+        self.initial_credit = int(credit)
+        self.reset()
+
+    def reset(self):
         self.remaining_credit=self.initial_credit
 
         for member in self.members:
@@ -82,11 +86,11 @@ class SpinButton(Button):
         Control.size(self, dialog)
 
         if self.is_pressed:
-            if self.direction == 'north': path = ['spinbutton2', 'downnortharrow']
-            else: path = ['spinbutton2', 'downsoutharrow']
+            if self.direction == 'north': path = ['spinbutton', 'downnortharrow']
+            else: path = ['spinbutton', 'downsoutharrow']
         else:
-            if self.direction == 'north': path = ['spinbutton2', 'upnortharrow']
-            else: path = ['spinbutton2', 'upsoutharrow']
+            if self.direction == 'north': path = ['spinbutton', 'upnortharrow']
+            else: path = ['spinbutton', 'upsoutharrow']
 
         if self.is_disabled():
             color = dialog.theme[path]['disabled_color']
@@ -107,13 +111,13 @@ class SpinButton(Button):
         self.width, self.height = 8, 7 #self.button.get_needed_size( 0, 0)
 
 class SpinControl(HorizontalLayout, Control):
-    def __init__(self, name=None, value=None, minv=0.0, maxv=100.0, step=1.0, on_spin=None, ctrlgroup=None, disabled=False, style=None):
+    def __init__(self, name=None, value=None, minv=0.0, maxv=100.0, step=1.0, on_spin=None, ctrlgroup=None, disabled=False, text_style={}, style=None):
 
         self.control_group=ctrlgroup
         if ctrlgroup:
             self.value     = self.control_group.value
-            self.minv_value = self.control_group.minv_value
-            self.maxv_value = self.control_group.maxv_value
+            self.min_value = self.control_group.min_value
+            self.max_value = self.control_group.max_value
             self.step      = self.control_group.step
             self.text_style=self.control_group.text_style
             self.control_group.add(self)
@@ -121,17 +125,17 @@ class SpinControl(HorizontalLayout, Control):
             if value is None: self.value=(maxv-minv)/2+minv
             else: self.value=value
 
-            self.minv_value=minv
-            self.maxv_value=maxv
+            self.min_value=minv
+            self.max_value=maxv
             self.step=step
-            self.text_style = text_style
+            self.text_style = None
 
         self.isMin=False
         self.isMax=False
 
         self.northarrow = SpinButton('north', on_click= self.increment)
         self.southarrow = SpinButton('south', on_click= self.decrement)
-        self.label = Label(str(self.value).rjust(2, ' '), style =self.text_style )
+        self.label = Label(str(self.value).rjust(2), style =self.text_style )
 
         HorizontalLayout.__init__(self, [VerticalLayout([self.northarrow,self.southarrow], align=HALIGN_CENTER, padding=3),
                                                 self.label
@@ -148,7 +152,7 @@ class SpinControl(HorizontalLayout, Control):
             else:
                 self.check_bound_value(True)
 
-            self.label.set_text(str(self.value).rjust(2, ' ') )
+            self.label.set_text(str(self.value).rjust(2) )
             self.dispatch_event('on_spin', self)
 
     def decrement(self, *args):
@@ -160,7 +164,7 @@ class SpinControl(HorizontalLayout, Control):
             else:
                 self.check_bound_value(True)
 
-            self.label.set_text(str(self.value).rjust(2, ' ') )
+            self.label.set_text(str(self.value).rjust(2) )
             self.dispatch_event('on_spin', self)
 
     def disable_south(self):
@@ -192,7 +196,7 @@ class SpinControl(HorizontalLayout, Control):
         else:
             self.check_bound_value(True)
 
-        self.label.set_text(str(self.value).rjust(2, ' ') )
+        self.label.set_text(str(self.value).rjust(2) )
         self.dispatch_event('on_spin', self)
 
 SpinControl.register_event_type('on_spin')

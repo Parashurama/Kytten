@@ -168,8 +168,6 @@ class Document(Control):
         Forces recreation of any graphic elements we have constructed.
         Overriden to avoid needlessly recreating pyglet text elements.
         '''
-        # Delete the button to force it to be redrawn
-
         if self.saved_dialog is not None:
             self.saved_dialog.set_needs_layout()
 
@@ -281,6 +279,7 @@ class Document(Control):
         line = self.content.get_line_from_point(x, y)
         position = self.content.get_position_on_line(line, x)
         CALLBACK = self.document.get_style('link',position)
+
         if CALLBACK:
             try:
                 CALLBACK_FUNC = self.link_reference[CALLBACK]
@@ -292,6 +291,17 @@ class Document(Control):
                 else:
                     for callback_func in CALLBACK_FUNC:
                         callback_func()
+
+    def on_gain_focus(self):
+        Control.on_gain_focus(self)
+        if self.scrollbar is not None and self.saved_dialog is not None:
+            self.saved_dialog.set_focus(self.scrollbar)
+
+    def on_lose_highlight(self):
+        Control.on_lose_highlight(self)
+
+        if self.scrollbar is not None and self.saved_dialog is not None:
+            self.saved_dialog.set_focus(None)
 
     def hit_test(self, x, y):
         '''

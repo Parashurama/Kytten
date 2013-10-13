@@ -71,15 +71,6 @@ class Wrapper(Widget):
             self.hidden_content.delete()
             self.hidden_content = None
 
-    def delete(self):
-        '''Deletes graphic elements within the Wrapper.'''
-        if self.content is not None:
-            self.content.delete()
-
-        if self.hidden_content is not None:
-            self.hidden_content.delete()
-        Widget.delete(self)
-
     def expand(self, width, height):
         if self.content is not None:
             if self.content.is_expandable():
@@ -133,48 +124,26 @@ class Wrapper(Widget):
             self.width, self.height = self.content.width, self.content.height
         else:
             self.width = self.height = 0
-    '''
-    def Set(self):
-        Widget.Set(self)
-        self.to_refresh=True'''
 
     def Hide(self):
-        if self.visible:
-
-            if self.content:
+        if self.visible is True:
+            if self.content is not None:
                 self.content.Hide()
 
-            self.delete()
-            if self.saved_dialog is not None:
-                self.saved_dialog.set_needs_layout()
-            else: # Top Level Wrapper
-                if hasattr(self,'set_needs_layout'): self.set_needs_layout()
-
             Widget.Hide(self)
-
-            self.visible=False
 
     def Show(self):
         if not self.visible:
 
-            if self.content:
+            if self.content is not None:
                 self.content.Show()
 
-            elif self.hidden_content:
+            elif self.hidden_content is not None:
                 self.hidden_content.Show()
-
-            if self.saved_dialog is not None:
-                self.saved_dialog.set_needs_layout()
-            else: # Top Level Wrapper
-                if hasattr(self,'set_needs_layout'): self.set_needs_layout()
 
             Widget.Show(self)
 
-            self.visible=True
-
     def __rereference_obj__(self, *args):
-        #if not self.visible: return
-
         self.content = self.hidden_content
         self.hidden_content = None
 
@@ -186,8 +155,6 @@ class Wrapper(Widget):
             if hasattr(self,'set_needs_layout'): self.set_needs_layout()
 
     def __dereference_obj__(self, *args):
-        #if not self.visible: return
-
         self.hidden_content = self.content
         self.content = None
 
@@ -199,9 +166,15 @@ class Wrapper(Widget):
             if hasattr(self,'set_needs_layout'): self.set_needs_layout()
 
     def delete(self):
+        '''Deletes graphic elements within the Wrapper.'''
+
         if self.content is not None:
-            if not self.visible: self.content.visible=False
             self.content.delete()
+
+        if self.hidden_content is not None:
+            self.hidden_content.delete()
+
+        Widget.delete(self)
 
     def teardown(self):
         if self.content is not None:
@@ -320,13 +293,12 @@ class Frame(Wrapper):
         self.width, self.height = self.frame.get_needed_size(
             self.content.width, self.content.height)
 
-class TransparentFrame(Frame):
-    def __init__(self, content=None, path=['transparent_frame'], image_name='image',
-                 is_expandable=False, anchor=ANCHOR_CENTER,
-                 use_bg_group=False):
+class TransparentFrame(Wrapper):
+    def __init__(self, content=None, is_expandable=False, anchor=ANCHOR_CENTER, name=None):
 
-        Frame.__init__(self, content=content, path=path, image_name=image_name, is_expandable=is_expandable, anchor=anchor, use_bg_group=use_bg_group)
+        Wrapper.__init__(self, content=content, is_expandable=is_expandable, anchor=anchor, name=name)
         self._header_bar = (0,0,0,0)
+
     def header_bar_hit_test(self, x, y):
         #Disable Dragging for Transparent Frame
         return False

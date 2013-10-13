@@ -297,20 +297,17 @@ class DialogEventManager(Control):
         @param scroll_x Number of clicks horizontally mouse was moved
         @param scroll_y Number of clicks vertically mouse was moved
         '''
+        if not self.visible or not self.hit_test(x,y): return
 
         if self.check_for_always_on_top_dialog('on_mouse_scroll', x, y, scroll_x, scroll_y):
             return pyglet.event.EVENT_HANDLED
 
-        if self.wheel_target is not None and \
-           self.wheel_target in self.controls and self.hit_test(x,y) and self.visible:
-            self.wheel_target.dispatch_event('on_mouse_scroll',
-                                             x, y, scroll_x, scroll_y)
+        if self.wheel_target is not None and self.wheel_target in self.controls:
+            self.wheel_target.dispatch_event('on_mouse_scroll', x, y, scroll_x, scroll_y)
             return self.EventHandled()
 
-        elif self.wheel_hint is not None and \
-             self.wheel_hint in self.controls and self.hit_test(x,y) and self.visible:
-            self.wheel_hint.dispatch_event('on_mouse_scroll',
-                                           x, y, scroll_x, scroll_y)
+        elif self.wheel_hint is not None and self.wheel_hint in self.controls:
+            self.wheel_hint.dispatch_event('on_mouse_scroll', x, y, scroll_x, scroll_y)
             return self.EventHandled()
 
     def on_text(self, text):
@@ -407,6 +404,12 @@ class DialogEventManager(Control):
 
     def set_wheel_target(self, control):
         self.wheel_target = control
+
+    def release_wheel_target(self, widget=None):
+        if widget is None:
+            self.wheel_target = None
+        elif self.wheel_target is widget:
+            self.wheel_target = None
 
     def teardown(self):
         Control.teardown(self)

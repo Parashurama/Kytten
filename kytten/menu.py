@@ -18,6 +18,7 @@ from .layout import HALIGN_CENTER
 from .layout import VALIGN_TOP, VALIGN_CENTER, VALIGN_BOTTOM
 from .override import KyttenLabel
 from .scrollable import Scrollable
+import inspect
 
 class MenuOption(Control):
     '''
@@ -85,11 +86,22 @@ class MenuOption(Control):
 
     def on_gain_highlight(self):
         Control.on_gain_highlight(self)
-        self.size(self.saved_dialog)  # to set up the highlight
+        saved_dialog = self.scrollable_parent if self.scrollable_parent is not None else self.saved_dialog
+        #self.size(saved_dialog)  # to set up the highlight
 
-        if self.highlight is not None:
-            self.highlight.update(self.x, self.y,
-                                  self.menu.width, self.height)
+
+        if self.is_selected:
+            path = ['menuoption', 'selection']
+        else:
+            path = ['menuoption']
+
+        if self.highlight is None:
+            if self.is_highlight():
+                self.highlight =  self.saved_dialog.theme[path]['highlight']['image'].generate(
+                    color = self.saved_dialog.theme[path]['highlight_color'],
+                    batch = saved_dialog.batch,
+                    group = saved_dialog.highlight_group)
+                self.highlight.update(self.x, self.y, self.menu.width, self.height)
 
     def on_lose_highlight(self):
         Control.on_lose_highlight(self)
@@ -337,6 +349,7 @@ class MenuList(Menu):
         if self.saved_dialog is not None:
             self.saved_dialog.set_needs_layout()
     '''
+
 class Dropdown(Control):
     def __init__(self, options=[], selected=None, fixed_width=0,
                  max_height=400, align=VALIGN_TOP, on_select=None,
@@ -392,11 +405,14 @@ class Dropdown(Control):
         if self.saved_dialog is not None:
             self.saved_dialog.set_needs_layout()
 
-    def on_mouse_release(self, x, y, button, modifiers):
-        if self.is_disabled():
-            return
+    def on_lose_focus(self):
+        Control.on_lose_focus(self)
+        # try to delete pulldown menu if it exists
+        self._delete_pulldown_menu()
 
-        if not self.hit_test(x, y): return
+    def on_mouse_release(self, x, y, button, modifiers):
+        if self.is_disabled() or not self.hit_test(x, y):
+            return
 
         if self.pulldown_menu is not None:
             self._delete_pulldown_menu()  # if it's already up, close it
@@ -413,10 +429,9 @@ class Dropdown(Control):
             if self.label is not None:
                 self.label.delete()
                 self.label = None
-            #self._delete_pulldown_menu()
 
             if self.on_select is not None:
-                self.on_select(choice, index) #self.on_select(choice, self.options.index(choice))
+                self.on_select(choice, index)
 
             self._delete_pulldown_menu()
 
@@ -449,7 +464,7 @@ class Dropdown(Control):
             ),
             window=root.window, batch=root.batch,
             group=root.root_group.parent, theme=root.theme,
-            movable=False, anchor=anchor, offset=(x, y),
+            movable=False, anchor=anchor, offset=(x, y), always_on_top=True,
             on_escape=on_escape)
 
         #root.window.push_handlers(self.pulldown_menu)
@@ -476,6 +491,7 @@ class Dropdown(Control):
     def size(self, dialog):
         if dialog is None:
             return
+
         Control.size(self, dialog)
 
         if self.is_disabled():

@@ -91,7 +91,17 @@ class Checkbox(Control):
 
     def on_gain_highlight(self):
         Control.on_gain_highlight(self)
-        self.size(self.saved_dialog)
+
+
+        saved_dialog = self.scrollable_parent if self.scrollable_parent is not None else self.saved_dialog
+        path = ['checkbox', 'checked'] if self.is_checked else ['checkbox', 'unchecked']
+
+        if self.highlight is None and self.is_highlight():
+            self.highlight = self.saved_dialog.theme[path]['highlight']['image'].generate(
+                    color=self.saved_dialog.theme[path]['highlight_color'],
+                    batch=saved_dialog.batch,
+                    group=saved_dialog.bg_group)
+
         self.highlight.update(self.x, self.y, self.width, self.height)
 
     def on_lose_highlight(self):

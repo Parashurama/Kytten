@@ -150,13 +150,15 @@ class Widget(object):
         '''
         if dialog != self and dialog is not None:
 
-            if isinstance(dialog, weakref.ProxyType): dialog = dialog
-            else: dialog = weakref.proxy(dialog)
-
             if isinstance( dialog, ScrollableAssert):
-                self.saved_dialog = dialog.saved_dialog
+                dialog = dialog.saved_dialog # might be weakref.ProxyType
+
+            if isinstance(dialog, weakref.ProxyType):
+                dialog = dialog
             else:
-                self.saved_dialog = dialog
+                dialog = weakref.proxy(dialog)
+
+            self.saved_dialog = dialog
 
     def teardown(self):
         '''
@@ -234,6 +236,7 @@ class Control(Widget, KyttenEventDispatcher):
     '''
     on_gain_hover_func=None
     on_lose_hover_func=None
+    scrollable_parent = None
     def __init__(self, name=None, on_gain_hover=None, on_lose_hover=None, value=None, width=0, height=0, disabled=False, noId=False, group=None):
         '''
         Creates a new Control.
@@ -286,6 +289,17 @@ class Control(Widget, KyttenEventDispatcher):
 
         self.disabled_flag = False
         self._force_refresh()
+
+    def size(self, dialog):
+        '''
+        Overrides Widget size to accomodate scrollable parents.
+
+        @param dialog The Dialog/Scrollable which contains this Widget
+        '''
+        if dialog is not self.saved_dialog:
+            self.scrollable_parent = dialog
+
+        Widget.size(self, dialog)
 
     def get_cursor(self, x, y):
         return self.cursor

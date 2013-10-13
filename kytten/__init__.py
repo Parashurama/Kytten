@@ -29,7 +29,7 @@ from .checkbox import Checkbox
 from .dialog import Dialog, PopupMessage, PopupConfirm, PropertyDialog, ToolTip, GuiElement, GuiStyle, Drag_n_Drop
 from .document import Document
 from .file_dialogs import FileLoadDialog, FileSaveDialog, DirectorySelectDialog
-from .frame import Frame, TitleFrame, TransparentFrame, GuiFrame, Wrapper, SectionHeader, FoldingSection
+from .frame import Frame, TitleFrame, GuiFrame, Wrapper, SectionHeader, FoldingSection
 from .layout import GridLayout, HorizontalLayout, VerticalLayout, FreeLayout, FreeForm, PaletteLayout, InteractiveLayout, InteractivePaletteLayout
 from .menu import Menu, Dropdown, MenuList
 from .scrollable import Scrollable

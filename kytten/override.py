@@ -153,7 +153,7 @@ pyglet_IncrementalTextLayout = pyglet.text.layout.IncrementalTextLayout
 
 class KyttenIncrementalTextLayout(pyglet_IncrementalTextLayout):
     def _init_groups(self, group):
-        # Scrollable layout never shares group becauase of translation.
+        # Scrollable layout never shares group because of translation.
         self.top_group = ScrollableTextLayoutGroup_KYTTEN_OVERRIDE(group)
         self.background_group = pyglet.graphics.OrderedGroup(0, self.top_group)
         self.foreground_group = pyglet.text.layout.TextLayoutForegroundGroup(1, self.top_group)

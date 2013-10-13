@@ -82,8 +82,15 @@ class Button(Control):
         If mouse hovers the button, display highlight
         '''
         Control.on_gain_highlight(self)
-        self.size(self.saved_dialog)
-        if self.highlight is not None:
+
+        saved_dialog = self.scrollable_parent if self.scrollable_parent is not None else self.saved_dialog
+        path = ['button', 'down'] if self.is_pressed else ['button', 'up']
+
+        if self.highlight is None and self.is_highlight():
+            self.highlight = self.saved_dialog.theme[path]['highlight']['image'].generate(
+                color=self.saved_dialog.theme[path]['highlight_color'],
+                batch=saved_dialog.batch,
+                group=saved_dialog.highlight_group)
             self.highlight.update(self.x, self.y, self.width, self.height)
 
     def on_lose_highlight(self):
@@ -469,13 +476,14 @@ class ImageButton(Button):
 
     def on_gain_highlight(self):
         self.image = self.hover_image
-        Button.on_gain_highlight(self)
+
+        Control.on_gain_highlight(self)
 
         self._force_refresh()
 
     def on_lose_highlight(self):
         self.image = self.default_image
-        Button.on_lose_highlight(self)
+        Control.on_lose_highlight(self)
 
         self._force_refresh()
 

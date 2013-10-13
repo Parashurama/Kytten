@@ -17,8 +17,14 @@ class Input(Control):
     '''
     A text input field.
     '''
+    document_style_set = False
+    text_layout = None
+    caret = None
+    field = None
+    highlight = None
+    restricted = None
     def __init__(self, text="", length=20, max_length=None, padding=0,
-                 on_input=None, name=None, disabled=False):
+                 on_input=None, name=None, disabled=False, restricted=None):
         Control.__init__(self, name=name, disabled=disabled)
         self.text = string_to_unicode(text)
         self.length = int(length)
@@ -26,12 +32,8 @@ class Input(Control):
         self.padding = int(padding)
         self.on_input = on_input
         self.document = pyglet.text.document.UnformattedDocument(text)
-        self.document_style_set = False
-        self.text_layout = None
         self.label = None
-        self.caret = None
-        self.field = None
-        self.highlight = None
+        self.restricted = set(restricted) if restricted is not None else self.restricted
 
     def delete(self):
         Control.delete(self)
@@ -55,6 +57,15 @@ class Input(Control):
         if self.highlight is not None:
             self.highlight.delete()
             self.highlight = None
+
+
+    def _force_refresh(self):
+        '''
+        Forces recreation of any graphic elements we have constructed.
+        Overriden to avoid needlessly recreating pyglet text elements.
+        '''
+        if self.saved_dialog is not None:
+            self.saved_dialog.set_needs_layout()
 
     def disable(self):
         Control.disable(self)
@@ -104,10 +115,7 @@ class Input(Control):
 
     def on_gain_focus(self):
         Control.on_gain_focus(self)
-        self.delete()
-        if self.saved_dialog is not None:
-            self.size(self.saved_dialog)
-            self.layout(self.x, self.y)
+        Control._force_refresh(self) # needs full refresh to create label and input as needed
 
     def on_key_press(self, symbol, modifiers):
 
@@ -120,34 +128,28 @@ class Input(Control):
                 clipboad_content = pyperclip.paste()#GetClipboardText()
                 if clipboad_content is not None:
                     self.on_text(clipboad_content)
-                    if self.saved_dialog is not None:
-                        self.saved_dialog.set_needs_layout()
+                    self._force_refresh()
                     return pyglet.event.EVENT_HANDLED
 
             elif symbol == key.X and (modifiers & key.MOD_CTRL):
-                SetClipboardText(self.text_layout.get_selection_text())
+                pyperclip.copy(self.text_layout.get_selection_text())
                 start, end = self.text_layout.get_selection()
                 self.document.delete_text(start, end )
                 self.text_layout.set_selection(start,start)
                 self.caret.mark = self.caret.position = start
-
-                if self.saved_dialog is not None:
-                    self.saved_dialog.set_needs_layout()
+                self._force_refresh()
                 return pyglet.event.EVENT_HANDLED
 
             elif symbol == key.A and (modifiers & key.MOD_CTRL):
                 self.text_layout.select_all()
-                if self.saved_dialog is not None:
-                    self.saved_dialog.set_needs_layout()
+                self._force_refresh()
                 return pyglet.event.EVENT_HANDLED
 
 
     def on_lose_focus(self):
         Control.on_lose_focus(self)
-        self.delete()
-        if self.saved_dialog is not None:
-            self.size(self.saved_dialog)
-            self.layout(self.x, self.y)
+        Control._force_refresh(self) # needs full refresh to create label and input as needed
+
         if self.on_input is not None:
             if self.name is not None:
                 self.on_input(self.name, self.get_text())
@@ -167,11 +169,24 @@ class Input(Control):
             return self.caret.on_mouse_press(x, y, button, modifiers)
 
     def on_text(self, text):
+
         if not self.is_disabled() and self.caret:
+
+            if self.restricted is not None:
+                if not text in self.restricted:
+                    if len(text)>1:
+                        text = ''.join(char for char in text if char in self.restricted)
+                    else:
+                        return pyglet.event.EVENT_HANDLED
+
+            self.text_layout.begin_update()
+
             self.caret.on_text(text)
             if self.max_length and len(self.document.text) > self.max_length:
-                self.document.text = self.document.text[:self.max_length]
-                self.caret.mark = self.caret.position = self.max_length
+                self.document.delete_text(self.max_length, len(self.document.text))
+
+            self.text_layout.end_update()
+
             return pyglet.event.EVENT_HANDLED
 
     def on_text_motion(self, motion):
@@ -189,12 +204,13 @@ class Input(Control):
                 self.highlight = None
 
     def set_highlight(self):
+        saved_dialog = self.scrollable_parent if self.scrollable_parent is not None else self.saved_dialog
         path = ['input', 'highlight']
         if self.highlight is None:
             self.highlight = self.saved_dialog.theme[path]['image'].generate(
                 color=self.saved_dialog.theme[path]['highlight_color'],
-                batch=self.saved_dialog.batch,
-                group=self.saved_dialog.highlight_group)
+                batch=saved_dialog.batch,
+                group=saved_dialog.highlight_group)
             self.highlight.update(self.x, self.y, self.width, self.height)
 
     def set_text(self, text):
@@ -210,6 +226,7 @@ class Input(Control):
     def size(self, dialog):
         if dialog is None:
             return
+
         Control.size(self, dialog)
 
         if self.is_disabled():
@@ -295,12 +312,7 @@ class MultilineInput(Input):
         self.padding = padding
         self.on_input = on_input
         self.document = pyglet.text.document.UnformattedDocument(self.text)
-        self.document_style_set = False
 
-        self.text_layout = None
-        self.caret = None
-        self.field = None
-        self.highlight = None
         self._auto_complete_func = auto_complete
 
     def set_text(self, text):
@@ -349,9 +361,10 @@ class MultilineInput(Input):
 
     def on_lose_focus(self):
         Control.on_lose_focus(self)
-        #self.delete()
+
         if self.saved_dialog is not None:
             self.saved_dialog.set_needs_layout()
+            self.saved_dialog.release_wheel_target()
 
         if self.text_layout is not None:
             self.text_layout.set_selection(0,0)
@@ -370,9 +383,9 @@ class MultilineInput(Input):
                 self.on_input(self.get_text())
 
     def on_mouse_scroll(self, x, y, scroll_x, scroll_y):
-        if self.caret is not None:
+        if self.caret is not None and self.hit_test(x, y):
             self.caret.on_mouse_scroll(x, y, scroll_x, scroll_y)
-        return True
+            return True
 
     def delete(self):
         Control.delete(self)
