@@ -100,7 +100,7 @@ class Checkbox(Control):
             self.highlight = self.saved_dialog.theme[path]['highlight']['image'].generate(
                     color=self.saved_dialog.theme[path]['highlight_color'],
                     batch=saved_dialog.batch,
-                    group=saved_dialog.bg_group)
+                    group=saved_dialog.highlight_group)
 
         self.highlight.update(self.x, self.y, self.width, self.height)
 
@@ -147,7 +147,7 @@ class Checkbox(Control):
             self.highlight = dialog.theme[path]['highlight']['image'].generate(
                     dialog.theme[path]['highlight_color'],
                     dialog.batch,
-                    dialog.bg_group)
+                    dialog.highlight_group)
         if self.label is None:
             self.label = KyttenLabel(self.text,
                 font_name=dialog.theme[path]['font'],

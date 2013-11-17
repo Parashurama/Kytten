@@ -26,7 +26,7 @@ from .button import Button, ButtonStyle, ImageButton, DraggableImageButton
 from .togglebutton import ToggleGroup, ToggleButton, ToggleImageButton
 from .spin_button import SpinControl, SpinControlGroup
 from .checkbox import Checkbox
-from .dialog import Dialog, PopupMessage, PopupConfirm, PropertyDialog, ToolTip, GuiElement, GuiStyle, Drag_n_Drop
+from .dialog import Dialog, PopupMessage, PopupConfirm, PropertyDialog, ToolTip, GuiElement, GuiTheme, Drag_n_Drop
 from .document import Document
 from .file_dialogs import FileLoadDialog, FileSaveDialog, DirectorySelectDialog
 from .frame import Frame, TitleFrame, GuiFrame, Wrapper, SectionHeader, FoldingSection

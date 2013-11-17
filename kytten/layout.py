@@ -106,7 +106,7 @@ class VerticalLayout(Widget,LayoutAssert):
         self.minheight=minheight
 
         for item in self.content:
-            item.__parent__=weakref.proxy(self)
+            item._parent=weakref.proxy(self)
 
         self.expandable = []
 
@@ -125,7 +125,7 @@ class VerticalLayout(Widget,LayoutAssert):
 
         @param item The Widget to be added
         '''
-        item.__parent__=weakref.proxy(self)
+        item._parent=weakref.proxy(self)
         if position is None:
             ITEM = item or Spacer()
             self.content.append(ITEM)
@@ -163,7 +163,7 @@ class VerticalLayout(Widget,LayoutAssert):
         if self.visible:
             self.visible=False
 
-    def __dereference_obj__(self, item):
+    def _dereference_obj(self, item):
         try:
             self.content.remove(item)
             self.hidden_content.append(item)
@@ -172,7 +172,7 @@ class VerticalLayout(Widget,LayoutAssert):
 
         if Log.isLogging():  print("DeReference in Layout", self, item, item.name)
 
-    def __rereference_obj__(self, item):
+    def _rereference_obj(self, item):
         try:
             self.hidden_content.remove(item)
             self.content.insert( self.content_cache.index(item), item)
@@ -276,7 +276,7 @@ class VerticalLayout(Widget,LayoutAssert):
         self.hidden_content = []
 
         for item in self.content:
-            item.__parent__=weakref.proxy(self)
+            item._parent=weakref.proxy(self)
 
         if self.saved_dialog is not None:
             self.saved_dialog.set_needs_layout()
@@ -441,7 +441,7 @@ class PaletteLayout(VerticalLayout):
         self.content.append(self.RowLayout())
         Row=self.content[i_row]
         Row.size(dialog)
-        Row.__parent__=weakref.proxy(self)
+        Row._parent=weakref.proxy(self)
         row_width=0
 
         for item in self.linear_content:
@@ -455,7 +455,7 @@ class PaletteLayout(VerticalLayout):
                     self.content.append(self.RowLayout())
                     Row=self.content[i_row]
                     Row.size(dialog)
-                    Row.__parent__=weakref.proxy(self)
+                    Row._parent=weakref.proxy(self)
                     row_width=0
 
                     # Add To row
@@ -477,7 +477,7 @@ class PaletteLayout(VerticalLayout):
 
         @param item The Widget to be added
         '''
-        #item.__parent__=self
+        #item._parent=self
         if position is None: self.linear_content.append(item or Spacer())
         else: self.linear_content.insert(position, item)
 
@@ -540,7 +540,7 @@ class GridLayout(Widget, LayoutAssert):
         '''
         for row in self.content:
             for item in row:
-                item.__parent__=weakref.proxy(self)'''
+                item._parent=weakref.proxy(self)'''
 
 
     def _get_controls(self):
@@ -565,7 +565,7 @@ class GridLayout(Widget, LayoutAssert):
         if self.saved_dialog is not None:
             self.saved_dialog.set_needs_layout()
 
-    def __dereference_obj__(self, item):
+    def _dereference_obj(self, item):
         try:
             self.content.remove(item)
             self.hidden_content.append(item)
@@ -574,7 +574,7 @@ class GridLayout(Widget, LayoutAssert):
 
         if Log.isLogging():  print("DeReference in Layout", self, item, item.name)
 
-    def __rereference_obj__(self, item):
+    def _rereference_obj(self, item):
         try:
             self.hidden_content.remove(item)
             self.content.insert( self.content_cache.index(item), item)
@@ -667,7 +667,7 @@ class GridLayout(Widget, LayoutAssert):
 
         self.content[row][column] = item
 
-        #item.__parent__=weakref.proxy(self)
+        #item._parent=weakref.proxy(self)
 
         if self.saved_dialog is not None:
             self.saved_dialog.set_needs_layout()
@@ -767,7 +767,7 @@ class FreeLayout(Spacer, FreeLayoutAssert):
         if self.name : ReferenceName(self, self.name)
 
         for anchor, offset_x, offset_y, widget in self.content:
-            widget.__parent__=weakref.proxy(self)
+            widget._parent=weakref.proxy(self)
 
     def _get_controls(self):
         '''Returns controls within the FreeLayout'''
@@ -788,7 +788,7 @@ class FreeLayout(Spacer, FreeLayoutAssert):
 
         old_widget.delete()
 
-        widget.__parent__=weakref.proxy(self)
+        widget._parent=weakref.proxy(self)
 
         try : i = self.content.index(OLD_WIDGET) ; self.content[i]  =  WIDGET
         except ValueError: self.hidden_content.remove(OLD_WIDGET)
@@ -804,7 +804,7 @@ class FreeLayout(Spacer, FreeLayoutAssert):
 
     def add_widget(self, WIDGET, position):
         (anchor, x, y, widget) = WIDGET
-        widget.__parent__=weakref.proxy(self)
+        widget._parent=weakref.proxy(self)
 
         self.content.insert(position, WIDGET)
         self.content_cache.insert(position, WIDGET)
@@ -823,7 +823,7 @@ class FreeLayout(Spacer, FreeLayoutAssert):
         @param y Y-coordinate of offset from anchor point; positive is upward
         @param widget The Widget to be added
         '''
-        widget.__parent__=weakref.proxy(self)
+        widget._parent=weakref.proxy(self)
         WIDGET = (anchor, x, y, widget)
         self.content.append( WIDGET )
         self.content_cache.append( WIDGET )
@@ -903,8 +903,7 @@ class FreeLayout(Spacer, FreeLayoutAssert):
         if self.visible:
             self.visible=False
 
-    def __dereference_obj__(self, item):
-        #if not self.visible: return
+    def _dereference_obj(self, item):
 
         for i, data in enumerate(self.content[:]):
             if item in data:
@@ -912,7 +911,7 @@ class FreeLayout(Spacer, FreeLayoutAssert):
                 self.hidden_content.append(data)
         if Log.isLogging(): print("DeReference in Free Layout", self, item, item.name)
 
-    def __rereference_obj__(self, item):
+    def _rereference_obj(self, item):
 
         for i, data in enumerate(self.hidden_content[:]):
             if item in data:
@@ -990,8 +989,8 @@ class InteractiveLayout(HorizontalLayout, InteractiveLayoutAssert):
 
         @param item The Widget to be added
         '''
-        if self.slaved: item.__parent__=self.__parent__
-        else: item.__parent__= weakref.proxy(self)
+        if self.slaved: item._parent=self._parent
+        else: item._parent= weakref.proxy(self)
 
         if position is None:
             self.content.append(item)
@@ -1035,9 +1034,9 @@ class InteractiveLayout(HorizontalLayout, InteractiveLayoutAssert):
         '''
 
         if self.slaved is True:
-            item.__parent__ = weakref.proxy(self.__parent__)
+            item._parent = weakref.proxy(self._parent)
         else:
-            item.__parent__ = weakref.proxy(self)
+            item._parent = weakref.proxy(self)
 
         self.content[position].delete()
         self.content[position]=item
@@ -1080,7 +1079,7 @@ class InteractivePaletteLayout(PaletteLayout, InteractiveLayoutAssert):
         self.content.append(self.RowLayout(padding=3, default_slot=self.default_slot))
         Row=self.content[i_row]
         Row.size(dialog)
-        Row.__parent__=weakref.proxy(self)
+        Row._parent=weakref.proxy(self)
         Row.slaved=True
         row_width=0
 
@@ -1095,7 +1094,7 @@ class InteractivePaletteLayout(PaletteLayout, InteractiveLayoutAssert):
                     self.content.append(self.RowLayout( padding=3, default_slot=self.default_slot))
                     Row=self.content[i_row]
                     Row.size(dialog)
-                    Row.__parent__=weakref.proxy(self)
+                    Row._parent=weakref.proxy(self)
                     Row.slaved=True
                     row_width=0
 

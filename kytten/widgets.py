@@ -38,6 +38,12 @@ class Widget(object):
     for the first time, they initialize any requisite graphic elements
     that could not be done at creation time.
     '''
+    name=None
+    saved_dialog=None
+    destroyed=False
+    visible=True
+    _parent=None
+    x=y=0
     def __init__(self, width=0, height=0, name=None, group=None, spacer=False):
         '''
         Creates a new Widget.
@@ -45,25 +51,18 @@ class Widget(object):
         @param width Initial width
         @param height Initial height
         '''
-        self.x = self.y = 0
         self.width = width
         self.height = height
-        self.saved_dialog = None
-        self.visible=True
-        self.destroyed=False
-
-        #self.is_unset=True
-        #self.to_hide=False
-        self.__parent__=None
-        #self.parent_entry=None
 
         if  isinstance(group, str) : GetObjectfromName(group).add(self)
         elif isinstance(group, DisplayGroup): group.add(self)
 
         #if not spacer: self.id=GenId(self)
         self.id=GenId(self)
-        self.name=name
-        if self.name: ReferenceName(self,self.name)
+
+        if name is not None:
+            ReferenceName(self,name)
+            self.name=name
 
     def _get_controls(self):
         '''
@@ -90,6 +89,9 @@ class Widget(object):
             self.saved_dialog.set_needs_layout()
 
     def ensure_visible(self):
+        '''
+        Ensure that the widget is visible in scrollable parent.
+        '''
         if self.saved_dialog is not None:
             self.saved_dialog.ensure_visible(self)
 
@@ -166,7 +168,8 @@ class Widget(object):
         '''
         self.delete()
         self.saved_dialog = None
-        self.__parent__=None
+        self._parent=None
+
         if self.destroyed is False:
             self.destroyed = True
             if self.name is not None:
@@ -184,15 +187,10 @@ class Widget(object):
             self.visible=False
             self.delete()
 
-            if self.__parent__ is not None:
+            if  self._parent is not None:
+                self._parent._dereference_obj(self) # Parent is Layout Instance (except GridLayout Not yet implemented)
 
-                self.__parent__.__dereference_obj__(self) # Parent is Layout Instance (except GridLayout Not yet implemented)
-
-                if self.__parent__.saved_dialog is not None:
-                    self.__parent__.saved_dialog.set_needs_layout()
-
-                elif hasattr(self.__parent__,'set_needs_layout'): # Top Level Wrapper
-                    self.__parent__.set_needs_layout()
+                self._try_refresh()
 
     def Show(self):
         '''
@@ -203,15 +201,18 @@ class Widget(object):
         if self.visible is False:
             self.visible=True
 
-            if self.__parent__ is not None:
-                self.__parent__.__rereference_obj__(self) # Parent is Layout Instance (except GridLayout Not yet implemented)
+            if  self._parent is not None:
+                self._parent._rereference_obj(self) # Parent is Layout Instance (except GridLayout Not yet implemented)
 
-                if self.__parent__.saved_dialog is not None:
-                    self.__parent__.saved_dialog.set_needs_layout()
+                self._try_refresh()
 
-                elif hasattr(self.__parent__,'set_needs_layout'): # Top Level Wrapper
-                    self.__parent__.set_needs_layout()
+    def _try_refresh(self):
 
+        if self.saved_dialog is not None:
+            self.saved_dialog.set_needs_layout()
+
+        elif hasattr(self,'set_needs_layout'):# Top Level Wrapper
+            self.set_needs_layout()
 
     def ToggleVisibility(self):
         '''
@@ -237,6 +238,10 @@ class Control(Widget, KyttenEventDispatcher):
     on_gain_hover_func=None
     on_lose_hover_func=None
     scrollable_parent = None
+    highlight_flag=False
+    focus_flag=False
+    hover_flag=False
+    tooltip=None
     def __init__(self, name=None, on_gain_hover=None, on_lose_hover=None, value=None, width=0, height=0, disabled=False, noId=False, group=None):
         '''
         Creates a new Control.
@@ -257,13 +262,12 @@ class Control(Widget, KyttenEventDispatcher):
 
         self.value = value
         self.disabled_flag = disabled
-        self.highlight_flag = False
-        self.focus_flag = False
-        self.hover_flag = False
-        self.tooltip = None
 
-        if on_gain_hover is not None: self.on_gain_hover_func=on_gain_hover
-        if on_lose_hover is not None: self.on_lose_hover_func=on_lose_hover
+        if on_gain_hover is not None:
+            self.on_gain_hover_func=on_gain_hover
+
+        if on_lose_hover is not None:
+            self.on_lose_hover_func=on_lose_hover
 
     def _get_controls(self):
         '''
@@ -369,7 +373,8 @@ class Spacer(Widget):
         @param height Minimum height
         '''
         Widget.__init__(self, spacer=spacer)
-        self.min_width, self.min_height = width, height
+        self.min_width = width
+        self.min_height = height
 
     def expand(self, width, height):
         '''
@@ -399,12 +404,14 @@ class Graphic(Widget):
     '''
     Lays out a graphic from the theme, i.e. part of a title bar.
     '''
+    min_width = 0
+    min_height = 0
+    graphic = None
+
     def __init__(self, path, is_expandable=False, group=None, color=None):
         Widget.__init__(self, group=group)
         self.path = path
         self.expandable=is_expandable
-        self.graphic = None
-        self.min_width = self.min_height = 0
         self.color=color
 
     def delete(self):

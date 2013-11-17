@@ -32,12 +32,12 @@ class SpinControlGroup(object):
         if  self.remaining_credit <= 0:
             for member in self.members.keys():
                 if not member.isMax:
-                    member.northarrow.disable()
+                    member._northarrow.disable()
 
         else:
             for member in self.members.keys():
                 if not member.isMax:
-                    member.northarrow.enable()
+                    member._northarrow.enable()
 
     def add(self, member):#Store SpinCTRL initial value
         if not member in self.members:
@@ -103,12 +103,34 @@ class SpinButton(Button):
                 dialog.batch, dialog.bg_group)
 
         if self.highlight is None and self.is_highlight():
-            self.highlight = dialog.theme[path]['highlight']['image'].\
-                generate(dialog.theme[path]['highlight_color'],
-                         dialog.batch,
-                         dialog.bg_group)
+            self.highlight = dialog.theme[path]['highlight']['image'].generate(
+                    dialog.theme[path]['highlight_color'],
+                    dialog.batch,
+                    dialog.highlight_group)
 
         self.width, self.height = 8, 7 #self.button.get_needed_size( 0, 0)
+
+    def on_gain_highlight(self):
+        '''
+        If mouse hovers the button, display highlight
+        '''
+        Control.on_gain_highlight(self)
+
+        saved_dialog = self.scrollable_parent if self.scrollable_parent is not None else self.saved_dialog
+
+        if self.is_pressed:
+            if self.direction == 'north': path = ['spinbutton', 'downnortharrow']
+            else: path = ['spinbutton', 'downsoutharrow']
+        else:
+            if self.direction == 'north': path = ['spinbutton', 'upnortharrow']
+            else: path = ['spinbutton', 'upsoutharrow']
+
+        if self.highlight is None and self.is_highlight():
+            self.highlight = self.saved_dialog.theme[path]['highlight']['image'].generate(
+                color=self.saved_dialog.theme[path]['highlight_color'],
+                batch=saved_dialog.batch,
+                group=saved_dialog.highlight_group)
+            self.highlight.update(self.x, self.y, self.width, self.height)
 
 class SpinControl(HorizontalLayout, Control):
     def __init__(self, name=None, value=None, minv=0.0, maxv=100.0, step=1.0, on_spin=None, ctrlgroup=None, disabled=False, text_style={}, style=None):
@@ -133,46 +155,47 @@ class SpinControl(HorizontalLayout, Control):
         self.isMin=False
         self.isMax=False
 
-        self.northarrow = SpinButton('north', on_click= self.increment)
-        self.southarrow = SpinButton('south', on_click= self.decrement)
+        self._northarrow = SpinButton('north', on_click= self._increment)
+        self._southarrow = SpinButton('south', on_click= self._decrement)
         self.label = Label(str(self.value).rjust(2), style =self.text_style )
 
-        HorizontalLayout.__init__(self, [VerticalLayout([self.northarrow,self.southarrow], align=HALIGN_CENTER, padding=3),
-                                                self.label
-                                                ], align=VALIGN_CENTER, padding=6, name=name )
+        HorizontalLayout.__init__(self, [VerticalLayout([self._northarrow,self._southarrow], align=HALIGN_CENTER, padding=3),
+                                         self.label
+                                        ], align=VALIGN_CENTER, padding=6, name=name )
 
-        if on_spin: self.set_handler('on_spin',on_spin)
+        self.on_spin_func = on_spin
 
-    def increment(self, *args):
+    def set_value(self, value):
+        self.value=value
+
+        self._update()
+
+    def _increment(self, *args):
         if not self.isMax:
             self.value+=self.step
-            if self.control_group:
-                self.control_group.check_total(self)
-                self.check_bound_value(False)
-            else:
-                self.check_bound_value(True)
 
-            self.label.set_text(str(self.value).rjust(2) )
-            self.dispatch_event('on_spin', self)
+            self._update()
 
-    def decrement(self, *args):
+    def _decrement(self, *args):
         if not self.isMin:
             self.value-=self.step
-            if self.control_group:
-                self.control_group.check_total(self)
-                self.check_bound_value(False)
-            else:
-                self.check_bound_value(True)
 
-            self.label.set_text(str(self.value).rjust(2) )
-            self.dispatch_event('on_spin', self)
+            self._update()
 
-    def disable_south(self):
-        self.southarrow.disable()
-    def disable_north(self):
-        self.northarrow.disable()
+    def _update(self):
 
-    def check_bound_value(self, control_group):
+        if self.control_group:
+            self.control_group.check_total(self)
+            self._check_bound_value(False)
+        else:
+            self._check_bound_value(True)
+
+        self.label.set_text(str(self.value).rjust(2) )
+
+        if self.on_spin_func is not None:
+            self.on_spin_func(self, self.value)
+
+    def _check_bound_value(self, control_group):
         if self.value >= self.max_value:
             self.value = self.max_value
             self.isMax=True
@@ -184,19 +207,5 @@ class SpinControl(HorizontalLayout, Control):
             self.isMin=False
             self.isMax=False
 
-    def on_spin(self, *args):
-        return pyglet.event.EVENT_HANDLED
 
-    def set_value(self, value):
-        self.value=value
 
-        if self.control_group:
-            self.control_group.check_total(self)
-            self.check_bound_value(False)
-        else:
-            self.check_bound_value(True)
-
-        self.label.set_text(str(self.value).rjust(2) )
-        self.dispatch_event('on_spin', self)
-
-SpinControl.register_event_type('on_spin')

@@ -58,7 +58,7 @@ class ToggleButton(Button):
     def on_mouse_release(self, x, y, button, modifiers):
         pass
 
-class ToggleImageButton(ImageButton, ToggleButton):
+class ToggleImageButton(ToggleButton, ImageButton):
     def __init__(self, image=None, style=None, size=None, text="", toggle=None, name=None, on_click=None, on_gain_hover=None, on_lose_hover=None, disabled=False, square=True):
         ImageButton.__init__(self, image=image, style=style, size=size, text=text, name=name, on_click=on_click, on_gain_hover=on_gain_hover, on_lose_hover=on_lose_hover, disabled=disabled, square=square)
 
@@ -69,15 +69,22 @@ class ToggleImageButton(ImageButton, ToggleButton):
         else: self.toggling_group=None
 
     def on_gain_highlight(self):
-        if not self.is_pressed: self.image = self.hover_image
-        Button.on_gain_highlight(self)
-
-        self._force_refresh()
+        if not self.is_pressed:
+            ImageButton.on_gain_highlight(self)
 
     def on_lose_highlight(self):
-        Button.on_lose_highlight(self)
-
         if not self.is_pressed:
-            self.image = self.default_image
+            ImageButton.on_lose_highlight(self)
 
+    def select(self):
+        self.is_pressed = True
+        self.image=self.clicked_image
         self._force_refresh()
+
+    def unselect(self):
+        self.is_pressed = False
+        self.image = self.default_image
+        self._force_refresh()
+
+    def on_mouse_press(self, x, y, button, modifiers):
+        ToggleButton.on_mouse_press(self, x, y, button, modifiers)

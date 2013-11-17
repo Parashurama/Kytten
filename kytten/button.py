@@ -521,7 +521,7 @@ class DraggableImageButton(ImageButton):
         DRAGGED_ITEM=weakref.proxy(GetObjectfromName('draggable_items'))
 
         if not self.isDragging:
-            self.__old__parent__=self.__parent__
+            self.__old__parent__=self._parent
 
             if   self.isCopying is True:
 
@@ -534,41 +534,41 @@ class DraggableImageButton(ImageButton):
 
                 if  isinstance(self.__old__parent__, InteractiveLayoutAssert):
 
-                    if hasattr(self.__parent__, 'slaved') and self.__parent__.slaved: # for InteractivePaletteLayout
-                        self.__old__parent_layout_info__ = self.__parent__.__parent__.remove(self, False)
-                        self.__parent__.__parent__.add( NEW , self.__old__parent_layout_info__[1])
+                    if hasattr(self._parent, 'slaved') and self._parent.slaved: # for InteractivePaletteLayout
+                        self.__old__parent_layout_info__ = self._parent._parent.remove(self, False)
+                        self._parent._parent.add( NEW , self.__old__parent_layout_info__[1])
 
                     else:
-                        self.__old__parent_layout_info__ = self.__parent__.remove(self, False)
-                        self.__parent__.add( NEW , self.__old__parent_layout_info__[1])
+                        self.__old__parent_layout_info__ = self._parent.remove(self, False)
+                        self._parent.add( NEW , self.__old__parent_layout_info__[1])
                 else:
-                    self.__old__parent_layout_info__, index = self.__parent__.remove(self)
+                    self.__old__parent_layout_info__, index = self._parent.remove(self)
 
-                    self.__parent__.add( *( self.__old__parent_layout_info__[:-1]+(NEW,) ) )
+                    self._parent.add( *( self.__old__parent_layout_info__[:-1]+(NEW,) ) )
 
             elif self.isCopying is False:
 
-                if hasattr(self.__parent__, 'slaved') and self.__parent__.slaved:
+                if hasattr(self._parent, 'slaved') and self._parent.slaved:
 
 
-                    self.__old__parent_layout_info__ = self.__parent__.__parent__.remove(self)
+                    self.__old__parent_layout_info__ = self._parent._parent.remove(self)
 
-                    if hasattr(self.__parent__.__parent__, 'on_drag_object') and self.__parent__.__parent__.on_drag_object is not None:
+                    if hasattr(self._parent._parent, 'on_drag_object') and self._parent._parent.on_drag_object is not None:
                         raise NotImplementedError('')
-                        self.__parent__.__parent__.on_drag_object(self)
+                        self._parent._parent.on_drag_object(self)
 
                 else:
-                    if  isinstance(self.__parent__, InteractiveLayoutAssert):
-                        item,index = self.__old__parent_layout_info__ = self.__parent__.remove(self)
+                    if  isinstance(self._parent, InteractiveLayoutAssert):
+                        item,index = self.__old__parent_layout_info__ = self._parent.remove(self)
                     else:
-                        (anchor, x, y, item), index = self.__old__parent_layout_info__ = self.__parent__.remove(self)
+                        (anchor, x, y, item), index = self.__old__parent_layout_info__ = self._parent.remove(self)
 
-                    if hasattr(self.__parent__, 'on_drag_object') and self.__parent__.on_drag_object is not None:
-                        self.__parent__.on_drag_object(self.__parent__, self, index)
+                    if hasattr(self._parent, 'on_drag_object') and self._parent.on_drag_object is not None:
+                        self._parent.on_drag_object(self._parent, self, index)
 
             else:
                 #item,index = self.__old__parent_layout_info__
-                #self.__parent__.on_drag_object(self.__parent__, self, index)
+                #self._parent.on_drag_object(self._parent, self, index)
 
                 self.delete()
 
@@ -619,11 +619,11 @@ class DraggableImageButton(ImageButton):
 
 
                 if hasattr(New_Parent, 'slaved') and New_Parent.slaved: # for InteractivePaletteLayout
-                    if New_Parent.__parent__.on_drop_object is not None:
-                        New_Parent.__parent__.on_drop_object(New_Parent, self, position)
+                    if New_Parent._parent.on_drop_object is not None:
+                        New_Parent._parent.on_drop_object(New_Parent, self, position)
 
-                    Widget, position = New_Parent.__parent__.remove(widget._self(), False)
-                    New_Parent.__parent__.add(self, position)
+                    Widget, position = New_Parent._parent.remove(widget._self(), False)
+                    New_Parent._parent.add(self, position)
 
                 else:
                     if New_Parent.on_drop_object is not None:

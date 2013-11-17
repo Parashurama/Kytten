@@ -45,7 +45,7 @@ class Wrapper(Widget):
         self.content_offset = offset
         self.to_refresh=True
 
-        if self.content is not None: self.content.__parent__=weakref.proxy(self)
+        if self.content is not None: self.content._parent=weakref.proxy(self)
 
     def _get_controls(self):
         '''Returns Controls contained by the Wrapper.'''
@@ -56,7 +56,7 @@ class Wrapper(Widget):
             self.content.delete()
 
         self.content = content
-        content.__parent__=weakref.proxy(self)
+        content._parent=weakref.proxy(self)
 
         if self.hidden_content is not None:
             self.hidden_content.delete()
@@ -143,27 +143,21 @@ class Wrapper(Widget):
 
             Widget.Show(self)
 
-    def __rereference_obj__(self, *args):
+    def _rereference_obj(self, *args):
         self.content = self.hidden_content
         self.hidden_content = None
 
         if Log.isLogging(): print("ReReference in Wrapper", self, self.content, self.hidden_content)
 
-        if self.saved_dialog is not None:
-            self.saved_dialog.set_needs_layout()
-        else: # Top Level Wrapper
-            if hasattr(self,'set_needs_layout'): self.set_needs_layout()
+        self._try_refresh()
 
-    def __dereference_obj__(self, *args):
+    def _dereference_obj(self, *args):
         self.hidden_content = self.content
         self.content = None
 
         if Log.isLogging(): print("DeReference in Wrapper", self, self.hidden_content, self.hidden_content.name)
 
-        if self.saved_dialog is not None:
-            self.saved_dialog.set_needs_layout()
-        else: # Top Level Wrapper
-            if hasattr(self,'set_needs_layout'): self.set_needs_layout()
+        self._try_refresh()
 
     def delete(self):
         '''Deletes graphic elements within the Wrapper.'''

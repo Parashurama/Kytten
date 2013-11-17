@@ -23,7 +23,7 @@ if __name__ == '__main__':
     kytten.SetWindow(window) # important to correctly initialize kytten before trying to create Gui widgets
 
     Theme = kytten.Theme('../theme', override={
-        "gui_color": [64, 128, 255, 255],
+        #"gui_color": [64, 128, 255, 255],
         "text_color": [0,100,255,255],
         "font_size": 16
     })

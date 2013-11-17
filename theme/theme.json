@@ -1,26 +1,6 @@
 {
-  "checkbox": {
-    "checked": {
-      "highlight": {
-        "image": {
-          "src": "input-highlight.png"
-        }
-      },
-      "image": {
-        "src": "checkbox-checked.png"
-      }
-    },
-    "unchecked": {
-      "highlight": {
-        "image": {
-          "src": "input-highlight.png"
-        }
-      },
-      "image": {
-        "src": "checkbox.png"
-      }
-    }
-  },
+  "font": "Lucida Grande",
+  "font_size": 10,
   "vscrollbar": {
     "bar": {
       "image": {
@@ -61,115 +41,47 @@
       }
     }
   },
-  "hscrollbar": {
-    "leftmax": {
+  "disabled_color": [160, 160, 160, 255],
+  "dropdown": {
+    "pulldown": {
       "image": {
-        "src": "hscrollbar.png",
-        "region": [48, 0, 16, 16]
+        "src": "pulldown.png",
+        "region": [0, 0, 64, 64],
+        "stretch": [12, 12, 12, 12],
+        "padding": [18, 18, 18, 18]
       }
     },
-    "right": {
-      "image": {
-        "src": "hscrollbar.png",
-        "region": [32, 0, 16, 16]
-      }
-    },
-    "bar": {
-      "image": {
-        "src": "hscrollbar.png",
-        "region": [64, 0, 16, 16],
-        "stretch": [6, 0, 4, 16],
-        "padding": [0, 0, 0, 0]
-      }
-    },
-    "space": {
-      "image": {
-        "src": "hscrollbar.png",
-        "region": [16, 0, 16, 16]
-      }
-    },
-    "rightmax": {
-      "image": {
-        "src": "hscrollbar.png",
-        "region": [80, 0, 16, 16]
-      }
-    },
-    "left": {
-      "image": {
-        "src": "hscrollbar.png",
-        "region": [0, 0, 16, 16]
-      }
+    "image": {
+      "src": "dropdown.png",
+      "stretch": [4, 8, 20, 5],
+      "padding": [6, 10, 6, 10]
     }
   },
+  "gui_color": [255, 255, 255, 255],
   "frame": {
     "image": {
-      "src": "panel.png",
-      "region": [0, 0, 64, 64],
-      "stretch": [12, 12, 40, 40],
-      "padding": [18, 18, 32, 32]
+      "src": "menu0.png",
+      "region": [0, 0, 256, 256],
+      "stretch": [14, 14, 231, 228],
+      "padding": [21, 17, 20, 19]
     }
   },
-  "font": "Lucida Grande",
-  "menuoption": {
-    "highlight": {
+  "colorselector": {
+    "swatch": {
       "image": {
-        "src": "input-highlight.png"
+        "src": "colorswatch.png",
+        "region": [0, 0, 26, 26],
+        "stretch": [5, 5, 16, 16],
+        "padding": [5, 5, 5, 5]
       }
     },
-    "selection": {
-      "gui_color": [255, 255, 255, 255],
-      "text_color": [0, 0, 0, 255]
-    }
-  },
-  "disabled_color": [160, 160, 160, 255],
-  "section": {
-    "right": {
+    "crosshair": {
       "image": {
-        "src": "line.png",
-        "region": [2, 0, 6, 4],
-        "stretch": [0, 4, 4, 0],
-        "padding": [0, 0, 0, 6]
+        "src": "crosshair.png",
+        "region": [0, 0, 16, 16],
+        "stretch": [8, 8, 0, 0],
+        "padding": [8, 8, 8, 8]
       }
-    },
-    "font_size": 14,
-    "center": {
-      "image": {
-        "src": "line.png",
-        "region": [2, 0, 4, 4],
-        "stretch": [0, 4, 4, 0],
-        "padding": [0, 0, 0, 6]
-      }
-    },
-    "closed": {
-      "image": {
-        "src": "book.png"
-      }
-    },
-    "left": {
-      "image": {
-        "src": "line.png",
-        "region": [0, 0, 6, 4],
-        "stretch": [2, 4, 4, 0],
-        "padding": [0, 0, 0, 6]
-      }
-    },
-    "opened": {
-      "image": {
-        "src": "book-open.png"
-      }
-    }
-  },
-  "input": {
-    "highlight": {
-      "image": {
-        "src": "input-highlight.png"
-      }
-    },
-    "image": {
-      "src": "input.png",
-      "region": [0, 0, 8, 8],
-      "stretch": [2, 2, 4, 4],
-      "padding": [3, 3, 2, 2]
     }
   },
   "spinbutton": {
@@ -238,62 +150,130 @@
       }
     }
   },
-  "dropdown": {
-    "pulldown": {
+  "text_color": [62, 255, 0, 255],
+  "hscrollbar": {
+    "leftmax": {
       "image": {
-      "src": "pulldown.png",
-      "region": [0, 0, 64, 64],
-      "stretch": [12, 12, 12, 12],
-      "padding": [18, 18, 18, 18]
+        "src": "hscrollbar.png",
+        "region": [48, 0, 16, 16]
       }
     },
-    "image": {
-      "src": "dropdown.png",
-      "stretch": [4, 8, 20, 5],
-      "padding": [6, 10, 6, 10]
-    }
-  },
-  "gui_color": [255, 255, 255, 255],
-  "text_color": [62, 255, 0, 255],
-  "slider": {
-    "knob": {
+    "right": {
       "image": {
-        "src": "slider-knob.png"
-      },
-      "offset": [-5, -11]
+        "src": "hscrollbar.png",
+        "region": [32, 0, 16, 16]
+      }
     },
-    "padding": [8, 8, 8, 8],
-    "step": {
+    "rightmax": {
       "image": {
-        "src": "slider-step.png"
-      },
-      "offset": [-2, -8]
+        "src": "hscrollbar.png",
+        "region": [80, 0, 16, 16]
+      }
+    },
+    "space": {
+      "image": {
+        "src": "hscrollbar.png",
+        "region": [16, 0, 16, 16]
+      }
     },
     "bar": {
       "image": {
-        "src": "slider-bar.png",
-        "stretch": [8, 8, 8, 0],
-        "padding": [8, 8, 8, 8]
+        "src": "hscrollbar.png",
+        "region": [64, 0, 16, 16],
+        "stretch": [6, 0, 4, 16],
+        "padding": [0, 0, 0, 0]
+      }
+    },
+    "left": {
+      "image": {
+        "src": "hscrollbar.png",
+        "region": [0, 0, 16, 16]
       }
     }
   },
-  "font_size": 10,
-  "colorselector": {
-    "swatch": {
+  "checkbox": {
+    "checked": {
+      "highlight": {
+        "image": {
+          "src": "input-highlight.png"
+        }
+      },
       "image": {
-        "src": "colorswatch.png",
-        "region": [0, 0, 26, 26],
-        "stretch": [5, 5, 16, 16],
-        "padding": [5, 5, 5, 5]
+        "src": "checkbox-checked.png"
       }
     },
-    "crosshair": {
+    "unchecked": {
+      "highlight": {
+        "image": {
+          "src": "input-highlight.png"
+        }
+      },
       "image": {
-        "src": "crosshair.png",
-        "region": [0, 0, 16, 16],
-        "stretch": [8, 8, 0, 0],
-        "padding": [8, 8, 8, 8]
+        "src": "checkbox.png"
       }
+    }
+  },
+  "section": {
+    "right": {
+      "image": {
+        "src": "line.png",
+        "region": [2, 0, 6, 4],
+        "stretch": [0, 4, 4, 0],
+        "padding": [0, 0, 0, 6]
+      }
+    },
+    "font_size": 14,
+    "opened": {
+      "image": {
+        "src": "book-open.png"
+      }
+    },
+    "closed": {
+      "image": {
+        "src": "book.png"
+      }
+    },
+    "left": {
+      "image": {
+        "src": "line.png",
+        "region": [0, 0, 6, 4],
+        "stretch": [2, 4, 4, 0],
+        "padding": [0, 0, 0, 6]
+      }
+    },
+    "center": {
+      "image": {
+        "src": "line.png",
+        "region": [2, 0, 4, 4],
+        "stretch": [0, 4, 4, 0],
+        "padding": [0, 0, 0, 6]
+      }
+    }
+  },
+  "input": {
+    "highlight": {
+      "image": {
+        "src": "input-highlight.png"
+      }
+    },
+    "image": {
+      "src": "input.png",
+      "region": [0, 0, 8, 8],
+      "stretch": [2, 2, 4, 4],
+      "padding": [3, 3, 2, 2]
+    }
+  },
+  "font_size_small": 8,
+  "highlight_color": [255, 255, 255, 64],
+  "menuoption": {
+    "highlight": {
+      "image": {
+        "src": "input-highlight.png"
+      }
+    },
+    "selection": {
+      "gui_color": [255, 255, 255, 255],
+      "text_color": [0, 0, 0, 255]
     }
   },
   "button": {
@@ -329,8 +309,28 @@
       }
     }
   },
-  "highlight_color": [255, 255, 255, 64],
-  "font_size_small": 8,
+  "slider": {
+    "knob": {
+      "image": {
+        "src": "slider-knob.png"
+      },
+      "offset": [-5, -11]
+    },
+    "padding": [8, 8, 8, 8],
+    "step": {
+      "image": {
+        "src": "slider-step.png"
+      },
+      "offset": [-2, -8]
+    },
+    "bar": {
+      "image": {
+        "src": "slider-bar.png",
+        "stretch": [8, 8, 8, 0],
+        "padding": [8, 8, 8, 8]
+      }
+    }
+  },
   "titlebar": {
     "frame": {
       "image": {

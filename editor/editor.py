@@ -24,11 +24,11 @@ from kytten.scrollable import ScrollableGroup
 from kytten.theme import TextureGraphicElementTemplate
 from kytten.theme import FrameTextureGraphicElementTemplate
 from kytten.widgets import Control
-from .proxy_dialog import ProxyDialog
-from .resizable import Resizable
-from .image_region_placer import ImageRegionPlacer
-from .state_manager import StateManager
-from .color_selector import ColorSelector
+from proxy_dialog import ProxyDialog
+from resizable import Resizable
+from image_region_placer import ImageRegionPlacer
+from state_manager import StateManager
+from color_selector import ColorSelector
 
 # Default theme
 theme_dir = os.path.join(os.getcwd(), 'theme')

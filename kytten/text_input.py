@@ -24,8 +24,8 @@ class Input(Control):
     highlight = None
     restricted = None
     def __init__(self, text="", length=20, max_length=None, padding=0,
-                 on_input=None, name=None, disabled=False, restricted=None):
-        Control.__init__(self, name=name, disabled=disabled)
+                 on_input=None, name=None, disabled=False, restricted=None, group=None):
+        Control.__init__(self, name=name, disabled=disabled, group=group)
         self.text = string_to_unicode(text)
         self.length = int(length)
         self.max_length = int(max_length) if max_length is not None else None
@@ -302,9 +302,9 @@ class Input(Control):
 class MultilineInput(Input):
 
     def __init__(self, text="", width=200, height = 100, padding=0,
-                 on_input=None, auto_complete=None, name=None, disabled=False):
+                 on_input=None, auto_complete=None, name=None, disabled=False, group=None):
 
-        Control.__init__(self, name=name, disabled=disabled)
+        Control.__init__(self, name=name, disabled=disabled, group=group)
         self.text = string_to_unicode(text)
         self.content_width = width
         self.content_height = height

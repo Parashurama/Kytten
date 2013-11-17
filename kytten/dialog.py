@@ -670,7 +670,7 @@ class Dialog(Wrapper, DialogEventManager, DialogAssert):
             self.screen = Widget(width=width, height=height)
             if not tooltip: window.push_handlers(weakref.proxy(self))
 
-    def GetRelativeSize(self):
+    def get_relative_size(self):
         _OFF_WIDTH = 0 ; _OFF_HEIGHT = 0
         OFF_WIDTH = 0 ; OFF_HEIGHT = 0
         _WIDTH = self.width; _HEIGHT = self.height
@@ -753,7 +753,7 @@ class Dialog(Wrapper, DialogEventManager, DialogAssert):
 
         return (WIDTH, HEIGHT),(OFF_WIDTH,OFF_HEIGHT)
 
-    def TranslateOffset(self, OFFSET, PARENT, DIALOG, SCREEN, ANCHOR):
+    def translate_offset(self, OFFSET, PARENT, DIALOG, SCREEN, ANCHOR):
         (OFFSET_X,OFFSET_Y) = OFFSET
 
         if   ANCHOR == ANCHOR_TOP_LEFT:
@@ -803,10 +803,10 @@ class Dialog(Wrapper, DialogEventManager, DialogAssert):
         else:
             raise NotImplementedError('')
 
-    def SetChildOffset(self):
+    def set_children_offsets(self):
         for child_dialog in self.child_dialogs:
             if not child_dialog.visible: continue
-            child_dialog.offset = child_dialog.basic_offset = self.TranslateOffset((self.x, self.y), self, child_dialog, self.screen, child_dialog.anchor)
+            child_dialog.offset = child_dialog.basic_offset = self.translate_offset((self.x, self.y), self, child_dialog, self.screen, child_dialog.anchor)
             child_dialog.needs_layout = True
 
     def do_layout(self):
@@ -826,7 +826,7 @@ class Dialog(Wrapper, DialogEventManager, DialogAssert):
                 if not child_dialog.visible: continue
                 child_dialog.size(child_dialog)
 
-            EFFECTIVE_SIZE, EFFECTIVE_OFFSET = self.GetRelativeSize()
+            EFFECTIVE_SIZE, EFFECTIVE_OFFSET = self.get_relative_size()
 
         self.child_group_size = (EFFECTIVE_SIZE[0]+EFFECTIVE_OFFSET[0], EFFECTIVE_SIZE[1]+EFFECTIVE_OFFSET[1])
 
@@ -863,7 +863,7 @@ class Dialog(Wrapper, DialogEventManager, DialogAssert):
         self.update_controls()
 
         if self.child_dialogs:
-            self.SetChildOffset()
+            self.set_children_offsets()
 
         self.needs_layout = False
 
@@ -1104,15 +1104,13 @@ class Dialog(Wrapper, DialogEventManager, DialogAssert):
         self.EventHandled()
         DereferenceDialog(self)
 
-
-
-
-class GuiStyle:
+class GuiTheme:
     def __init__(self, **kwargs):
         self.attributes=kwargs
 
 class GuiElement(Dialog):
-    def __init__(self, content=[], graphic=None , gui_style=None, fixed_size=None, offset_modifier=None, *args, **kwargs):
+
+    def __init__(self, content=[], graphic=None, gui_style=None, fixed_size=None, offset_modifier=None, *args, **kwargs):
 
         self.offset_modifier=offset_modifier # (ex: (-1/2.,0) offset x pos by half width towards left )
         self.basic_offset=kwargs.get('offset', (0,0))
@@ -1133,11 +1131,12 @@ class GuiElement(Dialog):
         else:
             content=TransparentFrame(content)
 
-        if not gui_style: Dialog.__init__(self, content, *args, **kwargs)
-        else:
-            ATTRIBUTES= gui_style.attributes.copy()
+        if gui_style is not None:
+            ATTRIBUTES=gui_style.attributes.copy()
             ATTRIBUTES.update(kwargs)
-            Dialog.__init__(self, content, **ATTRIBUTES)
+        else :
+            ATTRIBUTES = kwargs
+        Dialog.__init__(self, content, **ATTRIBUTES)
 
     def header_bar_hit_test(self, x, y):
         ix0,iy0,ix1,iy1=self.content._header_bar
@@ -1233,7 +1232,6 @@ class GuiElement(Dialog):
             self.set_offset(pos)
         else:
             raise NotImplementedError("Setting Position Only for Dialog with 'ANCHOR_BOTTOM_LEFT'")
-        #self.set_needs_layout()
 
     def set_offset(self, offset):
         self.basic_offset = (int(offset[0]), int(offset[1]))
@@ -1335,7 +1333,7 @@ class ToolTip(GuiElement):
                 if not child_dialog.visible: continue
                 child_dialog.size(child_dialog)
 
-            EFFECTIVE_SIZE, EFFECTIVE_OFFSET = self.GetRelativeSize()
+            EFFECTIVE_SIZE, EFFECTIVE_OFFSET = self.get_relative_size()
 
         self.child_group_size = (EFFECTIVE_SIZE[0]+EFFECTIVE_OFFSET[0], EFFECTIVE_SIZE[1]+EFFECTIVE_OFFSET[1])
 
@@ -1377,71 +1375,13 @@ class ToolTip(GuiElement):
         self.update_controls()
 
         if self.child_dialogs:
-            self.SetChildOffset()
+            self.set_children_offsets()
 
         self.needs_layout = False
 
         for child_dialog in self.child_dialogs:
             child_dialog.needs_layout=True
             child_dialog.on_update(0.0)
-
-
-    def doo_layout(self):
-        '''
-        We lay out the Dialog by first determining the size of all its
-        child Widgets, then laying ourself out relative to the parent window.
-        '''
-        if not self.screen: self.needs_layout = False ; return
-
-        # Determine size of all components
-        self.size(self)
-        EFFECTIVE_SIZE = (self.width,self.height)
-
-        EFFECTIVE_OFFSET=(0,0)
-        if self.child_dialogs:
-            for child_dialog in self.child_dialogs:
-                if not child_dialog.visible: continue
-                child_dialog.size(child_dialog)
-
-            EFFECTIVE_SIZE, EFFECTIVE_OFFSET = self.GetRelativeSize()
-
-        self.child_group_size = (EFFECTIVE_SIZE[0]+EFFECTIVE_OFFSET[0], EFFECTIVE_SIZE[1]+EFFECTIVE_OFFSET[1])
-
-        # Calculate our position relative to our containing window,
-        # making sure that we fit completely on the window.  If our offset
-        # would send us off the screen, constrain it.
-
-        x = self.parent_widget.x + self.parent_widget.width/2-self.width/2
-        y = self.parent_widget.y + self.parent_widget.height/2-self.height/2
-
-        offset_x, offset_y = self.offset
-
-        if self.child_dialogs:
-            g_width, g_height = self.child_group_size
-            t_height=EFFECTIVE_SIZE[1] if (0 and self.anchor[1] == VALIGN_CENTER) else g_height
-            t_width =EFFECTIVE_SIZE[0] if (0 and self.anchor[0] == HALIGN_CENTER) else g_width
-
-            min_offset_x, min_offset_y, max_offset_x, max_offset_y = SetMinMaxDialogOffsets(self.anchor, self.screen, g_width, g_height, t_width, t_height)
-
-            offset_x = max(min(offset_x, max_offset_x), min_offset_x) + EFFECTIVE_OFFSET[0]
-            offset_y = max(min(offset_y, max_offset_y), min_offset_y) + EFFECTIVE_OFFSET[1]
-        else:
-            min_offset_x, min_offset_y, max_offset_x, max_offset_y = SetMinMaxDialogOffsets(self.anchor, self.screen, self.width, self.height, self.width, self.height)
-            offset_x = max(min(offset_x, max_offset_x), min_offset_x)
-            offset_y = max(min(offset_y, max_offset_y), min_offset_y)
-
-        self.offset = (offset_x, offset_y)
-        x += offset_x
-        y += offset_y
-
-        # Perform the actual layout now!
-        self.layout(x, y)
-        self.update_controls()
-
-        if self.child_dialogs:
-            self.SetChildOffset()
-
-        self.needs_layout = False
 
     def on_mouse_drag(self,*args):
         pass
@@ -1478,7 +1418,7 @@ class ToolTipProxy(GuiElement):
 class Drag_n_Drop(Dialog):
     interactive_layouts=weakref.WeakKeyDictionary()
     to_update_data=weakref.WeakSet()
-    EmulDragging=False
+    _emul_dragging=False
 
     def __init__(self, *args, **kwargs):
         kwargs['always_on_top'] = True
@@ -1524,7 +1464,7 @@ class Drag_n_Drop(Dialog):
 
                 if x0 <= x <= x1 and y0 <= y <= y1 :
                     for i,widget in enumerate(layout.content):
-                        if (hasattr(layout, 'slaved') and layout.slaved and not widget in layout.__parent__.linear_content): continue
+                        if (hasattr(layout, 'slaved') and layout.slaved and not widget in layout._parent.linear_content): continue
 
                         x0 = widget.x
                         y0 = widget.y
@@ -1535,7 +1475,7 @@ class Drag_n_Drop(Dialog):
                             return layout, i, widget
 
     def on_mouse_motion(self, x, y, dx, dy):
-        if self.EmulDragging is True:
+        if self._emul_dragging is True:
             self.focus.on_mouse_drag(x,y,dx,dy, 0,0)
             return self.EventHandled()
 
@@ -1543,7 +1483,7 @@ class Drag_n_Drop(Dialog):
         return self.EventHandled()
 
     def on_mouse_press(self, x, y, button, modifiers):
-        if self.EmulDragging is True:
+        if self._emul_dragging is True:
             self.focus.on_mouse_release(x,y, 0,0)
             return self.EventHandled()
 
