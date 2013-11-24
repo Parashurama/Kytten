@@ -12,7 +12,7 @@ from .widgets import Control, Label
 from .layout import VALIGN_CENTER, HALIGN_CENTER, VerticalLayout, HorizontalLayout
 
 class SpinControlGroup(object):
-    def __init__(self, value=None, minv=0.0, maxv=100.0, step=1.0, credit=10, text_style=None):
+    def __init__(self, value=None, minv=0.0, maxv=100.0, step=1.0, credit=10, text_style={}):
 
         if value is None: self.value=(maxv-minv)/2+minv
         else: self.value=value
@@ -150,7 +150,7 @@ class SpinControl(HorizontalLayout, Control):
             self.min_value=minv
             self.max_value=maxv
             self.step=step
-            self.text_style = None
+            self.text_style = text_style
 
         self.isMin=False
         self.isMax=False

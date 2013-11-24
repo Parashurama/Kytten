@@ -36,7 +36,7 @@ from .scrollable import Scrollable
 from .slider import Slider
 from .text_input import Input, MultilineInput
 from .theme import Theme
-from .widgets import Widget, Spacer, Label, Control, Image, TextStyle
+from .widgets import Widget, Spacer, Label, Control, Image
 from .color_selector import ColorSelector, ColorWheel
 from .base import GetObjectfromId, GetObjectfromName, ReferenceName, DisplayGroup, GetActiveDialogs
 from .base import InvalidWidgetNameError

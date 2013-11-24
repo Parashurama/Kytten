@@ -42,6 +42,10 @@ ANCHOR_BOTTOM_LEFT = CVars.ANCHOR_BOTTOM_LEFT = (VALIGN_BOTTOM, HALIGN_LEFT)
 ANCHOR_BOTTOM = CVars.ANCHOR_BOTTOM     = (VALIGN_BOTTOM, HALIGN_CENTER)
 ANCHOR_BOTTOM_RIGHT = CVars.ANCHOR_BOTTOM_RIGHT = (VALIGN_BOTTOM, HALIGN_RIGHT)
 
+for var_name, var in vars().items():
+    if var_name.startswith('ANCHOR') or var_name.startswith('VALIGN') or var_name.startswith('HALIGN'):
+        setattr(CVars, var_name, var)
+
 def GetRelativePoint(parent, parent_anchor, child, child_anchor, offset):
     valign, halign = parent_anchor or ANCHOR_CENTER
 

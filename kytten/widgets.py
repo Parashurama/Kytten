@@ -538,35 +538,24 @@ class Image(Widget):
 
         self.width, self.height = self.min_width, self.min_height
 
-class TextStyle(object):
-    def __init__(self, bold=False, italic=False, font_name=None, font_size=None, color=None):
-        self.bold=bold
-        self.italic=italic
-        self.font_name=font_name
-        self.font_size=font_size
-        self.color=color
-
 class Label(Widget):
     '''
     A wrapper around a simple text label.
     '''
+    label=None
     def __init__(self, text="", name=None, style=None, bold=False, italic=False,
                  font_name=None, font_size=None, color=None, multiline=False, width=None, path=[], group=None):
         Widget.__init__(self, name=name, group=group)
 
         self.text = string_to_unicode(text)
+        self._text_style = {"bold":False, "italic":False, "font_name":None, "font_size":None, "color":None}
 
         if style is not None:
             self.set_text_style(style)
         else:
-            self.bold = bold
-            self.italic = italic
-            self.font_name = font_name
-            self.font_size = font_size
-            self.color = color
+            self.set_text_style({"bold":bold, "italic":italic, "font_name":font_name, "font_size":font_size, "color":color})
 
         self.path = path
-        self.label = None
         self.is_multiline = multiline
         self.label_width = width
 
@@ -587,22 +576,9 @@ class Label(Widget):
         Set Label text
         '''
         self.text = string_to_unicode(text)
-        #if self.label is not None:
-        #    self.label.text = self.text
-
         self._force_refresh()
 
     def set_text_style(self, style):
-        '''
-        Set Label text style
-        '''
-        self.bold = style.bold
-        self.italic = style.italic
-        self.font_name = style.font_name
-        self.font_size = style.font_size
-        self.color = style.color
-
-    def set_text_attributes(self, **kwargs):
         '''
         Set Label text attributes.
             - bold True to set font weight to bold
@@ -611,13 +587,7 @@ class Label(Widget):
             - font_size  To set text size
             - font_name To set text font
         '''
-        for attr, value in iteritems(kwargs):
-            setattr(self, attr, value)
-
-            # also modify attributes on interal pyglet Label (TextLayout)
-            #if self.label is not None:
-            #    setattr(self.label, attr, value)
-
+        self._text_style.update(style)
         self._force_refresh()
 
     def size(self, dialog):
@@ -628,11 +598,11 @@ class Label(Widget):
         if self.label is None:
             self.label = KyttenLabel(
                 self.text,
-                bold = self.bold,
-                italic = self.italic,
-                color = self.color or dialog.theme[self.path + ['gui_color']],
-                font_name = self.font_name or dialog.theme[self.path + ['font']],
-                font_size = self.font_size or dialog.theme[self.path + ['font_size']],
+                bold = self._text_style["bold"],
+                italic = self._text_style["italic"],
+                color = self._text_style["color"] or dialog.theme[self.path + ['text_color']],
+                font_name = self._text_style["font_name"] or dialog.theme[self.path + ['font']],
+                font_size = self._text_style["font_size"] or dialog.theme[self.path + ['font_size']],
                 batch = dialog.batch, group=dialog.fg_group,
                 multiline = self.is_multiline,
                 width = self.label_width)

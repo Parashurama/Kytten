@@ -9,7 +9,7 @@ from __future__ import unicode_literals, print_function
 import pyglet
 from pyglet import gl
 
-from .base import Virtual
+from .base import Virtual, CVars
 from .dialog import DialogEventManager
 from .frame import Wrapper, GetRelativePoint, ANCHOR_CENTER
 from .scrollbar import HScrollbar, VScrollbar
@@ -212,14 +212,20 @@ class Scrollable(Wrapper, ScrollableAssert):
             cx, cy = GetRelativePoint(  self, self.child_anchor,
                                         virtual_content, None, (0,0))
 
+        valign_anchor, halign_anchor = self.child_anchor
+
         # Work out the adjusted content width and height
         if self.hscrollbar is not None:
             self.hscrollbar.layout(x, y)
-            cy += self.hscrollbar.height
+            if valign_anchor == CVars.VALIGN_BOTTOM:
+                cy += self.hscrollbar.height
 
         if self.vscrollbar is not None:
-            self.vscrollbar.layout(
-                cx + self.content_width, cy)
+            if valign_anchor == CVars.HALIGN_RIGHT:
+                cx -= self.vscrollbar.width
+            #                       cx + self.content_width, cy)
+            self.vscrollbar.layout( cx + (self.max_width or self.content_width), cy)
+
 
         # Work out the content layout
         self.content_x, self.content_y = cx, cy
@@ -227,10 +233,10 @@ class Scrollable(Wrapper, ScrollableAssert):
 
         top = cy + self.content_height - self.content.height
 
-        if self.hscrollbar:
+        if self.hscrollbar is not None:
             left -= self.hscrollbar.get(self.content_width,
                                         self.content.width)
-        if self.vscrollbar:
+        if self.vscrollbar is not None:
             top += self.vscrollbar.get(self.content_height,
                                        self.content.height)
 
@@ -315,7 +321,7 @@ class Scrollable(Wrapper, ScrollableAssert):
                 self.vscrollbar = None
 
         self.width = min(self.max_width or self.width, self.width)
-        self.content_width = self.width + 12####################################
+        self.content_width = self.width
         self.height = min(self.max_height or self.height, self.height)
         self.content_height = self.height
 
@@ -332,5 +338,5 @@ class Scrollable(Wrapper, ScrollableAssert):
             self.vscrollbar.size(dialog)
             self.vscrollbar.set(self.max_height, max(self.content.height,
                                                      self.max_height))
-            self.width += self.vscrollbar.width# + 12 ###########################
+            self.width += self.vscrollbar.width
 

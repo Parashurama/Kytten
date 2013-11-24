@@ -136,12 +136,13 @@ class Checkbox(Control):
         else:
             path = ['checkbox', 'unchecked']
         if self.is_disabled():
-            color = dialog.theme[path]['disabled_color']
+            color = color2 = dialog.theme[path]['disabled_color']
         else:
-            color = dialog.theme[path]['gui_color']
+            color, color2 = dialog.theme[path]['text_color'], dialog.theme[path]['gui_color']
+
         if self.checkbox is None:
             self.checkbox = dialog.theme[path]['image'].generate(
-                self.main_color or color, #User-set colors or default colors
+                self.main_color or color2, #User-set colors or default colors
                 dialog.batch, dialog.bg_group)
         if self.highlight is None and self.is_highlight():
             self.highlight = dialog.theme[path]['highlight']['image'].generate(

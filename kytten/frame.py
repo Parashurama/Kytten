@@ -523,11 +523,15 @@ class FoldingSection(Control, VerticalLayout):
 
     def size(self, dialog):
 
-        if self.is_disabled():  colorpath = 'disabled_color'
-        else: colorpath = 'gui_color'
+        if self.is_disabled():
+            colorpath = 'disabled_color'
+            colorpath2 = 'disabled_color'
+        else:
+            colorpath = 'gui_color'
+            colorpath2 = 'text_color'
 
         for member in self.header_group:
-            member.color= self.main_color or dialog.theme[member.path][colorpath]
+            member.color= self.main_color or dialog.theme[member.path][colorpath2]
 
         self.book.path = self._get_image_path()
         self.book.color = self.main_color or dialog.theme[self.book.path][colorpath]

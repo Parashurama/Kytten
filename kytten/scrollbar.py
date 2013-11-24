@@ -375,7 +375,7 @@ class VScrollbar(HScrollbar):
             return (self.x,
                     self.y + self.right.height,
                     self.width,
-                    self.height - self.left.width - self.right.width)
+                    self.height - self.left.height - self.right.height)
         else:
             return self.x, self.y, self.width, self.height
 

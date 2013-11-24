@@ -1253,7 +1253,7 @@ class GuiElement(Dialog):
 
 
 class ToolTip(GuiElement):
-    def __init__(self, parent_widget, text='EMPTY', name=None, secondary=None, **kwargs):
+    def __init__(self, parent_widget, text='EMPTY', name=None, secondary=None, text_style={}, **kwargs):
 
 
 
@@ -1264,7 +1264,7 @@ class ToolTip(GuiElement):
         if self.parent_widget.tooltip:
             self.parent_widget.tooltip.tearing_down_tooltip()
                                     #string: bytes or unicode
-        if hasattr(text, 'startswith'): content=Label(text)
+        if hasattr(text, 'startswith'): content=Label(text, style=text_style)
         else:                           content=text
 
         GuiElement.__init__(self,   content=content,
