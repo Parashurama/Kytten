@@ -38,11 +38,11 @@ class Widget(object):
     for the first time, they initialize any requisite graphic elements
     that could not be done at creation time.
     '''
-    name=None
     saved_dialog=None
     destroyed=False
     visible=True
     _parent=None
+    name=None
     x=y=0
     def __init__(self, width=0, height=0, name=None, group=None, spacer=False):
         '''

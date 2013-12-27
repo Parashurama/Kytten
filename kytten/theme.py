@@ -621,7 +621,6 @@ class ScopedDict(dict):
                 self[k] = ScopedDict(v, self)
             else:
                 self[k] = v
-
     def __getitem__(self, key):
         if key is None:
             return self
@@ -841,7 +840,6 @@ class Theme(ScopedDict):
         ScopedDict.write(self, f, indent)
         f.write('\n')
 
-
 #######################
 
 @wrapper(yield_single_value)
@@ -1047,3 +1045,13 @@ class KyttenTexture(object):
         gl.glTexParameteri(gl.GL_TEXTURE_2D,gl.GL_TEXTURE_MIN_FILTER,gl.GL_LINEAR)
 
         gl.glBindTexture(gl.GL_TEXTURE_2D, 0)
+
+_SETTINGS = DEFAULT_THEME_SETTINGS.copy()
+_SETTINGS.update({"button": { "text_color": [0, 0, 0, 255],
+                              "down":{},
+                              "up":{}
+                            }
+                 })
+
+DEFAULT_EMPTY_THEME = ScopedDict(_SETTINGS)
+

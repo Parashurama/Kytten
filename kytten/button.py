@@ -313,7 +313,7 @@ class ImageButton(Button):
         self.on_click = button_style.on_click
         self.on_gain_hover_func = button_style.on_gain_hover_func
         self.on_lose_hover_func = button_style.on_lose_hover_func
-        self.text_style=button_style.text_style
+        self.text_style=button_style.text_style.copy()
 
         if force_refresh is True: self._force_refresh()
 
@@ -504,161 +504,116 @@ class ImageButton(Button):
 
 
 class DraggableImageButton(ImageButton):
+    _old_parent=None
+    _is_dragging=False
+    _is_copying=False
+
     def __init__(self, image=None, style=None, copy=True, *args, **kwargs):
         ImageButton.__init__(self, image=image, style=style, *args, **kwargs)
-        self.isDragging=False
-        self.isCopying=copy
-
-        self.__old__parent__=None
-        self.set_handler('on_mouse_drag', self.on_mouse_drag)
-        self.set_handler('on_mouse_release', self.on_mouse_release)
-
-    def on_mouse_press(self, *args):
-        self.saved_dialog.set_focus(self)
-        ImageButton.on_mouse_press(self, *args)
+        self._is_copying=copy
 
     def on_mouse_drag(self, x, y, dx, dy, buttons, modifiers):
-        DRAGGED_ITEM=weakref.proxy(GetObjectfromName('draggable_items'))
+        DRAGGABLE=weakref.proxy(GetObjectfromName('DRAGGABLE'))
 
-        if not self.isDragging:
-            self.__old__parent__=self._parent
+        if not self._is_dragging:
+            self._old_parent=self._parent
 
-            if   self.isCopying is True:
+            if   self._is_copying is True:
 
-                NEW = DraggableImageButton( image=self.default_image,
-                                            style=self.image_arg,
-                                            copy=True,
-                                            padding=self.padding,
-                                            on_click=self.on_click,
-                                            on_gain_hover=self.on_gain_hover_func)
+                NEW = DraggableImageButton( image=self.default_image,copy=True)
+                NEW.set_button_style(self)
 
-                if  isinstance(self.__old__parent__, InteractiveLayoutAssert):
-
-                    if hasattr(self._parent, 'slaved') and self._parent.slaved: # for InteractivePaletteLayout
-                        self.__old__parent_layout_info__ = self._parent._parent.remove(self, False)
-                        self._parent._parent.add( NEW , self.__old__parent_layout_info__[1])
-
-                    else:
-                        self.__old__parent_layout_info__ = self._parent.remove(self, False)
-                        self._parent.add( NEW , self.__old__parent_layout_info__[1])
+                if  isinstance(self._old_parent, InteractiveLayoutAssert):
+                    self._old_parent_layout_info = self._parent.remove(self, False)
+                    self._parent.add( NEW , self._old_parent_layout_info[1])
                 else:
-                    self.__old__parent_layout_info__, index = self._parent.remove(self)
+                    self._old_parent_layout_info, index = self._parent.remove(self)
+                    self._parent.add( *( self._old_parent_layout_info[:-1]+(NEW,) ) )
 
-                    self._parent.add( *( self.__old__parent_layout_info__[:-1]+(NEW,) ) )
+            elif self._is_copying is False:
 
-            elif self.isCopying is False:
-
-                if hasattr(self._parent, 'slaved') and self._parent.slaved:
-
-
-                    self.__old__parent_layout_info__ = self._parent._parent.remove(self)
-
-                    if hasattr(self._parent._parent, 'on_drag_object') and self._parent._parent.on_drag_object is not None:
-                        raise NotImplementedError('')
-                        self._parent._parent.on_drag_object(self)
-
+                if  isinstance(self._parent, InteractiveLayoutAssert):
+                    item,index = self._old_parent_layout_info = self._parent.remove(self)
                 else:
-                    if  isinstance(self._parent, InteractiveLayoutAssert):
-                        item,index = self.__old__parent_layout_info__ = self._parent.remove(self)
-                    else:
-                        (anchor, x, y, item), index = self.__old__parent_layout_info__ = self._parent.remove(self)
+                    (anchor, x, y, item), index = self._old_parent_layout_info = self._parent.remove(self)
 
-                    if hasattr(self._parent, 'on_drag_object') and self._parent.on_drag_object is not None:
-                        self._parent.on_drag_object(self._parent, self, index)
+                self._parent.dispatch_event('on_drag_object', self._parent, self, index)
 
-            else:
-                #item,index = self.__old__parent_layout_info__
-                #self._parent.on_drag_object(self._parent, self, index)
-
+            else:# self._is_copying is None # Emulate Dragging
                 self.delete()
 
-            DRAGGED_ITEM.set_content(self)
-            DRAGGED_ITEM.offset=(self.x,self.y)
-            DRAGGED_ITEM.needs_layout = True
-            self.__old__parent__.saved_dialog.dont_pop_to_top=True
-            self.__old__parent__.saved_dialog.set_focus(None)
-            DRAGGED_ITEM.set_focus(self)
-            DRAGGED_ITEM.pop_to_top()
+            DRAGGABLE.set_content(self)
+            DRAGGABLE.offset=(self.x,self.y)
+            DRAGGABLE.needs_layout = True
+            self._old_parent.saved_dialog.dont_pop_to_top=True
+            self._old_parent.saved_dialog.set_focus(None)
+            DRAGGABLE.set_focus(self)
+            DRAGGABLE.pop_to_top()
 
-            self.isDragging=True
+            self._is_dragging=True
 
             return pyglet.event.EVENT_HANDLED
 
-
-        X,Y = DRAGGED_ITEM.offset
-        DRAGGED_ITEM.set_focus(self)##################################
-        DRAGGED_ITEM.offset=(X+dx,Y+dy)
-        DRAGGED_ITEM.needs_layout = True
+        X,Y = DRAGGABLE.offset
+        DRAGGABLE.set_focus(self)
+        DRAGGABLE.offset=(X+dx,Y+dy)
+        DRAGGABLE.set_needs_layout()
 
         return pyglet.event.EVENT_HANDLED
 
     def on_mouse_release(self, x, y, button, modifiers):
-        if self.isDragging:
-            DRAGGED_ITEM=GetObjectfromName('draggable_items')
-            NEW_POSITION = DRAGGED_ITEM.check_position(int(self.x +self.width/2.),int(self.y+self.height/2.))
+        if self._is_dragging:
+            DRAGGABLE=GetObjectfromName('DRAGGABLE')
+            NEW_POSITION = DRAGGABLE.check_position(int(self.x +self.width/2.),int(self.y+self.height/2.))
 
             Widget=None
 
             if NEW_POSITION is None :
-                '''
-                if not self.isCopying:
-                    if isinstance(self.__old__parent__, InteractiveLayout):
-                        self.__old__parent__.set( *self.__old__parent_layout_info__)
-
+                if not self._is_copying:
+                    if isinstance(self._old_parent, InteractiveLayoutAssert):
+                        self._old_parent.set( *self._old_parent_layout_info)
                     else:
-                        self.__old__parent__.add( *self.__old__parent_layout_info__)
-                    self.__old__parent__.saved_dialog.pop_to_top()
-                    self.__old__parent__.saved_dialog.set_focus(self)
+                        self._old_parent.set_widget( *self._old_parent_layout_info)
+                    self._old_parent.saved_dialog.pop_to_top()
+                    self._old_parent.saved_dialog.set_focus(self)
+                    self._old_parent.dispatch_event('on_drop_object', self._old_parent, self, self._old_parent_layout_info[1])
+                    self.delete()
 
                 else:
-                '''
-                self.teardown()
+                    self.teardown()
 
             else:
                 New_Parent, position, widget = NEW_POSITION
+                New_Parent.dispatch_event('on_drop_object', New_Parent, self, position)
 
-
-                if hasattr(New_Parent, 'slaved') and New_Parent.slaved: # for InteractivePaletteLayout
-                    if New_Parent._parent.on_drop_object is not None:
-                        New_Parent._parent.on_drop_object(New_Parent, self, position)
-
-                    Widget, position = New_Parent._parent.remove(widget._self(), False)
-                    New_Parent._parent.add(self, position)
-
-                else:
-                    if New_Parent.on_drop_object is not None:
-                        New_Parent.on_drop_object(New_Parent, self, position)
-
-                    Widget, _ = New_Parent.remove(widget, False)
-                    New_Parent.add(self, position)
-
-                self.delete()
+                Widget, _ = New_Parent.remove(widget, False)
+                New_Parent.add(self, position)
                 New_Parent.saved_dialog.pop_to_top()
-                self.isCopying=False
+                self._is_copying=False
+                self.delete()
 
-            DRAGGED_ITEM.set_focus(None)
-            DRAGGED_ITEM.delete_content()
-            DRAGGED_ITEM.EmulDragging=False
-            DRAGGED_ITEM.needs_layout = True
+            DRAGGABLE.set_focus(None)
+            DRAGGABLE.set_needs_layout()
+            DRAGGABLE.delete_content()
+            DRAGGABLE._emul_dragging=False
 
-            self.__old__parent__=None
-            self.__old__parent_layout_info__=None
-
-            self.isDragging=False
+            self._old_parent=None
+            self._old_parent_layout_info=None
+            self._is_dragging=False
 
             if isinstance(Widget, DraggableImageButton):
-                Widget.isCopying='Bypass'
+                Widget._is_copying=None
                 Widget.on_mouse_drag( x, y, 0, 0, button, modifiers)
-                DRAGGED_ITEM.EmulDragging=True
+                DRAGGABLE._emul_dragging=True
 
             return pyglet.event.EVENT_HANDLED
 
     def on_gain_hover(self,*args):
-        if self.isDragging: return True
+        if self._is_dragging is True: return True
         Control.on_gain_hover(self,*args)
 
     def on_lose_hover(self,*args):
-        if self.isDragging: return True
+        if self._is_dragging is True: return True
         Control.on_lose_hover(self,*args)
 
 DraggableImageButton.register_event_type('on_mouse_drag')

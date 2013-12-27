@@ -11,7 +11,7 @@ import weakref
 import time
 from pyglet import gl
 
-from .widgets import Widget, Spacer, Control, Label, DialogAssert
+from .widgets import Widget, Spacer, Control, Label, DialogAssert, InteractiveLayoutAssert
 from .button import Button
 from .frame import Wrapper, Frame, SectionHeader, GuiFrame, TransparentFrame
 from .layout import GetRelativePoint, ANCHOR_CENTER, HALIGN_LEFT, HALIGN_CENTER, VALIGN_TOP, VALIGN_CENTER
@@ -77,6 +77,7 @@ class DialogEventManager(Control):
         self.wheel_target = None
         self.last_clicked_time =0.
         self.mouse_in = False
+        self.interactive_layouts = []
 
     def get_value(self, name):
         widget = self.get_widget(name)
@@ -858,6 +859,9 @@ class Dialog(Wrapper, DialogEventManager, DialogAssert):
         x += offset_x
         y += offset_y
 
+        # delete interactive_layouts references
+        del self.interactive_layouts[:]
+
         # Perform the actual layout now!
         self.layout(x, y)
         self.update_controls()
@@ -1280,7 +1284,7 @@ class ToolTip(GuiElement):
                                     **kwargs)
 
         self.parent_widget.tooltip=self
-        self.parent_widget.set_handler('on_lose_hover', self.tearing_down_tooltip)
+        self.parent_widget.push_handlers('on_lose_hover','on_mouse_press', on_mouse_press=self.tearing_down_tooltip, on_lose_hover=self.tearing_down_tooltip)
 
         if secondary is not None:
             secondary_doc, secondary_name = secondary
@@ -1307,7 +1311,7 @@ class ToolTip(GuiElement):
 
     def tearing_down_tooltip(self,*args):
         if self.parent_widget.tooltip is not None:
-            self.parent_widget.remove_handler('on_lose_hover', self.tearing_down_tooltip)
+            self.parent_widget.pop_handlers() #pop tooltip event handlers 'on_lose_hover' and 'on_mouse_press' syntax : self.parent_widget.remove_handler('on_lose_hover', self.tearing_down_tooltip)
             self.parent_widget.tooltip=None
             self.tearing_down_tooltip=None
             #self.parent_widget=None
@@ -1386,7 +1390,7 @@ class ToolTip(GuiElement):
     def on_mouse_drag(self,*args):
         pass
 
-    def on_mouse_press(self,*args):
+    def on_mouse_press(self,x, y, *args):
         pass
 
     def on_mouse_release(self,*args):
@@ -1415,63 +1419,19 @@ class ToolTipProxy(GuiElement):
     def on_mouse_scroll(self,*args):
         pass
 
-class Drag_n_Drop(Dialog):
-    interactive_layouts=weakref.WeakKeyDictionary()
-    to_update_data=weakref.WeakSet()
+class DragNDrop(Dialog):
     _emul_dragging=False
 
     def __init__(self, *args, **kwargs):
         kwargs['always_on_top'] = True
         Dialog.__init__(self, *args, **kwargs)
 
-    def register(self, layout):
-
-        DIALOG=layout.saved_dialog
-        if not DIALOG:
-            self.to_update_data.add(layout)
-
-        else:
-            DIALOG=DIALOG._self()
-            if not DIALOG in self.interactive_layouts:
-                self.interactive_layouts[DIALOG]=weakref.WeakSet()
-
-            self.interactive_layouts[DIALOG].add(layout)
-
     def check_position(self, x,y):
-
-        for layout in self.to_update_data.copy():
-            DIALOG=layout.saved_dialog
-
-            if DIALOG is not None:
-                DIALOG=DIALOG._self()
-                if not DIALOG in self.interactive_layouts:
-                    self.interactive_layouts[DIALOG]=weakref.WeakSet()
-
-                self.interactive_layouts[DIALOG].add(layout._self())
-                self.to_update_data.remove(layout)
-
-        LIST =  sorted(((dialog.root_group.real_order,dialog, self.interactive_layouts[dialog]) for dialog in __int__.__ListOfExtantDialog__ if dialog in self.interactive_layouts), reverse=True)
-
-        for order, dialog, ilayouts in LIST:
-
-            if not dialog.hit_test(x, y): continue
-
-            for layout in ilayouts:
-                x0 = layout.x
-                y0 = layout.y
-                x1 = layout.x + layout.width
-                y1 = layout.y + layout.height
-
-                if x0 <= x <= x1 and y0 <= y <= y1 :
+        for _, dialog in sorted(((dialog.root_group.real_order,dialog) for dialog in GetActiveDialogs() if (dialog.visible is True and dialog.hit_test(x,y)) ), reverse=True):
+            for layout in dialog.interactive_layouts:
+                if layout.hit_test(x,y):
                     for i,widget in enumerate(layout.content):
-                        if (hasattr(layout, 'slaved') and layout.slaved and not widget in layout._parent.linear_content): continue
-
-                        x0 = widget.x
-                        y0 = widget.y
-                        x1 = widget.x + widget.width
-                        y1 = widget.y + widget.height
-
-                        if x0 <= x <= x1 and y0 <= y <= y1 :
+                        if widget.hit_test(x,y):
                             return layout, i, widget
 
     def on_mouse_motion(self, x, y, dx, dy):

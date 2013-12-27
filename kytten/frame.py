@@ -147,15 +147,11 @@ class Wrapper(Widget):
         self.content = self.hidden_content
         self.hidden_content = None
 
-        if Log.isLogging(): print("ReReference in Wrapper", self, self.content, self.hidden_content)
-
         self._try_refresh()
 
     def _dereference_obj(self, *args):
         self.hidden_content = self.content
         self.content = None
-
-        if Log.isLogging(): print("DeReference in Wrapper", self, self.hidden_content, self.hidden_content.name)
 
         self._try_refresh()
 

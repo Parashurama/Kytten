@@ -102,7 +102,7 @@ class PageManager:
         if constructor is not None: constructor()
 
         for dialog in GetActiveDialogs():
-            if not dialog.name in WidgetsToShow+['draggable_items']:
+            if not dialog.name in WidgetsToShow+['DRAGGABLE']:
                 dialog.Hide()
 
         if page in PageManager.PageDialogs:

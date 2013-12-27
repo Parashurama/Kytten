@@ -26,11 +26,11 @@ from .button import Button, ButtonStyle, ImageButton, DraggableImageButton
 from .togglebutton import ToggleGroup, ToggleButton, ToggleImageButton
 from .spin_button import SpinControl, SpinControlGroup
 from .checkbox import Checkbox
-from .dialog import Dialog, PopupMessage, PopupConfirm, PropertyDialog, ToolTip, GuiElement, GuiTheme, Drag_n_Drop
+from .dialog import Dialog, PopupMessage, PopupConfirm, PropertyDialog, ToolTip, GuiElement, GuiTheme
 from .document import Document
 from .file_dialogs import FileLoadDialog, FileSaveDialog, DirectorySelectDialog
 from .frame import Frame, TitleFrame, GuiFrame, Wrapper, SectionHeader, FoldingSection
-from .layout import GridLayout, HorizontalLayout, VerticalLayout, FreeLayout, FreeForm, PaletteLayout, InteractiveLayout, InteractivePaletteLayout
+from .layout import GridLayout, HorizontalLayout, VerticalLayout, FreeLayout, FreeForm, InteractiveLayout
 from .menu import Menu, Dropdown, MenuList
 from .scrollable import Scrollable
 from .slider import Slider
@@ -46,6 +46,7 @@ from .images import LoadImage
 
 def SetWindow(window, manager=None, isBuffered=True):
     global KyttenManager, KyttenRenderGUI
+    from .theme import DEFAULT_EMPTY_THEME
 
     if manager is not None and not isinstance(manager, GuiManager):
         raise TypeError('Invalid Gui Manager instance. Only GuiManager instance or subclass are supported.')
@@ -58,3 +59,8 @@ def SetWindow(window, manager=None, isBuffered=True):
     from .base import __int__
     from .theme import KyttenTexture
     __int__.BlankTexture = KyttenTexture( [ 255 ]*16, 'ubyte', (2,2))
+
+    from .dialog import DragNDrop
+    DragNDrop( Frame(),
+        window=window, batch=KyttenManager, group=KyttenManager.foregroup,
+        offset=(0,0), theme=DEFAULT_EMPTY_THEME, name='DRAGGABLE', anchor=ANCHOR_BOTTOM_LEFT, always_on_top=False)

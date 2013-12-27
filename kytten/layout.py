@@ -21,6 +21,7 @@ from pyglet import gl
 from .widgets import Widget, Control, Spacer, Graphic, Image, Label, LayoutAssert, FreeLayoutAssert, InteractiveLayoutAssert
 from .button import ImageButton
 from .base import ReferenceName, Log, GetObjectfromName, CVars
+from .override import KyttenEventDispatcher
 
 # GUI layout constants
 
@@ -32,15 +33,15 @@ HALIGN_LEFT = -1
 HALIGN_CENTER = 0
 HALIGN_RIGHT = 1
 
-ANCHOR_TOP_LEFT = CVars.ANCHOR_TOP_LEFT = (VALIGN_TOP, HALIGN_LEFT)
-ANCHOR_TOP = CVars.ANCHOR_TOP           = (VALIGN_TOP, HALIGN_CENTER)
-ANCHOR_TOP_RIGHT = CVars.ANCHOR_TOP_RIGHT = (VALIGN_TOP, HALIGN_RIGHT)
-ANCHOR_LEFT = CVars.ANCHOR_LEFT         = (VALIGN_CENTER, HALIGN_LEFT)
-ANCHOR_CENTER = CVars.ANCHOR_CENTER     = (VALIGN_CENTER, HALIGN_CENTER)
-ANCHOR_RIGHT = CVars.ANCHOR_RIGHT       = (VALIGN_CENTER, HALIGN_RIGHT)
-ANCHOR_BOTTOM_LEFT = CVars.ANCHOR_BOTTOM_LEFT = (VALIGN_BOTTOM, HALIGN_LEFT)
-ANCHOR_BOTTOM = CVars.ANCHOR_BOTTOM     = (VALIGN_BOTTOM, HALIGN_CENTER)
-ANCHOR_BOTTOM_RIGHT = CVars.ANCHOR_BOTTOM_RIGHT = (VALIGN_BOTTOM, HALIGN_RIGHT)
+ANCHOR_TOP_LEFT     = (VALIGN_TOP, HALIGN_LEFT)
+ANCHOR_TOP          = (VALIGN_TOP, HALIGN_CENTER)
+ANCHOR_TOP_RIGHT    = (VALIGN_TOP, HALIGN_RIGHT)
+ANCHOR_LEFT         = (VALIGN_CENTER, HALIGN_LEFT)
+ANCHOR_CENTER       = (VALIGN_CENTER, HALIGN_CENTER)
+ANCHOR_RIGHT        = (VALIGN_CENTER, HALIGN_RIGHT)
+ANCHOR_BOTTOM_LEFT  = (VALIGN_BOTTOM, HALIGN_LEFT)
+ANCHOR_BOTTOM       = (VALIGN_BOTTOM, HALIGN_CENTER)
+ANCHOR_BOTTOM_RIGHT = (VALIGN_BOTTOM, HALIGN_RIGHT)
 
 for var_name, var in vars().items():
     if var_name.startswith('ANCHOR') or var_name.startswith('VALIGN') or var_name.startswith('HALIGN'):
@@ -319,17 +320,7 @@ class VerticalLayout(Widget,LayoutAssert):
     def teardown(self):
         self.clear()
         Widget.teardown(self)
-    '''
-    def teardown(self):
 
-        for item in self.content:
-            item.teardown()
-
-        self.content = []
-        self.content_cache = []
-        self.hidden_content = []
-        Widget.teardown(self)
-    '''
 class HorizontalLayout(VerticalLayout):
     '''
     Arranges Widgets from left to right.
@@ -411,103 +402,6 @@ class HorizontalLayout(VerticalLayout):
         self.width, self.height = width, height
         self.expandable = [x for x in self.content if x.is_expandable()]
 
-
-
-
-class PaletteLayout(VerticalLayout):
-    RowLayout = HorizontalLayout
-
-    def __init__(self,  content=None,
-                        valign=VALIGN_CENTER,
-                        halign=HALIGN_LEFT,
-                        padding_x=0,
-                        padding_y=0,
-                        width=0,
-                        height=0,
-                        name=None,
-                        group=None):
-
-        self.linear_content=content
-        self.max_width = width
-        self.max_height = height
-
-        VerticalLayout.__init__(self, [], halign, padding_y, name=name, group=group)
-
-    def get_palette_layout(self, dialog):
-
-        for item in self.linear_content: item.size(dialog)
-
-        for row in self.content: row.delete()
-
-        del self.content[:]
-
-        i_row=0
-        self.content.append(self.RowLayout())
-        Row=self.content[i_row]
-        Row.size(dialog)
-        Row._parent=weakref.proxy(self)
-        row_width=0
-
-        for item in self.linear_content:
-            if item.visible:
-                if row_width+item.width <= self.max_width: # Append to Current Row
-                    Row.add(item)
-                    row_width+=item.width
-
-                else: # Add New Row
-                    i_row+=1
-                    self.content.append(self.RowLayout())
-                    Row=self.content[i_row]
-                    Row.size(dialog)
-                    Row._parent=weakref.proxy(self)
-                    row_width=0
-
-                    # Add To row
-                    Row.add(item)
-                    row_width+=item.width
-
-    def size(self, dialog):
-
-        if dialog is None:
-            return
-
-        self.get_palette_layout(dialog)
-
-        VerticalLayout.size(self, dialog)
-
-    def add(self, item, position=None):
-        '''
-        Adds a new Widget to the layout.
-
-        @param item The Widget to be added
-        '''
-        #item._parent=self
-        if position is None: self.linear_content.append(item or Spacer())
-        else: self.linear_content.insert(position, item)
-
-        self.saved_dialog.set_needs_layout()
-
-    def remove(self, item=None, position=None):
-        '''
-        Removes a Widget from the layout.
-
-        @param item The Widget to be removed
-        '''
-        assert ( item is not None or position is not None), "Item or Position should be specified in 'remove' method of PaletteLayout"
-
-        if not item: item = self.linear_content[position]
-
-        item.delete()
-        self.saved_dialog.set_needs_layout()
-
-        index=self.linear_content.index(item)
-        self.linear_content.pop(index)
-        return (item,index)
-
-    def teardown(self):
-        VerticalLayout.teardown(self)
-        self.linear_content = []
-
 class GridLayout(Widget, LayoutAssert):
     '''
     Arranges Widgets in a table.  Each cell's height and width are set to
@@ -541,11 +435,6 @@ class GridLayout(Widget, LayoutAssert):
         self.offset = offset
         self.max_heights = []
         self.max_widths = []
-        '''
-        for row in self.content:
-            for item in row:
-                item._parent=weakref.proxy(self)'''
-
 
     def _get_controls(self):
         '''
@@ -576,16 +465,12 @@ class GridLayout(Widget, LayoutAssert):
         except ValueError:
             assert item in self.hidden_content
 
-        if Log.isLogging():  print("DeReference in Layout", self, item, item.name)
-
     def _rereference_obj(self, item):
         try:
             self.hidden_content.remove(item)
             self.content.insert( self.content_cache.index(item), item)
         except ValueError:
             assert item in self.content
-
-        if Log.isLogging():  print("ReReference in Layout", self, item, item.name)
 
     def delete(self):
         '''Deletes all graphic elements within the layout.'''
@@ -646,12 +531,12 @@ class GridLayout(Widget, LayoutAssert):
                 if cell is not None:
                     if cell.is_expandable():
                         cell.expand(placement.width, placement.height)
-                    cell.layout(*GetRelativePoint(placement, self.anchor,
-                                                  cell, self.anchor,
-                                                  self.offset))
+                    cell.layout(*GetRelativePoint(placement, self.anchor, cell, self.anchor, self.offset))
                 placement.x += placement.width
                 col_index += 1
             row_index += 1
+
+        placement.teardown()
 
     def set(self, column, row, item):
         '''
@@ -707,14 +592,14 @@ class GridLayout(Widget, LayoutAssert):
                 col_index += 1
             self.max_heights[row_index] = max_height
             row_index += 1
+
         if self.max_widths:
-            self.width = reduce(lambda x, y: x + y, self.max_widths) \
-                - self.padding
+            self.width = reduce(lambda x, y: x + y, self.max_widths) - self.padding
         else:
             self.width = 0
+
         if self.max_heights:
-            self.height = reduce(lambda x, y: x + y, self.max_heights) \
-                - self.padding
+            self.height = reduce(lambda x, y: x + y, self.max_heights) - self.padding
         else:
             self.height = 0
 
@@ -729,16 +614,7 @@ class GridLayout(Widget, LayoutAssert):
     def teardown(self):
         self.clear()
         Widget.teardown(self)
-    '''
-    def teardown(self):
-        for row in self.content:
-            for cell in row:
-                cell.teardown()
-        self.content = []
-        self.content_cache = []
-        self.hidden_content = []
-        Widget.teardown(self)
-    '''
+
 class FreeLayout(Spacer, FreeLayoutAssert):
     '''
     FreeLayout defines a rectangle on the screen where Widgets may be placed
@@ -856,7 +732,7 @@ class FreeLayout(Spacer, FreeLayoutAssert):
         @param dialog Dialog which contains the FreeLayout
         @param widget The Widget to be removed
         '''
-        #self.content = [x for x in self.content if x[3] != widget]
+
         for x in self.content:
             if x[3]== widget:
                 try:               self.content.remove(x)
@@ -879,7 +755,6 @@ class FreeLayout(Spacer, FreeLayoutAssert):
 
         for anchor, offset_x, offset_y, widget in self.content:
             widget.size(dialog)
-
 
     def Show(self):
 
@@ -913,7 +788,6 @@ class FreeLayout(Spacer, FreeLayoutAssert):
             if item in data:
                 self.content.pop(i)
                 self.hidden_content.append(data)
-        if Log.isLogging(): print("DeReference in Free Layout", self, item, item.name)
 
     def _rereference_obj(self, item):
 
@@ -921,7 +795,6 @@ class FreeLayout(Spacer, FreeLayoutAssert):
             if item in data:
                 self.hidden_content.pop(i)
                 self.content.insert( self.content_cache.index(data), data)
-        if Log.isLogging(): print("ReReference in Free Layout", self, item, item.name)
 
     def delete(self):
         '''Deletes all graphic elements within the layout.'''
@@ -941,51 +814,33 @@ class FreeLayout(Spacer, FreeLayoutAssert):
         self.clear()
         Widget.teardown(self)
 
-    '''
-    def teardown(self):
-        for _, _, _, item in self.content:
-            item.teardown()
-        self.content = []
-        self.content_cache = []
-        self.hidden_content = []
 
-        Widget.teardown(self)
-    '''
-
-class FreeForm(FreeLayout):
-    def __init__(self, content=[], reference=None, width=0, height=0, on_drag_object=None, name=None):
+class FreeForm(FreeLayout, Control):
+    def __init__(self, content=[], widget_anchor=None, width=0, height=0, on_drag_object=None, name=None):
         FreeLayout.__init__(self, content=content, width=width, height=height, name=name)
-        self.reference=reference
-        self.on_drag_object = on_drag_object
-
+        self.widget_anchor=widget_anchor
+        self.set_handler('on_drag_object', on_drag_object)
 
     def layout(self, x, y):
 
-        if self.reference is None:  self.reference=self.saved_dialog
+        if self.widget_anchor is None:
+            self.widget_anchor=self.saved_dialog
 
         Spacer.layout(self, x, y)
         for anchor, offset_x, offset_y, widget in self.content:
-            x, y = GetRelativePoint(self.reference, anchor, widget, anchor,
-                                    (offset_x, offset_y))
+            x, y = GetRelativePoint(self.widget_anchor, anchor, widget, anchor, (offset_x, offset_y))
             widget.layout(x, y)
 
+FreeForm.register_event_type('on_drag_object')
 
-
-class InteractiveLayout(HorizontalLayout, InteractiveLayoutAssert):
-    slaved=False
+class InteractiveLayout(HorizontalLayout, InteractiveLayoutAssert, KyttenEventDispatcher):
     def __init__(self, *args, **kwargs):
 
         self.default_slot = kwargs.pop('default_slot')
-        self.on_drop_object = kwargs.pop('on_drop_object', None)
-        self.on_drag_object = kwargs.pop('on_drag_object', None)
+        self.set_handler('on_drop_object', kwargs.pop('on_drop_object', None))
+        self.set_handler('on_drag_object', kwargs.pop('on_drag_object', None))
 
         HorizontalLayout.__init__(self, *args, **kwargs)
-
-        DRAG_N_DROP = GetObjectfromName('draggable_items')
-
-        assert ( DRAG_N_DROP is not None ), "No Drag_n_Drop Dialog '{0}' Created".format('draggable_items')
-
-        GetObjectfromName('draggable_items').register(self)
 
     def add(self, item, position=None):
         '''
@@ -993,13 +848,11 @@ class InteractiveLayout(HorizontalLayout, InteractiveLayoutAssert):
 
         @param item The Widget to be added
         '''
-        if self.slaved: item._parent=self._parent
-        else: item._parent= weakref.proxy(self)
+        item._parent= weakref.proxy(self)
 
         if position is None:
             self.content.append(item)
             self.content_cache.append(item)
-
         else:
             self.content.insert(position, item)
             self.content_cache.insert(position, item)
@@ -1036,11 +889,7 @@ class InteractiveLayout(HorizontalLayout, InteractiveLayoutAssert):
 
         @param position Position of the Widget
         '''
-
-        if self.slaved is True:
-            item._parent = weakref.proxy(self._parent)
-        else:
-            item._parent = weakref.proxy(self)
+        item._parent = weakref.proxy(self)
 
         self.content[position].delete()
         self.content[position]=item
@@ -1060,58 +909,12 @@ class InteractiveLayout(HorizontalLayout, InteractiveLayoutAssert):
         HorizontalLayout.teardown(self)
         self.default_slot=None
 
-class InteractivePaletteLayout(PaletteLayout, InteractiveLayoutAssert):
-    RowLayout = InteractiveLayout
-    def __init__(self, *args, **kwargs):
-        self.default_slot = kwargs.pop('default_slot')
-        self.on_drop_object = kwargs.pop('on_drop_object', None)
-        self.on_drag_object = kwargs.pop('on_drag_object', None)
+    def layout(self, x, y):
 
-        PaletteLayout.__init__(self, *args, **kwargs)
+        if self.saved_dialog is not None:
+            self.saved_dialog.interactive_layouts.append(self)
+        HorizontalLayout.layout(self, x, y)
 
-    def get_palette_layout(self, dialog):
+InteractiveLayout.register_event_type('on_drag_object')
+InteractiveLayout.register_event_type('on_drop_object')
 
-        self.linear_content = [ item for item in self.linear_content if not hasattr(item,'isSlot') ]
-
-        for item in self.linear_content: item.size(dialog)
-
-        for row in self.content: row.delete()
-
-        del self.content[:]
-
-        i_row=0
-        self.content.append(self.RowLayout(padding=3, default_slot=self.default_slot))
-        Row=self.content[i_row]
-        Row.size(dialog)
-        Row._parent=weakref.proxy(self)
-        Row.slaved=True
-        row_width=0
-
-        for item in self.linear_content:
-            if item.visible:
-                if row_width+item.width <= self.max_width: # Append to Current Row
-                    Row.add(item)
-                    row_width+=item.width
-
-                else: # Add New Row
-                    i_row+=1
-                    self.content.append(self.RowLayout( padding=3, default_slot=self.default_slot))
-                    Row=self.content[i_row]
-                    Row.size(dialog)
-                    Row._parent=weakref.proxy(self)
-                    Row.slaved=True
-                    row_width=0
-
-                    # Add To row
-                    Row.add(item)
-                    row_width+=item.width
-
-        while row_width+item.width <= self.max_width:
-            Slot=ImageButton(self.default_slot, padding=0)
-            Slot.isSlot=True
-            Row.add(Slot)
-            self.linear_content.append(Slot)
-            row_width+=item.width
-
-
-    #def overloaded_RowLayout_remove_method(self
