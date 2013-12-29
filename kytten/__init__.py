@@ -30,7 +30,7 @@ from .dialog import Dialog, PopupMessage, PopupConfirm, PropertyDialog, ToolTip,
 from .document import Document
 from .file_dialogs import FileLoadDialog, FileSaveDialog, DirectorySelectDialog
 from .frame import Frame, TitleFrame, GuiFrame, Wrapper, SectionHeader, FoldingSection
-from .layout import GridLayout, HorizontalLayout, VerticalLayout, FreeLayout, FreeForm, InteractiveLayout
+from .layout import GridLayout, HorizontalLayout, VerticalLayout, FreeLayout, FreeForm, InteractiveLayout, PaletteLayout
 from .menu import Menu, Dropdown, MenuList
 from .scrollable import Scrollable
 from .slider import Slider
@@ -43,6 +43,7 @@ from .base import InvalidWidgetNameError
 from .manager import GuiManager, PageManager
 from .selectable_image import Selectable
 from .images import LoadImage
+from .tabbed_form import TabbedForm, TabEntry
 
 def SetWindow(window, manager=None, isBuffered=True):
     global KyttenManager, KyttenRenderGUI

@@ -86,5 +86,10 @@ class ToggleImageButton(ToggleButton, ImageButton):
         self.image = self.default_image
         self._force_refresh()
 
-    def on_mouse_press(self, x, y, button, modifiers):
-        ToggleButton.on_mouse_press(self, x, y, button, modifiers)
+    def set_toggling_group(self, toggle):
+
+        if isinstance( toggle, ToggleGroup):
+            self.toggling_group = toggle
+            self.toggling_group.add(self)
+
+        else: self.toggling_group=None

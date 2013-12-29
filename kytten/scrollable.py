@@ -15,6 +15,8 @@ from .frame import Wrapper, GetRelativePoint, ANCHOR_CENTER
 from .scrollbar import HScrollbar, VScrollbar
 from .widgets import Widget, ScrollableAssert
 
+SCROLLBAR_PADDING = 5
+
 class ScrollableGroup(pyglet.graphics.Group):
     '''
     We restrict what's shown within a Scrollable by performing a scissor
@@ -217,15 +219,18 @@ class Scrollable(Wrapper, ScrollableAssert):
         # Work out the adjusted content width and height
         if self.hscrollbar is not None:
             self.hscrollbar.layout(x, y)
-            if valign_anchor == CVars.VALIGN_BOTTOM:
-                cy += self.hscrollbar.height
+            if   valign_anchor == CVars.VALIGN_BOTTOM:
+                cy += self.hscrollbar.height + SCROLLBAR_PADDING
+            elif valign_anchor == CVars.VALIGN_BOTTOM:
+                cy += self.hscrollbar.height//2 + SCROLLBAR_PADDING
 
         if self.vscrollbar is not None:
-            if valign_anchor == CVars.HALIGN_RIGHT:
-                cx -= self.vscrollbar.width
-            #                       cx + self.content_width, cy)
-            self.vscrollbar.layout( cx + (self.max_width or self.content_width), cy)
 
+            if   halign_anchor == CVars.HALIGN_RIGHT:
+                cx -= self.vscrollbar.width + SCROLLBAR_PADDING
+            elif halign_anchor == CVars.HALIGN_CENTER:
+                cx -= self.vscrollbar.width//2 + SCROLLBAR_PADDING
+            self.vscrollbar.layout( self.x + self.width - self.vscrollbar.width, cy )
 
         # Work out the content layout
         self.content_x, self.content_y = cx, cy
@@ -332,11 +337,11 @@ class Scrollable(Wrapper, ScrollableAssert):
             self.hscrollbar.size(dialog)
             self.hscrollbar.set(self.max_width, max(self.content.width,
                                                     self.max_width))
-            self.height += self.hscrollbar.height
+            self.height += self.hscrollbar.height + SCROLLBAR_PADDING
 
         if self.vscrollbar is not None:
             self.vscrollbar.size(dialog)
             self.vscrollbar.set(self.max_height, max(self.content.height,
                                                      self.max_height))
-            self.width += self.vscrollbar.width
+            self.width += self.vscrollbar.width + SCROLLBAR_PADDING
 

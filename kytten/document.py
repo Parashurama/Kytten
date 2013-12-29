@@ -109,6 +109,10 @@ class Document(Control):
             self.scrollbar.delete()
             self.scrollbar = None
 
+    def _hide(self):
+        self.visible=False
+        self.delete()
+
     def teardown(self):
         Control.teardown(self)
 

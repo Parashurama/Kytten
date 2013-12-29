@@ -177,6 +177,13 @@ class Widget(object):
         else:
             print("widget", self, "destroyed again")
 
+    def _hide(self):
+        '''
+        Fast path to hide widgets inside layouts
+        '''
+        self.visible=False
+        self.delete()
+
     def Hide(self):
         '''
         Hide Widget and delete graphic resources. Also dereference itself from its parent.
@@ -188,7 +195,7 @@ class Widget(object):
             self.delete()
 
             if  self._parent is not None:
-                self._parent._dereference_obj(self) # Parent is Layout Instance (except GridLayout Not yet implemented)
+                self._parent._dereference_obj(self)
 
                 self._try_refresh()
 
@@ -202,9 +209,15 @@ class Widget(object):
             self.visible=True
 
             if  self._parent is not None:
-                self._parent._rereference_obj(self) # Parent is Layout Instance (except GridLayout Not yet implemented)
+                self._parent._rereference_obj(self)
 
                 self._try_refresh()
+
+    def _show(self):
+        '''
+        Fast path to hide widgets inside layouts
+        '''
+        self.visible=True
 
     def _try_refresh(self):
 

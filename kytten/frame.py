@@ -52,15 +52,10 @@ class Wrapper(Widget):
         if self.content: return self.content._get_controls()
 
     def set_content(self, content):
-        if self.content is not None:
-            self.content.delete()
+        self.delete_content()
 
         self.content = content
         content._parent=weakref.proxy(self)
-
-        if self.hidden_content is not None:
-            self.hidden_content.delete()
-            self.hidden_content=None
 
     def delete_content(self):
         if self.content is not None:
@@ -127,10 +122,13 @@ class Wrapper(Widget):
 
     def Hide(self):
         if self.visible is True:
+
             if self.content is not None:
                 self.content.Hide()
 
             Widget.Hide(self)
+
+    _hide = Hide
 
     def Show(self):
         if not self.visible:
@@ -143,8 +141,10 @@ class Wrapper(Widget):
 
             Widget.Show(self)
 
+    _show = Show
+
     def _rereference_obj(self, *args):
-        self.content = self.hidden_content
+        self.content = self.hidden_content if self.hidden_content is not None else self.content
         self.hidden_content = None
 
         self._try_refresh()

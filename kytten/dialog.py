@@ -200,7 +200,7 @@ class DialogEventManager(Control):
         if not self.visible or not self.hit_test(x, y):
             if self.mouse_in is True:
                 self.dispatch_event('on_mouse_leave', x, y)
-            return #Event not Handled
+            return pyglet.event.EVENT_UNHANDLED
 
         if self.hit_test(x, y) and self.mouse_in is False:
             ActionOnAllDialogs(self, 'on_mouse_leave', x, y)
@@ -276,9 +276,14 @@ class DialogEventManager(Control):
         @param button Button released
         @param modifiers Modifiers to apply to button
         '''
-        if not self.visible: return
 
         self.is_dragging = False
+        if self.parent_dialog is not None:
+            self.parent_dialog.is_dragging = False
+
+        if self.visible is False:
+            return pyglet.event.EVENT_UNHANDLED
+
         if self.focus is not None:
             RETVALUE = self.focus.dispatch_event('on_mouse_release', x, y, button, modifiers)
         else:
@@ -990,25 +995,6 @@ class Dialog(Wrapper, DialogEventManager, DialogAssert):
 
         return retval
 
-    def on_mouse_release(self, x, y, button, modifiers):
-        '''
-        Button was released.  We pass this along to the focus, then we
-        generate an on_mouse_motion to handle changing the highlighted
-        Control if necessary.
-
-        @param x X coordinate of mouse
-        @param y Y coordinate of mouse
-        @param button Button released
-        @param modifiers Modifiers to apply to button
-        '''
-        #if self.check_for_always_on_top_dialog('on_mouse_release', x, y, button, modifiers):
-        #    return pyglet.event.EVENT_HANDLED
-        if self.parent_dialog: self.parent_dialog.is_dragging = False
-
-        self.is_dragging = False
-        return DialogEventManager.on_mouse_release(self, x, y,
-                                                   button, modifiers)
-
     def on_mouse_enter(self, x, y):
         if self.hit_test(x, y) and self.on_mouse_enter_func is not None:
             self.mouse_in = True
@@ -1221,12 +1207,10 @@ class GuiElement(Dialog):
 
             elif isinstance(self.content, TransparentFrame):
                 content = self.content.content
-                self.content.delete_content()
                 self.set_content(GuiFrame( content= HorizontalLayout([content]),
                                            texture=graphic, anchor=self.anchor, flag='repeat') )
         else:
             content = self.content.content
-            self.content.delete_content()
             self.set_content(TransparentFrame(content))
 
         self.set_needs_layout()
@@ -1440,6 +1424,7 @@ class DragNDrop(Dialog):
             return self.EventHandled()
 
     def set_hover(self,*args):
+        self.hover=None
         return self.EventHandled()
 
     def on_mouse_press(self, x, y, button, modifiers):

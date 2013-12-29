@@ -20,7 +20,7 @@ from pyglet import gl
 
 from .widgets import Widget, Control, Spacer, Graphic, Image, Label, LayoutAssert, FreeLayoutAssert, InteractiveLayoutAssert
 from .button import ImageButton
-from .base import ReferenceName, Log, GetObjectfromName, CVars
+from .base import ReferenceName, Log, GetObjectfromName, CVars, xrange
 from .override import KyttenEventDispatcher
 
 # GUI layout constants
@@ -145,28 +145,26 @@ class VerticalLayout(Widget,LayoutAssert):
     def Show(self):
 
         for item in self.content_cache[:]:
-            item.Show()
+            item._show()
 
         Widget.Show(self)
 
         self.content=self.content_cache[:]
         self.hidden_content=[]
 
-        if not self.visible:
-            self.visible=True
+    _show = Show
 
     def Hide(self):
 
         for item in self.content_cache[:]:
-            item.Hide()
+            item._hide()
 
         Widget.Hide(self)
 
         self.hidden_content=self.content_cache[:]
         self.content=[]
 
-        if self.visible:
-            self.visible=False
+    _hide = Hide
 
     def _dereference_obj(self, item):
         try:
@@ -412,8 +410,8 @@ class GridLayout(Widget, LayoutAssert):
     Another anchor point may be specified, i.e. ANCHOR_CENTER will ensure
     that Widgets are centered within cells.
     '''
-    def __init__(self, content=[[]], anchor=ANCHOR_TOP_LEFT, padding=5,
-                 offset=(0, 0)):
+    offset = (0,0)
+    def __init__(self, content=[[]], anchor=ANCHOR_TOP_LEFT, padding=5, name=None, group=None):
         '''
         Defines a new GridLayout.
 
@@ -422,19 +420,24 @@ class GridLayout(Widget, LayoutAssert):
                        and rows do not need to all be the same length.
         @param anchor Alignment of
         '''
-        assert ((isinstance(content, list) or isinstance(content, tuple)) and
-                (len(content) == 0 or (isinstance(content[0], list) or
-                                       isinstance(content[0], tuple))))
-        Widget.__init__(self)
-        self.content = content
-        self.content_cache = self.content[:]
-        self.hidden_content = []
+        assert isinstance(content, (list, tuple)) and ( len(content) == 0 or isinstance(content[0], (list, tuple)) )
+
+        Widget.__init__(self, name=name, group=group)
+        self.content = [ list(row) for row in content ]
+        self.content_cache = [ list(row) for row in content ]
+        self.hidden_content = [[None for cell in row] for row in self.content_cache ]
 
         self.anchor = anchor
         self.padding = padding
-        self.offset = offset
         self.max_heights = []
         self.max_widths = []
+        self._item_ref={}
+
+        for i, row in enumerate(self.content):
+            for j, item in enumerate(row):
+                if item is not None:
+                    item._parent=weakref.proxy(self)
+                    self._item_ref[item] = (i, j)
 
     def _get_controls(self):
         '''
@@ -453,44 +456,100 @@ class GridLayout(Widget, LayoutAssert):
 
         @param row An array of widgets, or None for cells without widgets
         '''
-        assert isinstance(row, tuple) or isinstance(row, list)
-        self.content.append(row)
+        assert isinstance(row, (tuple,list))
+        self.content.append(list(row))
+        self.hidden_content.append([None for cell in row])
+        self.content_cache.append(list(row))
+
         if self.saved_dialog is not None:
             self.saved_dialog.set_needs_layout()
 
     def _dereference_obj(self, item):
         try:
-            self.content.remove(item)
-            self.hidden_content.append(item)
-        except ValueError:
-            assert item in self.hidden_content
+            row_id, index = self._item_ref[item]
+
+            cell = self.content[row_id][index]
+            if cell is item:
+                self.content[row_id][index] = None
+                self.hidden_content[row_id][index] = cell
+
+            elif cell is None: # if item not visible assert item is hidden
+                assert self.hidden_content[row_id][index] is item
+            else:
+                raise AssertionError("Error in GridLayout. Bad Index in GridLayout:\n {}".format(self._item_ref) )
+
+        except KeyError:
+            raise AssertionError("item '{}' not in GridLayout.".format(item))
 
     def _rereference_obj(self, item):
         try:
-            self.hidden_content.remove(item)
-            self.content.insert( self.content_cache.index(item), item)
-        except ValueError:
-            assert item in self.content
+            row_id, index = self._item_ref[item]
+            cell = self.hidden_content[row_id][index]
+            if cell is item:
+                self.hidden_content[row_id][index] = None
+                self.content[row_id][index] = cell
+
+            elif cell is None: # if item visible assert item is not hidden
+                assert self.content[row_id][index] is item
+            else:
+                raise AssertionError("Error in GridLayout. Bad Index in GridLayout:\n {}".format(self._item_ref) )
+
+        except KeyError:
+            raise AssertionError("item '{}' not in GridLayout.".format(item))
+
+    def Show(self):
+
+        for row in self.content_cache[:]:
+            for cell in row:
+                if cell is not None:
+                    cell._show()
+
+        Widget.Show(self)
+
+        self.content=[ row[:] for row in self.content_cache]
+        self.hidden_content = [[None for cell in row] for row in self.content_cache ]
+
+    _show = Show
+
+    def Hide(self):
+
+        for row in self.content_cache[:]:
+            for cell in row:
+                if cell is not None:
+                    cell._hide()
+
+        Widget.Hide(self)
+
+        self.hidden_content=[ row[:] for row in self.content_cache]
+        self.content = [[None for cell in row] for row in self.content_cache ]
+
+    _hide = Hide
 
     def delete(self):
         '''Deletes all graphic elements within the layout.'''
         for row in self.content:
             for cell in row:
-                cell.delete()
+                if cell is not None:
+                    cell.delete()
         Widget.delete(self)
 
-    def delete_row(self, row):
+    def delete_row(self, row_index):
         '''
         Deletes a row from the layout
 
         @param row Index of row
         '''
-        if len(self.content) <= row:
+        if len(self.content) <= row_index:
             return
-        row = self.content.pop(row)
+
+        row = self.content.pop(row_index)
+        self.hidden_content.pop(row_index)
+        self.content_cache.pop(row_index)
+
         for column in row:
             if column is not None:
-                column.delete()
+                column.teardown()
+
         if self.saved_dialog is not None:
             self.saved_dialog.set_needs_layout()
 
@@ -538,25 +597,36 @@ class GridLayout(Widget, LayoutAssert):
 
         placement.teardown()
 
-    def set(self, column, row, item):
+    def set(self, column_id, row_id, item):
         '''
         Sets the content of a cell within the grid.
 
-        @param column The column of the cell to be set
-        @param row The row of the cell to be set
+        @param column_id The column_id of the cell to be set
+        @param row_id The row_id of the cell to be set
         @param item The new Widget to be set in that cell
         '''
-        if len(self.content) <= row:
-            self.content = list(self.content) + [] * (row - len(self.content) + 1)
-        if len(self.content[row]) <= column:
-            self.content[row] = list(self.content[row]) + [None] * (column - len(self.content[row]) + 1)
+        if len(self.content) <= row_id:
+            self.content        = self.content + [] * (row_id - len(self.content) + 1)
+            self.hidden_content = self.hidden_content + [] * (row_id - len(self.hidden_content) + 1)
+            self.content_cache  = self.content_cache + [] * (row_id - len(self.content_cache) + 1)
 
-        if self.content[row][column] is not None:
-            self.content[row][column].delete()
+        if len(self.content[row_id]) <= column_id:
+            self.content[row_id]        = self.content[row_id] + [None] * (column_id - len(self.content[row_id]) + 1)
+            self.hidden_content[row_id] = self.hidden_content[row_id] + [None] * (column_id - len(self.hidden_content[row_id]) + 1)
+            self.content_cache[row_id]  = self.content_cache[row_id] + [None] * (column_id - len(self.content_cache[row_id]) + 1)
 
-        self.content[row][column] = item
+        cell = self.content[row_id][column_id]
+        if cell is not None:
+            cell.delete()
+            del self._item_ref[cell]
 
-        #item._parent=weakref.proxy(self)
+        self.content[row_id][column_id] = item
+        self.hidden_content[row_id][column_id] = None
+        self.content_cache[row_id][column_id] = item
+
+        self._item_ref[item] = (i, j)
+
+        item._parent=weakref.proxy(self)
 
         if self.saved_dialog is not None:
             self.saved_dialog.set_needs_layout()
@@ -571,25 +641,31 @@ class GridLayout(Widget, LayoutAssert):
             return
         Widget.size(self, dialog)
         self.max_heights = [0] * len(self.content)
-        width = 0
-        for row in self.content:
-            width = max(width, len(row))
+
+        width = max( 0, max( len(row) for row in self.content ) )
         self.max_widths = [self.padding] * width
+
         row_index = 0
+
         for row in self.content:
             max_height = self.padding
             col_index = 0
+
             for cell in row:
                 if cell is not None:
                     cell.size(dialog)
                     width, height = cell.width, cell.height
                 else:
                     width = height = 0
+
                 max_height = max(max_height, height + self.padding)
+
                 max_width = self.max_widths[col_index]
                 max_width = max(max_width, width + self.padding)
+
                 self.max_widths[col_index] = max_width
                 col_index += 1
+
             self.max_heights[row_index] = max_height
             row_index += 1
 
@@ -614,6 +690,15 @@ class GridLayout(Widget, LayoutAssert):
     def teardown(self):
         self.clear()
         Widget.teardown(self)
+
+
+class PaletteLayout(GridLayout):
+    def __init__(self, content, width, *args, **kwargs):
+
+        grid_content = [ content[i:i + width] for i in xrange(0, len(content), width) ]
+
+        GridLayout.__init__(self, grid_content, *args, **kwargs)
+
 
 class FreeLayout(Spacer, FreeLayoutAssert):
     '''
@@ -759,28 +844,26 @@ class FreeLayout(Spacer, FreeLayoutAssert):
     def Show(self):
 
         for _,_,_,item in self.content_cache[:]:
-            item.Show()
+            item._show()
 
         Widget.Show(self)
 
         self.content=self.content_cache[:]
         self.hidden_content=[]
 
-        if not self.visible:
-            self.visible=True
+    _show = Show
 
     def Hide(self):
 
         for _,_,_,item in self.content_cache[:]:
-            item.Hide()
+            item._hide()
 
         Widget.Hide(self)
 
         self.hidden_content=self.content_cache[:]
         self.content=[]
 
-        if self.visible:
-            self.visible=False
+    _hide = Hide
 
     def _dereference_obj(self, item):
 
@@ -816,10 +899,10 @@ class FreeLayout(Spacer, FreeLayoutAssert):
 
 
 class FreeForm(FreeLayout, Control):
-    def __init__(self, content=[], widget_anchor=None, width=0, height=0, on_drag_object=None, name=None):
+    def __init__(self, content=[], widget_anchor=None, width=0, height=0, on_drag_object=None, on_drop_object=None, name=None):
         FreeLayout.__init__(self, content=content, width=width, height=height, name=name)
         self.widget_anchor=widget_anchor
-        self.set_handler('on_drag_object', on_drag_object)
+        self.set_handlers(['on_drag_object', 'on_drop_object'], on_drag_object=on_drag_object, on_drop_object=on_drop_object)
 
     def layout(self, x, y):
 
@@ -832,14 +915,14 @@ class FreeForm(FreeLayout, Control):
             widget.layout(x, y)
 
 FreeForm.register_event_type('on_drag_object')
+FreeForm.register_event_type('on_drop_object')
 
 class InteractiveLayout(HorizontalLayout, InteractiveLayoutAssert, KyttenEventDispatcher):
     def __init__(self, *args, **kwargs):
 
         self.default_slot = kwargs.pop('default_slot')
-        self.set_handler('on_drop_object', kwargs.pop('on_drop_object', None))
-        self.set_handler('on_drag_object', kwargs.pop('on_drag_object', None))
-
+        self.set_handlers(['on_drag_object', 'on_drop_object'], on_drag_object=kwargs.pop('on_drag_object', None),
+                                                                on_drop_object=kwargs.pop('on_drop_object', None))
         HorizontalLayout.__init__(self, *args, **kwargs)
 
     def add(self, item, position=None):

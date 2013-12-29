@@ -589,6 +589,9 @@ class DraggableImageButton(ImageButton):
                 Widget, _ = New_Parent.remove(widget, False)
                 New_Parent.add(self, position)
                 New_Parent.saved_dialog.pop_to_top()
+                New_Parent.saved_dialog.update_controls()
+                New_Parent.saved_dialog.on_mouse_motion(x, y, 0, 0)
+
                 self._is_copying=False
                 self.delete()
 
@@ -606,7 +609,7 @@ class DraggableImageButton(ImageButton):
                 Widget.on_mouse_drag( x, y, 0, 0, button, modifiers)
                 DRAGGABLE._emul_dragging=True
 
-            return pyglet.event.EVENT_HANDLED
+            #return pyglet.event.EVENT_HANDLED
 
     def on_gain_hover(self,*args):
         if self._is_dragging is True: return True
