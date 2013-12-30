@@ -8,7 +8,7 @@ from __future__ import unicode_literals, print_function
 
 import pyglet
 import weakref
-from .widgets import Control, InteractiveLayoutAssert
+from .widgets import Control, DragNDropLayoutType, FreeLayoutAssert
 from .override import KyttenLabel
 from .base import  GetObjectfromName, CVars, string_to_unicode
 from .theme import DefaultTextureGraphicElement
@@ -505,41 +505,47 @@ class ImageButton(Button):
 
 class DraggableImageButton(ImageButton):
     _old_parent=None
+    _old_parent_layout_info=None
     _is_dragging=False
-    _is_copying=False
 
-    def __init__(self, image=None, style=None, copy=True, *args, **kwargs):
+    def __init__(self, image=None, style=None, force_copy=False, *args, **kwargs):
         ImageButton.__init__(self, image=image, style=style, *args, **kwargs)
-        self._is_copying=copy
+        self._force_copy=force_copy
+        self._is_copy=kwargs.pop('is_copy', False)
 
     def on_mouse_drag(self, x, y, dx, dy, buttons, modifiers):
         DRAGGABLE=weakref.proxy(GetObjectfromName('DRAGGABLE'))
 
         if not self._is_dragging:
+            if not isinstance(self._parent, DragNDropLayoutType):
+                return pyglet.event.EVENT_HANDLED
+
             self._old_parent=self._parent
 
-            if   self._is_copying is True:
+            if   self._force_copy is True:
 
-                NEW = DraggableImageButton( image=self.default_image,copy=True)
+                NEW = DraggableImageButton( image=self.default_image, force_copy=True)
                 NEW.set_button_style(self)
+                self._is_copy = True #Set ImageButton as copy.
+                self._force_copy = False #Set ImageButton as 'dont duplicate on dragging'.
 
-                if  isinstance(self._old_parent, InteractiveLayoutAssert):
-                    self._old_parent_layout_info = self._parent.remove(self, False)
-                    self._parent.add( NEW , self._old_parent_layout_info[1])
-                else:
+                if  isinstance(self._old_parent, FreeLayoutAssert):
                     self._old_parent_layout_info, index = self._parent.remove(self)
                     self._parent.add( *( self._old_parent_layout_info[:-1]+(NEW,) ) )
-
-            elif self._is_copying is False:
-
-                if  isinstance(self._parent, InteractiveLayoutAssert):
-                    item,index = self._old_parent_layout_info = self._parent.remove(self)
                 else:
+                    self._old_parent_layout_info = self._parent.remove(self, False)
+                    self._parent.add( NEW , self._old_parent_layout_info[1])
+
+            elif self._force_copy is False:
+
+                if  isinstance(self._parent, FreeLayoutAssert):
                     (anchor, x, y, item), index = self._old_parent_layout_info = self._parent.remove(self)
+                else:
+                    item,index = self._old_parent_layout_info = self._parent.remove(self)
 
                 self._parent.dispatch_event('on_drag_object', self._parent, self, index)
 
-            else:# self._is_copying is None # Emulate Dragging
+            else:# _force_copy is Modfied # Emulate Dragging
                 self.delete()
 
             DRAGGABLE.set_content(self)
@@ -563,36 +569,63 @@ class DraggableImageButton(ImageButton):
 
     def on_mouse_release(self, x, y, button, modifiers):
         if self._is_dragging:
-            DRAGGABLE=GetObjectfromName('DRAGGABLE')
-            NEW_POSITION = DRAGGABLE.check_position(int(self.x +self.width/2.),int(self.y+self.height/2.))
 
+
+
+            DRAGGABLE=GetObjectfromName('DRAGGABLE')
+            NEW_POSITION = DRAGGABLE.layout_validate_drop_widget(self, (int(self.x +self.width/2.),int(self.y+self.height/2.)))
+            _discard_old_parent=False
             Widget=None
 
-            if NEW_POSITION is None :
-                if not self._is_copying:
-                    if isinstance(self._old_parent, InteractiveLayoutAssert):
-                        self._old_parent.set( *self._old_parent_layout_info)
-                    else:
-                        self._old_parent.set_widget( *self._old_parent_layout_info)
+            if NEW_POSITION is None:
+
+                if not self._is_copy:
+                    if   self._old_parent_layout_info is None:
+                        return pyglet.event.EVENT_HANDLED #EmulDragging don't release Button
+
+                    self._old_parent.set( *self._old_parent_layout_info) # Put Widget back back with parent.
                     self._old_parent.saved_dialog.pop_to_top()
                     self._old_parent.saved_dialog.set_focus(self)
                     self._old_parent.dispatch_event('on_drop_object', self._old_parent, self, self._old_parent_layout_info[1])
                     self.delete()
 
-                else:
+                else: #Widget is copy
                     self.teardown()
 
-            else:
+            else:#Set Widget to new position
                 New_Parent, position, widget = NEW_POSITION
+
+                if self._old_parent_layout_info is None and isinstance(New_Parent, FreeLayoutAssert):
+                    return # Disable Drop Widget if new_parent is FreeLayout and has widget has no parent info.
+
                 New_Parent.dispatch_event('on_drop_object', New_Parent, self, position)
 
-                Widget, _ = New_Parent.remove(widget, False)
-                New_Parent.add(self, position)
+                if  isinstance(New_Parent, FreeLayoutAssert):
+                    Widget = New_Parent.set(widget, position)
+                    # Slot in FreeLayout was not Empty
+                    if isinstance(Widget, DraggableImageButton):
+                        _, index = self._old_parent_layout_info
+                        layout_info = (Widget, index)
+
+                        _widget = self._old_parent.set( *layout_info) # Put Widget in slot back back with old parent.
+
+                        self._old_parent.saved_dialog.pop_to_top()
+                        self._old_parent.saved_dialog.set_focus(self)
+                        self._old_parent.dispatch_event('on_drop_object', self._old_parent, Widget, index)
+                        Widget.delete()
+                        #Hack
+                        Widget=_widget
+                        _discard_old_parent=True # Discard old parent info
+
+                else:
+                    Widget, _ = New_Parent.remove(widget, False)
+                    New_Parent.add(self, position)
+                    layout_info = (Widget, position)
+
                 New_Parent.saved_dialog.pop_to_top()
                 New_Parent.saved_dialog.update_controls()
                 New_Parent.saved_dialog.on_mouse_motion(x, y, 0, 0)
 
-                self._is_copying=False
                 self.delete()
 
             DRAGGABLE.set_focus(None)
@@ -600,14 +633,21 @@ class DraggableImageButton(ImageButton):
             DRAGGABLE.delete_content()
             DRAGGABLE._emul_dragging=False
 
+            if self._force_copy not in (True, False):
+                self._force_copy = self._force_copy[0]
+
+            if isinstance(Widget, DraggableImageButton): # Slot was not Empty
+                Widget._force_copy=(Widget._force_copy,) #
+                Widget.on_mouse_drag( x, y, 0, 0, button, modifiers)
+                DRAGGABLE.offset=(int(x-Widget.width/2.),int(y-Widget.height/2.))
+                if not _discard_old_parent:
+                    Widget._old_parent = New_Parent
+                    Widget._old_parent_layout_info = layout_info
+                DRAGGABLE._emul_dragging=True
+
             self._old_parent=None
             self._old_parent_layout_info=None
             self._is_dragging=False
-
-            if isinstance(Widget, DraggableImageButton):
-                Widget._is_copying=None
-                Widget.on_mouse_drag( x, y, 0, 0, button, modifiers)
-                DRAGGABLE._emul_dragging=True
 
             #return pyglet.event.EVENT_HANDLED
 

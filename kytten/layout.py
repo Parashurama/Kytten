@@ -18,7 +18,7 @@ import pyglet
 import weakref
 from pyglet import gl
 
-from .widgets import Widget, Control, Spacer, Graphic, Image, Label, LayoutAssert, FreeLayoutAssert, InteractiveLayoutAssert
+from .widgets import Widget, Control, Spacer, Graphic, Image, Label, LayoutAssert, FreeLayoutAssert, DragNDropLayoutType
 from .button import ImageButton
 from .base import ReferenceName, Log, GetObjectfromName, CVars, xrange
 from .override import KyttenEventDispatcher
@@ -741,7 +741,7 @@ class FreeLayout(Spacer, FreeLayoutAssert):
             controls += item._get_controls()
         return controls
 
-    def set_widget(self, widget, position=None ):
+    def set(self, widget, position=None ):
         if isinstance(widget, tuple):
             WIDGET = (anchor, x, y, widget) = widget
             OLD_WIDGET = self.content_cache[position]
@@ -898,13 +898,16 @@ class FreeLayout(Spacer, FreeLayoutAssert):
         Widget.teardown(self)
 
 
-class FreeForm(FreeLayout, Control):
-    def __init__(self, content=[], widget_anchor=None, width=0, height=0, on_drag_object=None, on_drop_object=None, name=None):
+class FreeForm(FreeLayout, DragNDropLayoutType):
+    def __init__(self, content=[], widget_anchor=None, width=0, height=0, on_drag_object=None, on_drop_object=None, validate_drop_widget=None, name=None):
         FreeLayout.__init__(self, content=content, width=width, height=height, name=name)
+        DragNDropLayoutType.__init__(self,  on_drag_object=on_drag_object, on_drop_object=on_drop_object, validate_drop_widget=validate_drop_widget)
         self.widget_anchor=widget_anchor
-        self.set_handlers(['on_drag_object', 'on_drop_object'], on_drag_object=on_drag_object, on_drop_object=on_drop_object)
 
     def layout(self, x, y):
+
+        if self.saved_dialog is not None:
+            self.saved_dialog.drag_n_drop_layouts.append(self)
 
         if self.widget_anchor is None:
             self.widget_anchor=self.saved_dialog
@@ -914,16 +917,22 @@ class FreeForm(FreeLayout, Control):
             x, y = GetRelativePoint(self.widget_anchor, anchor, widget, anchor, (offset_x, offset_y))
             widget.layout(x, y)
 
-FreeForm.register_event_type('on_drag_object')
-FreeForm.register_event_type('on_drop_object')
+    def hit_test(self, x, y):
+        return True
 
-class InteractiveLayout(HorizontalLayout, InteractiveLayoutAssert, KyttenEventDispatcher):
+class InteractiveLayout(HorizontalLayout, DragNDropLayoutType):
     def __init__(self, *args, **kwargs):
 
         self.default_slot = kwargs.pop('default_slot')
-        self.set_handlers(['on_drag_object', 'on_drop_object'], on_drag_object=kwargs.pop('on_drag_object', None),
-                                                                on_drop_object=kwargs.pop('on_drop_object', None))
+        on_drop_object=kwargs.pop('on_drop_object', None)
+        on_drag_object=kwargs.pop('on_drag_object', None)
+        validate_drop_widget = kwargs.pop('validate_drop_widget', None)
+
         HorizontalLayout.__init__(self, *args, **kwargs)
+        DragNDropLayoutType.__init__(self,  on_drag_object=on_drag_object,
+                                            on_drop_object=on_drop_object,
+                                            validate_drop_widget=validate_drop_widget)
+
 
     def add(self, item, position=None):
         '''
@@ -973,13 +982,15 @@ class InteractiveLayout(HorizontalLayout, InteractiveLayoutAssert, KyttenEventDi
         @param position Position of the Widget
         '''
         item._parent = weakref.proxy(self)
-
+        old_item  = self.content[position]
         self.content[position].delete()
         self.content[position]=item
         self.content_cache[position]=item
 
         if self.saved_dialog is not None:
             self.saved_dialog.set_needs_layout()
+
+        return old_item
 
     def addDefaultSlot(self, position=None):
         if isinstance(self.default_slot, Image):
@@ -995,9 +1006,12 @@ class InteractiveLayout(HorizontalLayout, InteractiveLayoutAssert, KyttenEventDi
     def layout(self, x, y):
 
         if self.saved_dialog is not None:
-            self.saved_dialog.interactive_layouts.append(self)
+            self.saved_dialog.drag_n_drop_layouts.append(self)
         HorizontalLayout.layout(self, x, y)
 
-InteractiveLayout.register_event_type('on_drag_object')
-InteractiveLayout.register_event_type('on_drop_object')
-
+    def validate_drop_widget(self, widget, pos):
+        x,y=pos
+        if self.hit_test(x, y):
+            for i,widget in enumerate(self.content):
+                if widget.hit_test(x,y):
+                    return self, i, widget

@@ -642,6 +642,15 @@ class DialogAssert:
 class ScrollableAssert:
     pass
 
-class InteractiveLayoutAssert:
-    pass
+class DragNDropLayoutType(KyttenEventDispatcher):
+    def __init__(self, on_drag_object=None, on_drop_object=None, validate_drop_widget=None):
+        self.set_handlers(['on_drag_object', 'on_drop_object'], on_drag_object=on_drag_object,
+                                                                on_drop_object=on_drop_object)
+        self.validate_drop_widget_func=validate_drop_widget
 
+    def validate_drop_widget(self, widget, pos):
+        if self.hit_test(*pos) and self.validate_drop_widget_func is not None:
+            return self.validate_drop_widget_func(self, widget, pos)
+
+DragNDropLayoutType.register_event_type('on_drag_object')
+DragNDropLayoutType.register_event_type('on_drop_object')

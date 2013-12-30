@@ -11,7 +11,7 @@ import weakref
 import time
 from pyglet import gl
 
-from .widgets import Widget, Spacer, Control, Label, DialogAssert, InteractiveLayoutAssert
+from .widgets import Widget, Spacer, Control, Label, DialogAssert, FreeLayoutAssert, DragNDropLayoutType
 from .button import Button
 from .frame import Wrapper, Frame, SectionHeader, GuiFrame, TransparentFrame
 from .layout import GetRelativePoint, ANCHOR_CENTER, HALIGN_LEFT, HALIGN_CENTER, VALIGN_TOP, VALIGN_CENTER
@@ -77,7 +77,7 @@ class DialogEventManager(Control):
         self.wheel_target = None
         self.last_clicked_time =0.
         self.mouse_in = False
-        self.interactive_layouts = []
+        self.drag_n_drop_layouts = []
 
     def get_value(self, name):
         widget = self.get_widget(name)
@@ -864,8 +864,8 @@ class Dialog(Wrapper, DialogEventManager, DialogAssert):
         x += offset_x
         y += offset_y
 
-        # delete interactive_layouts references
-        del self.interactive_layouts[:]
+        # delete drag_n_drop_layouts references
+        del self.drag_n_drop_layouts[:]
 
         # Perform the actual layout now!
         self.layout(x, y)
@@ -1410,13 +1410,13 @@ class DragNDrop(Dialog):
         kwargs['always_on_top'] = True
         Dialog.__init__(self, *args, **kwargs)
 
-    def check_position(self, x,y):
+    def layout_validate_drop_widget(self, item, pos):
+        x, y=pos
         for _, dialog in sorted(((dialog.root_group.real_order,dialog) for dialog in GetActiveDialogs() if (dialog.visible is True and dialog.hit_test(x,y)) ), reverse=True):
-            for layout in dialog.interactive_layouts:
-                if layout.hit_test(x,y):
-                    for i,widget in enumerate(layout.content):
-                        if widget.hit_test(x,y):
-                            return layout, i, widget
+            for layout in dialog.drag_n_drop_layouts:
+                POSITION = layout.validate_drop_widget(item, pos)
+                if POSITION is not None:
+                    return POSITION
 
     def on_mouse_motion(self, x, y, dx, dy):
         if self._emul_dragging is True:
