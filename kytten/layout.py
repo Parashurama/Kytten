@@ -920,6 +920,15 @@ class FreeForm(FreeLayout, DragNDropLayoutType):
     def hit_test(self, x, y):
         return True
 
+    def check_position(self, position):
+        '''
+        Lookup position in the layout.
+
+        @param position The slot to lookup
+        '''
+        return self.content_cache[position][3]
+
+
 class InteractiveLayout(HorizontalLayout, DragNDropLayoutType):
     def __init__(self, *args, **kwargs):
 
@@ -973,6 +982,14 @@ class InteractiveLayout(HorizontalLayout, DragNDropLayoutType):
 
         return (item,index)
 
+    def check_position(self, position):
+        '''
+        Lookup position in the layout.
+
+        @param position The slot to lookup
+        '''
+        return self.content[position]
+
     def set(self, item, position):
         '''
         Replace a Widget in the layout.
@@ -1012,6 +1029,9 @@ class InteractiveLayout(HorizontalLayout, DragNDropLayoutType):
     def validate_drop_widget(self, widget, pos):
         x,y=pos
         if self.hit_test(x, y):
+            if self.validate_drop_widget_func is not None and not self.validate_drop_widget_func(self, widget, pos):
+                return None
+
             for i,widget in enumerate(self.content):
                 if widget.hit_test(x,y):
                     return self, i, widget

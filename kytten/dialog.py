@@ -9,7 +9,9 @@ from __future__ import unicode_literals, print_function
 import pyglet
 import weakref
 import time
-from pyglet import gl
+import pyglet.gl as gl
+import pyglet.window.mouse as mouse
+
 
 from .widgets import Widget, Spacer, Control, Label, DialogAssert, FreeLayoutAssert, DragNDropLayoutType
 from .button import Button
@@ -402,7 +404,7 @@ class DialogEventManager(Control):
         return self.EventHandled()
 
     def check_hover(self, dt, hover):
-        if self.hover is hover and hover.visible:
+        if self.hover is hover and hover.visible and not hover.hover_disabled:
             hover.dispatch_event('on_gain_hover', hover)
 
     def set_wheel_hint(self, control):
@@ -581,7 +583,6 @@ class Dialog(Wrapper, DialogEventManager, DialogAssert):
                        on_mouse_enter=None,
                        on_mouse_leave=None,
                        always_on_top=False,
-                       tooltip=False,
                        hover_delay=0.3,
                        attached_to=None,
                        anchor_flag=None,
@@ -674,7 +675,7 @@ class Dialog(Wrapper, DialogEventManager, DialogAssert):
         else:
             width, height = window.get_size()
             self.screen = Widget(width=width, height=height)
-            if not tooltip: window.push_handlers(weakref.proxy(self))
+            window.push_handlers(self)
 
     def get_relative_size(self):
         _OFF_WIDTH = 0 ; _OFF_HEIGHT = 0
@@ -1243,17 +1244,16 @@ class GuiElement(Dialog):
 class ToolTip(GuiElement):
     def __init__(self, parent_widget, text='EMPTY', name=None, secondary=None, text_style={}, **kwargs):
 
-
-
         self.parent_widget = weakref.proxy(parent_widget)
         parent_dialog=parent_widget.saved_dialog
         #self.parent_widget.disable() # caused bug : on_click not working after ToolTip is created
 
         if self.parent_widget.tooltip:
             self.parent_widget.tooltip.tearing_down_tooltip()
-                                    #string: bytes or unicode
-        if hasattr(text, 'startswith'): content=Label(text, style=text_style)
-        else:                           content=text
+
+        if not text:                        content=None
+        elif hasattr(text, 'startswith'):   content=Label(text, style=text_style)#string: bytes or unicode
+        else:                               content=text
 
         GuiElement.__init__(self,   content=content,
                                     window=parent_dialog.window,
@@ -1261,6 +1261,7 @@ class ToolTip(GuiElement):
                                     batch=parent_dialog.batch,
                                     group=parent_dialog.parent_group,
                                     anchor=ANCHOR_BOTTOM_LEFT,
+                                    #tooltip=True,
                                     offset=(0,0),
                                     always_on_top=True,
                                     movable=False,
@@ -1378,6 +1379,7 @@ class ToolTip(GuiElement):
         pass
 
     def on_mouse_release(self,*args):
+        print("on_mouse_release tooltip", self, self.destroyed)
         pass
 
     def on_mouse_motion(self,*args):
@@ -1420,7 +1422,7 @@ class DragNDrop(Dialog):
 
     def on_mouse_motion(self, x, y, dx, dy):
         if self._emul_dragging is True:
-            self.focus.on_mouse_drag(x,y,dx,dy, 0,0)
+            self.focus.dispatch_event("on_mouse_drag", x,y,dx,dy, mouse.LEFT,16)
             return self.EventHandled()
 
     def set_hover(self,*args):
@@ -1429,7 +1431,7 @@ class DragNDrop(Dialog):
 
     def on_mouse_press(self, x, y, button, modifiers):
         if self._emul_dragging is True:
-            self.focus.on_mouse_release(x,y, 0,0)
+            self.focus.dispatch_event("on_mouse_release", x,y, button,modifiers)
             return self.EventHandled()
 
 class PopupMessage(Dialog):

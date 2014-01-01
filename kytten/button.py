@@ -111,6 +111,7 @@ class Button(Control):
         '''
         if not self.is_pressed and not self.is_disabled():
             self.is_pressed = True
+            self.disable_hover()
 
             self._force_refresh()
 
@@ -123,6 +124,7 @@ class Button(Control):
         '''
         if self.is_pressed is True:
             self.is_pressed = False
+            self.enable_hover()
 
             self._force_refresh()
 
@@ -490,6 +492,8 @@ class ImageButton(Button):
     def on_mouse_press(self, x, y, button, modifiers):
         self.image = self.clicked_image
         Button.on_mouse_press(self, x, y, button, modifiers)
+        if self.tooltip is not None:
+            self.tooltip.tearing_down_tooltip()
 
     def on_mouse_release(self, x, y, button, modifiers):
         if not self.highlight_flag:  self.image = self.default_image
@@ -570,8 +574,6 @@ class DraggableImageButton(ImageButton):
     def on_mouse_release(self, x, y, button, modifiers):
         if self._is_dragging:
 
-
-
             DRAGGABLE=GetObjectfromName('DRAGGABLE')
             NEW_POSITION = DRAGGABLE.layout_validate_drop_widget(self, (int(self.x +self.width/2.),int(self.y+self.height/2.)))
             _discard_old_parent=False
@@ -581,6 +583,9 @@ class DraggableImageButton(ImageButton):
 
                 if not self._is_copy:
                     if   self._old_parent_layout_info is None:
+                        return pyglet.event.EVENT_HANDLED #EmulDragging don't release Button
+
+                    if isinstance(self._old_parent.check_position(self._old_parent_layout_info[1]), DraggableImageButton):
                         return pyglet.event.EVENT_HANDLED #EmulDragging don't release Button
 
                     self._old_parent.set( *self._old_parent_layout_info) # Put Widget back back with parent.
@@ -638,13 +643,15 @@ class DraggableImageButton(ImageButton):
 
             if isinstance(Widget, DraggableImageButton): # Slot was not Empty
                 Widget._force_copy=(Widget._force_copy,) #
-                Widget.on_mouse_drag( x, y, 0, 0, button, modifiers)
+                Widget.dispatch_event('on_mouse_drag', x, y, 0, 0, button, modifiers)
+
                 DRAGGABLE.offset=(int(x-Widget.width/2.),int(y-Widget.height/2.))
                 if not _discard_old_parent:
                     Widget._old_parent = New_Parent
                     Widget._old_parent_layout_info = layout_info
                 DRAGGABLE._emul_dragging=True
 
+            self.enable_hover()
             self._old_parent=None
             self._old_parent_layout_info=None
             self._is_dragging=False

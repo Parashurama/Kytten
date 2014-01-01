@@ -45,7 +45,7 @@ class FileLoadDialog(Dialog):
     def __init__(self, path=os.getcwd(), extensions=[], title="Select File",
                  width=540, height=300, window=None, batch=None, group=None, name=None, parent=None,
                  anchor=ANCHOR_CENTER, offset=(0, 0),
-                 theme=None, movable=True, on_select=None, on_enter=None, on_escape=None, always_on_top=False, tooltip=False, attached_to=None):
+                 theme=None, movable=True, on_select=None, on_enter=None, on_escape=None, always_on_top=False, attached_to=None):
         self.path = path
         self.extensions = extensions
         self.title = title
@@ -77,7 +77,7 @@ class FileLoadDialog(Dialog):
         content = self._get_content()
         Dialog.__init__(self, content, window=window, batch=batch, group=group, name =name, parent=parent,
                         anchor=anchor, offset=offset, theme=theme,
-                        movable=movable, on_escape=on_escape, always_on_top=always_on_top, tooltip=tooltip, attached_to=attached_to )
+                        movable=movable, on_escape=on_escape, always_on_top=always_on_top, attached_to=attached_to )
 
     def _get_content(self):
         return Frame(

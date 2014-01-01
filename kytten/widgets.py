@@ -254,6 +254,7 @@ class Control(Widget, KyttenEventDispatcher):
     highlight_flag=False
     focus_flag=False
     hover_flag=False
+    hover_disabled=False
     tooltip=None
     def __init__(self, name=None, on_gain_hover=None, on_lose_hover=None, value=None, width=0, height=0, disabled=False, noId=False, group=None):
         '''
@@ -326,6 +327,12 @@ class Control(Widget, KyttenEventDispatcher):
 
     def is_focus(self):
         return self.focus_flag
+
+    def disable_hover(self):
+        self.hover_disabled=True
+
+    def enable_hover(self):
+        self.hover_disabled=False
 
     def is_highlight(self):
         return self.highlight_flag

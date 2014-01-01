@@ -21,17 +21,8 @@ class KyttenEventDispatcher(pyglet.event.EventDispatcher):
 
 
     def remove_handlers(self, *args, **kwargs):
-        '''Remove event handlers from the event stack.
+        # See 'remove_handler' method of pyglet.event.EventDispatcher
 
-        See `push_handlers` for the accepted argument types.  All handlers
-        are removed from the first stack frame that contains any of the given
-        handlers.  No error is raised if any handler does not appear in that
-        frame, or if no stack frame contains any of the given handlers.
-
-        If the stack frame is empty after removing the handlers, it is
-        removed from the stack.  Note that this interferes with the expected
-        symmetry of `push_handlers` and `pop_handlers`.
-        '''
         handlers = list(self._get_handlers(args, kwargs))
 
         # Find the first stack frame containing any of the handlers
@@ -62,21 +53,8 @@ class KyttenEventDispatcher(pyglet.event.EventDispatcher):
             self._event_stack.remove(frame)
 
     def remove_handler(self, name, handler):
-        '''Remove a single event handler.
+        # See 'remove_handler' method of pyglet.event.EventDispatcher
 
-        The given event handler is removed from the first handler stack frame
-        it appears in.  The handler must be the exact same callable as passed
-        to `set_handler`, `set_handlers` or `push_handlers`; and the name
-        must match the event type it is bound to.
-
-        No error is raised if the event handler is not set.
-
-        :Parameters:
-            `name` : str
-                Name of the event type to remove.
-            `handler` : callable
-                Event handler to remove.
-        '''
         for frame in self._event_stack:
             try: # set comparison to EQUAL (is testing was failling for some instance bond functions)
                 if frame[name] == handler:
@@ -84,6 +62,27 @@ class KyttenEventDispatcher(pyglet.event.EventDispatcher):
                     break
             except KeyError:
                 pass
+
+    @classmethod
+    def patch_class_event(cls, func_name):
+        def _wrapper(func_obj):
+            if not hasattr(cls, '_func_event_stack'):
+                cls._func_event_stack={}
+
+            if not func_name in cls._func_event_stack:
+                def _call_wrapper(self, *args, **kargs):
+                    for func in reversed(cls._func_event_stack[func_name]):
+                        if func(self, *args, **kargs) is True:
+                            break
+
+                cls._func_event_stack[func_name]=[getattr(cls,func_name) ]
+                setattr(cls, func_name, _call_wrapper)
+
+            cls._func_event_stack[func_name].append(func_obj)
+
+            return cls
+
+        return _wrapper
 
 class TextLayoutGroup_KYTTEN_OVERRIDE(pyglet.graphics.Group):
     def set_state(self):
