@@ -295,7 +295,7 @@ class Menu(VerticalLayout):
 
         self._make_options(options)
 
-        self.set(self.menu_options)
+        self.set_content(self.menu_options)
 
         if self.saved_dialog is not None:
             self.saved_dialog.set_needs_layout()

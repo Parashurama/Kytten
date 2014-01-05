@@ -267,7 +267,7 @@ class VerticalLayout(Widget,LayoutAssert):
                 item.layout(x, top - item.height)
                 top -= item.height + self.padding
 
-    def set(self, content):
+    def set_content(self, content):
         '''
         Sets an entirely new set of Widgets, discarding the old.
 
@@ -961,12 +961,15 @@ class InteractiveLayout(HorizontalLayout, DragNDropLayoutType):
         if self.saved_dialog is not None:
             self.saved_dialog.set_needs_layout()
 
-    def remove(self, item, replacing=True):
+    def remove(self, item, replacing=True, position=None):
         '''
         Removes a Widget from the layout.
 
         @param item The Widget to be removed
         '''
+        if position is not None:
+            item = self.content_cache[position]
+
         item.delete()
         if self.saved_dialog is not None:
             self.saved_dialog.set_needs_layout()

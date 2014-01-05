@@ -13,6 +13,7 @@
 # TitleFrame: like Frame, but has a title region on top as well.
 from __future__ import unicode_literals, print_function
 
+import pyglet
 import weakref
 from .widgets import Widget, Control, Graphic, Label, Spacer
 from .layout import HorizontalLayout, VerticalLayout, GetRelativePoint
@@ -404,6 +405,102 @@ class GuiFrame(Frame):
 
         self.content.layout(x, y)
 
+class BubbleFrame(GuiFrame, Control):
+    hover=None
+    focus=None
+    focusable_events=set(["on_text", "on_text_motion", "on_text_motion_select", "on_mouse_drag"])
+    hover_events=set(["on_gain_hover", "on_lose_hover"])
+
+    def __init__(self, content, texture, is_expandable=False, anchor=ANCHOR_CENTER, use_bg_group=False, group=None, name=None, flag='default', **kwargs):
+
+        GuiFrame.__init__(self, content, texture, is_expandable=is_expandable, anchor=anchor, use_bg_group=use_bg_group, group=group, name=name, flag=flag)
+        Control.__init__(self, **kwargs)
+        self._controls_list=[]
+
+    def _get_controls(self):
+        '''Returns Controls contained by the Wrapper.'''
+        CONTROLS = self.content._get_controls() if self.content is not None else []
+        self._controls_list = [ctrl[0] for ctrl in CONTROLS]
+        self.control_areas = dict( (str(ctrl[0]),(ctrl[1],ctrl[2], ctrl[2], ctrl[4])) for ctrl in CONTROLS )
+
+        return Control._get_controls(self)
+
+    def hit_control(self, x, y, control):
+        left, right, top, bottom = self.control_areas[str(control)]
+        if x >= left and x < right and y >= bottom and y < top:
+            return control.hit_test(x, y)
+        else:
+            return False
+
+    def dispatch_event(self, event_type, *args):
+        if event_type in ("on_update",): return
+
+        if   event_type in ("on_mouse_press", "on_mouse_motion", "on_lose_focus", "on_lose_hover", "on_gain_focus", "on_gain_hover"):
+            print ("Event", event_type, args)
+            return Control.dispatch_event(self, event_type, *args)
+
+        elif  event_type in self.focusable_events:
+            if self.focus is not None and self.focus.dispatch_event(event_type, *args):
+                return pyglet.event.EVENT_HANDLED
+
+        elif event_type == "on_mouse_release":
+            for ctrl in self._controls_list:
+                ctrl.dispatch_event(event_type, *args)
+        else:
+            print("Ignored Event", event_type)
+
+    def on_mouse_press(self, x, y, *args):
+
+        for ctrl in self._controls_list:
+            if self.hit_control(x, y, ctrl):
+                self.set_focus(ctrl)
+                return ctrl.dispatch_event("on_mouse_press", x, y, *args)
+
+        self.set_focus(None)
+
+    def on_mouse_motion(self, x, y,  *args):
+        for ctrl in self._controls_list:
+            if self.hit_control(x, y, ctrl):
+                self.set_hover(ctrl)
+                return ctrl.dispatch_event("on_mouse_motion", x, y, *args)
+
+        self.set_hover(None)
+
+    def on_lose_focus(self):
+        self.set_focus(None)
+
+    def on_lose_hover(self, *args):
+        self.set_hover(None)
+
+    def set_hover(self, hover):
+        if not self.visible or self.hover == hover:
+            return
+
+        if self.hover is not None:
+            self.hover.dispatch_event('on_lose_highlight')
+            if self.hover.hover_flag is True:
+                self.hover.dispatch_event('on_lose_hover', self.hover)
+
+        self.hover = hover
+        if hover is not None:
+            hover.dispatch_event('on_gain_highlight')
+
+    def set_focus(self, focus):
+        '''
+        Sets a new focus, dispatching lose and gain focus events appropriately
+
+        @param focus The new focus, or None if no focus
+        '''
+        if not self.visible or self.focus == focus:
+            return
+
+        if self.focus is not None:
+            self.focus.dispatch_event('on_lose_focus')
+
+        self.focus = focus
+
+        if focus is not None:
+            focus.dispatch_event('on_gain_focus')
 
 class TitleFrame(VerticalLayout):
     def __init__(self, title, content):

@@ -328,7 +328,6 @@ class MultilineInput(Input):
             self.caret.on_text(text)
             if self._auto_complete_func is not None:
                 self.get_auto_complete()
-
             return pyglet.event.EVENT_HANDLED
 
     def get_auto_complete(self):
@@ -370,7 +369,8 @@ class MultilineInput(Input):
             self.text_layout.set_selection(0,0)
 
         if self.caret is not None:
-            self.caret.visible = False
+            self.caret.delete()
+            self.caret=None
 
         if self.highlight is not None:
             self.highlight.delete()
@@ -444,7 +444,7 @@ class MultilineInput(Input):
                                                             batch=dialog.batch, group=dialog.fg_group)
             assert self.caret is None
 
-        if self.caret is None:
+        if self.caret is None and self.is_focus():
             self.caret = pyglet.text.caret.Caret(
                 self.text_layout,
                 color=dialog.theme['input']['gui_color'][0:3])

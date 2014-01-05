@@ -142,13 +142,12 @@ class DialogEventManager(Control):
 
         elif symbol != pyglet.window.key.ESCAPE:
             if self.focus is not None:
-                if hasattr(self.focus, 'on_key_press') and self.focus.on_key_press(symbol, modifiers):
+                if self.focus.dispatch_event("on_key_press", symbol, modifiers):
                     return self.EventHandled()
-                elif hasattr(self.focus, 'on_text'):
-                    if symbol == pyglet.window.key.ENTER:
-                        self.focus.on_text('\n')
-
-                    return self.EventHandled()
+                else:
+                    char = '\n' if symbol == pyglet.window.key.ENTER else ''
+                    if self.focus.dispatch_event("on_text", char):
+                        return self.EventHandled()
 
     def on_key_release(self, symbol, modifiers):
         '''Pass key release events to the focus
@@ -159,8 +158,8 @@ class DialogEventManager(Control):
 
         if not self.visible : return
 
-        if self.focus is not None and hasattr(self.focus, 'on_key_release'):
-            return self.focus.on_key_release(symbol, modifiers)
+        if self.focus is not None and self.focus.dispatch_event("on_key_release", symbol, modifiers):
+            return pyglet.event.EVENT_HANDLED
 
     def check_for_always_on_top_dialog(self, event_type, *args):
         x=args[0]
@@ -319,30 +318,21 @@ class DialogEventManager(Control):
             return self.EventHandled()
 
     def on_text(self, text):
-        if self.focus is not None and text != '\r':
-            try:
-                if self.focus.on_text(text):
-                    return self.EventHandled()
-            except AttributeError: # PATCHED from KeyError
-                pass
+        if self.focus is not None and text != '\r' and self.focus.dispatch_event("on_text", text):
+            return self.EventHandled()
+
         return pyglet.event.EVENT_UNHANDLED
 
     def on_text_motion(self, motion):
-        if self.focus is not None:
-            try:
-                if self.focus.on_text_motion(motion):
-                    return self.EventHandled()
-            except AttributeError: # PATCHED from KeyError
-                pass
+        if self.focus is not None and self.focus.dispatch_event("on_text_motion", motion):
+            return self.EventHandled()
+
         return pyglet.event.EVENT_UNHANDLED
 
     def on_text_motion_select(self, motion):
-        if self.focus is not None:
-            try:
-                if self.focus.on_text_motion_select(motion):
-                    return self.EventHandled()
-            except AttributeError: # PATCHED from KeyError
-                pass
+        if self.focus is not None and self.focus.dispatch_event("on_text_motion_select",motion):
+            return self.EventHandled()
+
         return pyglet.event.EVENT_UNHANDLED
 
     def on_update(self, dt):
