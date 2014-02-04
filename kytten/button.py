@@ -17,6 +17,10 @@ class Button(Control):
     '''
     A simple text-labeled button.
     '''
+    label = None
+    button = None
+    highlight = None
+    is_pressed = False
     def __init__(self, text="", name=None, on_click=None, on_double_click=None, group=None, on_gain_hover=None, on_lose_hover=None, disabled=False):
         '''
         Creates a new Button.  The provided text will be used to caption the button.
@@ -34,10 +38,7 @@ class Button(Control):
         self.text = string_to_unicode(text)
         self.on_click = self._wrap_method(on_click)
         self.on_double_click_func = self._wrap_method(on_double_click)
-        self.label = None
-        self.button = None
-        self.highlight = None
-        self.is_pressed = False
+
 
     def set_text(self, text):
         '''
@@ -70,8 +71,10 @@ class Button(Control):
         '''
         Control.layout(self, x, y)
         self.button.update(self.x, self.y, self.width, self.height)
+
         if self.highlight is not None:
             self.highlight.update(self.x, self.y, self.width, self.height)
+
         x, y, width, height = self.button.get_content_region()
         font = self.label.document.get_font()
         self.label.x = x + width/2 - self.label.content_width/2
@@ -430,11 +433,9 @@ class ImageButton(Button):
             if self.bitmap is None:
                 self.bitmap = DefaultTextureGraphicElement(texture=self.image, batch=dialog.batch, group=dialog.bg_group, color=self.color)
 
-
             if self.fixed_size:
                 if self.square is True or self.image.height == self.image.width:
                     self.bitmap.height=self.bitmap.width=float(self.fixed_size)
-
                 else :
                     if   self.image.width > self.image.height:
                         self.bitmap.height=self.image.height*self.fixed_size/float(self.image.width)

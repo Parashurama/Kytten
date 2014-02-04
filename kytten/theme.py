@@ -70,6 +70,19 @@ class CustomGraphicTextureGroup(pyglet.graphics.TextureGroup):
         # Without this option : problem with alpha blending when rendering buffered GUI textures
         #Also in context.glContext
 
+class UntexturedGroup(pyglet.graphics.Group):
+    '''
+    CustomGraphicTextureGroup, in addition to setting the texture, also ensures that
+    correct interpolation between texels.
+    '''
+
+    def set_state(self):
+        pyglet.graphics.Group.set_state(self)
+        gl.glBlendFuncSeparate(gl.GL_SRC_ALPHA, gl.GL_ONE_MINUS_SRC_ALPHA, gl.GL_ONE, gl.GL_ONE_MINUS_SRC_ALPHA)
+        # To Allow Normal Rendering when Buffering with FrameBufferObject
+        # Without this option : problem with alpha blending when rendering buffered GUI textures
+        #Also in context.glContext
+
 
 
 class UndefinedGraphicElementTemplate:
@@ -531,6 +544,40 @@ class Repeat_NinePatchTextureGraphicElement(object):
                                                 ('c4B', self._color*n_vertexes ),
                                                 ('t2f', self._get_texcoords())
                                                 )
+
+class UntexturedGraphicElement(object):
+    def __init__(self, color, batch, group):
+        self.x = self.y = 0
+        self.width, self.height = 0, 0
+        self.group = UntexturedGroup(group)
+        self.vertex_list = batch.add(4, gl.GL_QUADS, self.group,
+                                     ('v2i', self._get_vertices()),
+                                     ('c4B', color * 4))
+
+    def _get_vertices(self):
+        x1, y1 = int(self.x), int(self.y)
+        x2, y2 = x1 + int(self.width), y1 + int(self.height)
+        return (x1, y1, x2, y1, x2, y2, x1, y2)
+
+    def delete(self):
+        self.vertex_list.delete()
+        self.vertex_list = None
+        self.group = None
+
+    def get_content_region(self):
+        return (self.x, self.y, self.width, self.height)
+
+    def get_content_size(self, width, height):
+        return width, height
+
+    def get_needed_size(self, content_width, content_height):
+        return content_width, content_height
+
+    def update(self, x, y, width, height):
+        self.x, self.y, self.width, self.height = x, y, width, height
+        if self.vertex_list is not None:
+            self.vertex_list.vertices = self._get_vertices()
+
 
 class DefaultTextureGraphicElement(object):
 

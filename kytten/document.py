@@ -323,12 +323,11 @@ class Document(Control):
             return x >= self.x and x < self.x + self.width and \
                    y >= self.y and y < self.y + self.height
 
-
-
 class RichText(Widget):
     content=None
     document=None
     background=None
+    set_document_style = False
     def __init__(self, document, formatted=False, width=250, height=50, name=None, text_style={}, background_color=None, group=None):
         '''
         Creates a new RichText Widget.
@@ -337,6 +336,7 @@ class RichText(Widget):
         self.background_color=background_color
         self.content_width = width
         self.content_height = height
+        self.text_style = text_style
 
         if hasattr(document, 'startswith'): # document is a string
             self.set_document(self.create_document(document, formatted))
@@ -384,6 +384,30 @@ class RichText(Widget):
         if self.saved_dialog is not None:
             self.saved_dialog.set_needs_layout()
 
+    def do_set_document_style(self, dialog):
+        self.set_document_style = True
+
+        # Check the style runs to make sure we don't stamp on anything
+        # set by the user
+        color     = self.text_style.get('color', None)
+        font      = self.text_style.get('font', None)
+        font_size = self.text_style.get('font_size', None)
+
+        self._do_set_document_style('color', color or dialog.theme['text_color'])
+        self._do_set_document_style('font_name', font or dialog.theme['font'])
+        self._do_set_document_style('font_size', font_size or dialog.theme['font_size'])
+
+    def _do_set_document_style(self, attr, value):
+        length = len(self.document.text)
+        runs = [(start, end, doc_value) for start, end, doc_value in
+                self.document.get_style_runs(attr).ranges(0, length)
+                if doc_value is not None]
+        if not runs:
+            terminator = len(self.document.text)
+        else:
+            terminator = runs[0][0]
+        self.document.set_style(0, terminator, {attr: value})
+
     def layout(self, x, y):
         self.x, self.y = x, y
 
@@ -403,9 +427,9 @@ class RichText(Widget):
             return
 
         Widget.size(self, dialog, scale)
-        #if not self.set_document_style:
+        if not self.set_document_style:
             # Set Document Style for unformatted Documment
-        #    self.do_set_document_style(dialog)
+            self.do_set_document_style(dialog)
 
         if self.content is None:
             self.content = pyglet.text.layout.TextLayout(  self.document,  self.content_width, self.content_height, multiline=True,

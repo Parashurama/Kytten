@@ -643,7 +643,32 @@ class Label(Widget):
         else:
             self.height = self.label.content_height  - font.descent #font.ascent - font.descent  # descent is negative
 
+    def get_text_width(self, text):
 
+        font = self.label.document.get_font(dpi=self.label._dpi)
+        glyphs = font.get_glyphs(text)
+        return sum( glyph.advance for glyph in glyphs[:-1])+glyphs[-1].width
+
+    def check_text_width(self, text, max_width):
+        font = self.label.document.get_font(dpi=self.label._dpi)
+        glyphs = font.get_glyphs(text)
+
+        def _gen_wrap(glyphs):
+            if glyphs:
+                for i, glyph in enumerate(glyphs[:-1]):
+                    yield i, glyph.advance
+
+                yield i+1, glyphs[-1].width
+
+        width=0
+        for i, glyph_width in _gen_wrap(glyphs):
+            width+=glyph_width
+            if width >= max_width:
+                width -=glyph_width
+
+                return True, i
+
+        return False, 0
 
 class LayoutAssert:
     pass

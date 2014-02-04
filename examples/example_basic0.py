@@ -31,7 +31,8 @@ if __name__ == '__main__':
     dialog = kytten.Dialog(
             kytten.TitleFrame('Kytten Test',
                 kytten.VerticalLayout([
-                    kytten.Label("Select dialog to show"),
+                    kytten.Label(u"jhbze \u0010 Select dialog\u2029 to show", multiline=True, width =250),
+                    kytten.RichText(u"""{color (255, 255, 0, 255)}including {color (75, 0, 128, 255)}\u2028CPython\n{color (0, 255, 0, 255)}) can function""", formatted="attr"),
                     kytten.Menu(options=["Document", "Form", "Scrollable"] ),
                 ]),
             ),
