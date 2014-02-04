@@ -33,7 +33,11 @@ class ScrollableGroup(pyglet.graphics.Group):
         '''
         pyglet.graphics.Group.__init__(self, parent)
         self.x, self.y, self.width, self.height = x, y, width, height
+        self._scale = 1.0
         self.was_scissor_enabled = False
+
+    def set_scale(self, scale):
+        self._scale = float(scale)
 
     def set_state(self):
         '''
@@ -46,10 +50,17 @@ class ScrollableGroup(pyglet.graphics.Group):
         gl.glScissor(int(self.x), int(self.y),
                      int(self.width), int(self.height))
 
+        if self._scale != 1.0:
+            gl.glPushMatrix(gl.GL_MODELVIEW_MATRIX)
+            gl.glScalef(self._scale,self._scale,1.0)
+
     def unset_state(self):
         '''
         Disables the scissor test
         '''
+        if self._scale != 1.0:
+            gl.glPopMatrix(gl.GL_MODELVIEW_MATRIX)
+
         if not self.was_scissor_enabled:
             gl.glDisable(gl.GL_SCISSOR_TEST)
         gl.glPopAttrib()
@@ -88,6 +99,7 @@ class Scrollable(Wrapper, ScrollableAssert):
         self.hscrollbar_height = 0
         self.vscrollbar_width = 0
         self.child_anchor = child_anchor
+        self.scale = 1.0
 
         # We emulate some aspects of Dialog here.  We cannot just inherit
         # from Dialog because pyglet event handling won't allow keyword
@@ -262,7 +274,7 @@ class Scrollable(Wrapper, ScrollableAssert):
         '''
         if self.needs_layout:
             width, height = self.width, self.height
-            self.size(self.saved_dialog)
+            self.size(self.saved_dialog, self.scale)
             self.expand(width, height)
             self.layout(self.x, self.y)
 
@@ -279,7 +291,10 @@ class Scrollable(Wrapper, ScrollableAssert):
         if self.saved_dialog is not None:
             self.saved_dialog.set_wheel_target(control)
 
-    def size(self, dialog):
+    def set_scale(self, scale):
+        self.scale = scale
+
+    def size(self, dialog, scale):
         '''
         Recalculate the size of the Scrollable.
 
@@ -287,7 +302,7 @@ class Scrollable(Wrapper, ScrollableAssert):
         '''
         if dialog is None:
             return
-        Widget.size(self, dialog)
+        Widget.size(self, dialog, scale)
 
         self.hscrollbar_height = \
             dialog.theme['hscrollbar']['left']['image'].height
@@ -305,7 +320,10 @@ class Scrollable(Wrapper, ScrollableAssert):
             self.highlight_group = pyglet.graphics.OrderedGroup( 3, self.root_group)
             Wrapper.delete(self)  # force children to abandon old groups
 
-        Wrapper.size(self, self)  # all children are to use our groups
+        Wrapper.size(self, self, scale)  # all children are to use our groups
+
+        self.root_group.set_scale(self.scale)
+        print (self.scale)
 
         if self.always_show_scrollbars or \
            (self.max_width and self.width > self.max_width):
@@ -334,13 +352,13 @@ class Scrollable(Wrapper, ScrollableAssert):
             self.width, self.height = self.max_width, self.max_height
 
         if self.hscrollbar is not None:
-            self.hscrollbar.size(dialog)
+            self.hscrollbar.size(dialog, scale)
             self.hscrollbar.set(self.max_width, max(self.content.width,
                                                     self.max_width))
             self.height += self.hscrollbar.height + SCROLLBAR_PADDING
 
         if self.vscrollbar is not None:
-            self.vscrollbar.size(dialog)
+            self.vscrollbar.size(dialog, scale)
             self.vscrollbar.set(self.max_height, max(self.content.height,
                                                      self.max_height))
             self.width += self.vscrollbar.width + SCROLLBAR_PADDING

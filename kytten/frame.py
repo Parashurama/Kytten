@@ -104,7 +104,7 @@ class Wrapper(Widget):
         self.content = content
         dialog.set_needs_layout()
 
-    def size(self, dialog):
+    def size(self, dialog, scale):
         '''
         The default Wrapper wraps up its Widget snugly.
 
@@ -112,10 +112,10 @@ class Wrapper(Widget):
         '''
         if dialog is None:
             return
-        Widget.size(self, dialog)
+        Widget.size(self, dialog, scale)
 
         if self.content is not None:
-            self.content.size(dialog)
+            self.content.size(dialog, scale)
 
             self.width, self.height = self.content.width, self.content.height
         else:
@@ -255,7 +255,7 @@ class Frame(Wrapper):
                                 self.content, self.anchor, self.content_offset)
         self.content.layout(x, y)
 
-    def size(self, dialog):
+    def size(self, dialog, scale):
         '''
         Determine minimum size of the Frame.
 
@@ -264,7 +264,7 @@ class Frame(Wrapper):
         if dialog is None:
             return
 
-        Wrapper.size(self, dialog)
+        Wrapper.size(self, dialog, scale)
 
         if not self.visible or not self.content:
             self.width=self.height=0
@@ -354,7 +354,7 @@ class GuiFrame(Frame):
         if not flag in ('repeat', 'stretch', 'default'):
             raise ValueError("Invalid Texture Flag Declaration in GuiFrame: must be 'repeat','stretch' or 'default' ")
 
-    def size(self, dialog):
+    def size(self, dialog, scale):
         '''
         Determine minimum size of the Frame.
 
@@ -363,7 +363,7 @@ class GuiFrame(Frame):
         if dialog is None:
             return
 
-        Wrapper.size(self, dialog)
+        Wrapper.size(self, dialog, scale)
 
         if not self.visible or not self.content:
             self.width=self.height=0
@@ -617,7 +617,7 @@ class FoldingSection(Control, VerticalLayout):
         if self.saved_dialog is not None:
             self.saved_dialog.set_needs_layout()
 
-    def size(self, dialog):
+    def size(self, dialog, scale):
 
         if self.is_disabled():
             colorpath = 'disabled_color'
@@ -632,7 +632,7 @@ class FoldingSection(Control, VerticalLayout):
         self.book.path = self._get_image_path()
         self.book.color = self.main_color or dialog.theme[self.book.path][colorpath]
 
-        VerticalLayout.size(self, dialog)
+        VerticalLayout.size(self, dialog, scale)
 
     def disable(self):
         self.disabled_flag=True

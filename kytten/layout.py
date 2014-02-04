@@ -291,7 +291,7 @@ class VerticalLayout(Widget,LayoutAssert):
         if self.saved_dialog is not None:
             self.saved_dialog.set_needs_layout()
 
-    def size(self, dialog):
+    def size(self, dialog, scale):
         '''
         Calculates size of the layout, based on its children.
 
@@ -299,7 +299,7 @@ class VerticalLayout(Widget,LayoutAssert):
         '''
         if dialog is None:
             return
-        Widget.size(self, dialog)
+        Widget.size(self, dialog, scale)
         if len(self.content) < 2:
             height = 0
         else:
@@ -308,7 +308,12 @@ class VerticalLayout(Widget,LayoutAssert):
         width = self.minwidth
 
         for item in self.content:
-            item.size(dialog)
+            try:
+                item.size(dialog, scale)
+            except TypeError:
+                print ("TypeError", item, item.size)
+                raise
+
             height += item.height + self.padding
             width = max(width, item.width)
         self.width, self.height = width, height
@@ -391,7 +396,7 @@ class HorizontalLayout(VerticalLayout):
                 item.layout(left, y)
                 left += item.width + self.padding
 
-    def size(self, dialog):
+    def size(self, dialog, scale):
         '''
         Calculates size of the layout, based on its children.
 
@@ -399,14 +404,14 @@ class HorizontalLayout(VerticalLayout):
         '''
         if dialog is None:
             return
-        Widget.size(self, dialog)
+        Widget.size(self, dialog, scale)
         height = 0
         if len(self.content) < 2:
             width = 0
         else:
             width = -self.padding
         for item in self.content:
-            item.size(dialog)
+            item.size(dialog, scale)
             height = max(height, item.height)
             width += item.width + self.padding
         self.width, self.height = width, height
@@ -655,7 +660,7 @@ class GridLayout(Widget, LayoutAssert):
         if self.saved_dialog is not None:
             self.saved_dialog.set_needs_layout()
 
-    def size(self, dialog):
+    def size(self, dialog, scale):
         '''Recalculates our size and the maximum widths and heights of
         each row and column in our table.
 
@@ -663,7 +668,7 @@ class GridLayout(Widget, LayoutAssert):
         '''
         if dialog is None:
             return
-        Widget.size(self, dialog)
+        Widget.size(self, dialog, scale)
         self.max_heights = [0] * len(self.content)
 
         width = max( 0, max( len(row) for row in self.content ) )
@@ -677,7 +682,7 @@ class GridLayout(Widget, LayoutAssert):
 
             for cell in row:
                 if cell is not None:
-                    cell.size(dialog)
+                    cell.size(dialog, scale)
                     width, height = cell.width, cell.height
                 else:
                     width = height = 0
@@ -863,7 +868,7 @@ class FreeLayout(Spacer, FreeLayoutAssert):
     def _destroy_obj(self, widget):
         self.remove(widget)
 
-    def size(self, dialog):
+    def size(self, dialog, scale):
         '''
         Calculate size of the FreeLayout and all Widgets inside
 
@@ -873,10 +878,10 @@ class FreeLayout(Spacer, FreeLayoutAssert):
         if dialog is None:
             return
 
-        Spacer.size(self, dialog)
+        Spacer.size(self, dialog, scale)
 
         for anchor, offset_x, offset_y, widget in self.content:
-            widget.size(dialog)
+            widget.size(dialog, scale)
 
     def Show(self):
 

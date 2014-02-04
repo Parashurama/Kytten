@@ -160,13 +160,13 @@ class Slider(Control):
 
         self.set_value(current_value)
 
-    def size(self, dialog):
+    def size(self, dialog, scale):
         '''
         Creates slider components.
         '''
         if dialog is None:
             return
-        Control.size(self, dialog)
+        Control.size(self, dialog, scale)
         if self.is_disabled():
             color = dialog.theme['slider']['disabled_color']
         else:

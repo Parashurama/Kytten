@@ -415,8 +415,8 @@ class ColorWheel(Control):
         self._update_triangle()
         self._update_crosshair(set_color=False)
 
-    def size(self, dialog):
-        Control.size(self, dialog)
+    def size(self, dialog, scale):
+        Control.size(self, dialog, scale)
         self.width = 2 * (self.RADIUS + self.BORDER)
         self.height = self.width
         if self.circle_vlist is None:
@@ -622,8 +622,8 @@ class ColorSelector(Control):
             on_escape=on_escape)
         root.window.push_handlers(self.select_dialog)
 
-    def size(self, dialog):
-        Control.size(self, dialog)
+    def size(self, dialog, scale):
+        Control.size(self, dialog, scale)
         if self.swatch is None:
             self.swatch = dialog.theme[self.path]['image'].generate(
                 dialog.theme[self.path]['gui_color'],
@@ -636,7 +636,7 @@ class ColorSelector(Control):
                 ('c4B', self.color * 4))
         if self.swatch_label is None:
             self.swatch_label = Label(repr(self.color))
-        self.swatch_label.size(dialog)
+        self.swatch_label.size(dialog, scale)
         swatch_width, swatch_height = self.swatch.get_needed_size(
             self.content_width, self.content_height)
         self.height = max(self.swatch_label.height, swatch_height)

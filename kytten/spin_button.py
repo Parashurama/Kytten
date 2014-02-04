@@ -75,7 +75,7 @@ class SpinButton(Button):
             self.highlight.update(self.x, self.y, self.width, self.height)
         x, y, width, height = self.button.get_content_region()
 
-    def size(self, dialog):
+    def size(self, dialog, scale):
         '''
         Sizes the Button.  If necessary, creates the graphic elements.
 
@@ -83,7 +83,7 @@ class SpinButton(Button):
         '''
         if dialog is None:
             return
-        Control.size(self, dialog)
+        Control.size(self, dialog, scale)
 
         if self.is_pressed:
             if self.direction == 'north': path = ['spinbutton', 'downnortharrow']

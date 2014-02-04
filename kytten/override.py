@@ -8,6 +8,7 @@ from __future__ import unicode_literals, print_function
 
 import pyglet
 import pyglet.gl as gl
+from types import MethodType
 
 from .tools import string_to_unicode
 from .base import xrange
@@ -83,6 +84,29 @@ class KyttenEventDispatcher(pyglet.event.EventDispatcher):
             return cls
 
         return _wrapper
+
+    def patch_instance(self, func_name):
+        def _wrapper(func_obj):
+            if not hasattr(self, '_func_event_stack2'):
+                self._func_event_stack2={}
+
+            if not func_name in self._func_event_stack2:
+                def _call_wrapper(self, *args, **kwargs):
+                    for func in reversed(self._func_event_stack2[func_name]):
+                        print ("call", func.__name__)
+                        if func(*args, **kwargs) is True:
+                            return True
+
+                self._func_event_stack2[func_name]=[getattr(self,func_name) ]
+                setattr(self, func_name, MethodType(_call_wrapper, self, type(self)))
+
+            self._func_event_stack2[func_name].append(MethodType(func_obj, self, type(self)))
+
+            return self
+
+        return _wrapper
+
+        #return MethodType(func_obj, self, type(self)) if func is not None else None
 
 class TextLayoutGroup_KYTTEN_OVERRIDE(pyglet.graphics.Group):
     def set_state(self):

@@ -290,13 +290,13 @@ class HScrollbar(Control):
         if self.bar is not None:
             self.bar.update(*self._get_bar_region())
 
-    def size(self, dialog):
+    def size(self, dialog, scale):
         '''
         Creates scrollbar components.
         '''
         if dialog is None:
             return
-        Control.size(self, dialog)
+        Control.size(self, dialog, scale)
         dialog.set_wheel_hint(self)
         if self.left is None:
             if self.pos > 0.0:

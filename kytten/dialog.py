@@ -308,6 +308,8 @@ class DialogEventManager(Control):
 
         if self.check_for_always_on_top_dialog('on_mouse_scroll', x, y, scroll_x, scroll_y):
             return pyglet.event.EVENT_HANDLED
+        print ("wheel_target", self.wheel_target, self)
+        print ("wheel_hint", self.wheel_hint)
 
         if self.wheel_target is not None and self.wheel_target in self.controls:
             self.wheel_target.dispatch_event('on_mouse_scroll', x, y, scroll_x, scroll_y)
@@ -814,14 +816,14 @@ class Dialog(Wrapper, DialogEventManager, DialogAssert):
         if not self.screen: self.needs_layout = False ; return
 
         # Determine size of all components
-        self.size(self)
+        self.size(self, 1.0) #scale = 1.0
         EFFECTIVE_SIZE = (self.width,self.height)
 
         EFFECTIVE_OFFSET=(0,0)
         if self.child_dialogs:
             for child_dialog in self.child_dialogs:
                 if not child_dialog.visible: continue
-                child_dialog.size(child_dialog)
+                child_dialog.size(child_dialog, 1.0)#scale = 1.0
 
             EFFECTIVE_SIZE, EFFECTIVE_OFFSET = self.get_relative_size()
 
@@ -1217,8 +1219,8 @@ class GuiElement(Dialog):
         self.offset = (int(offset[0]), int(offset[1]))
         self.set_needs_layout()
 
-    def size(self, dialog):
-        Wrapper.size(self, dialog)
+    def size(self, dialog, scale):
+        Wrapper.size(self, dialog, scale)
 
         if self.offset_modifier:
 
@@ -1303,7 +1305,7 @@ class ToolTip(GuiElement):
         '''
         if not self.screen: self.needs_layout = False ; return
         # Determine size of all components
-        self.size(self)
+        self.size(self, 1.0)#scale = 1.0
         EFFECTIVE_SIZE = (self.width,self.height)
 
         EFFECTIVE_OFFSET=(0,0)

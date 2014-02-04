@@ -128,11 +128,11 @@ class MenuOption(Control):
         if self.saved_dialog is not None:
             self.saved_dialog.set_needs_layout()
 
-    def size(self, dialog):
+    def size(self, dialog, scale):
         if dialog is None:
             return
 
-        Control.size(self, dialog)
+        Control.size(self, dialog, scale)
 
         if self.is_selected:
             path = ['menuoption', 'selection']
@@ -488,11 +488,11 @@ class Dropdown(Control):
         if self.saved_dialog is not None:
             self.saved_dialog.set_needs_layout()
 
-    def size(self, dialog):
+    def size(self, dialog, scale):
         if dialog is None:
             return
 
-        Control.size(self, dialog)
+        Control.size(self, dialog, scale)
 
         if self.is_disabled():
             color = dialog.theme['dropdown']['disabled_color']

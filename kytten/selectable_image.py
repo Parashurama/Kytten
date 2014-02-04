@@ -109,7 +109,7 @@ class Selectable(Control, Image):
         self.delete_selection1()
         self.delete_selection2()
 
-    def size(self, dialog):
+    def size(self, dialog, scale):
         if self.start_position0 is not None and self.current_position0 is not None:
 
             x, y, width, height = self.calc_real_selection_rect0()
@@ -128,7 +128,7 @@ class Selectable(Control, Image):
             self.delete_selection2()
             self.selection2 = DefaultTextureGraphicElement( texture=__int__.BlankTexture, color=self.selection_color2, size=(width, height), position=(x,y),  batch=dialog.batch,  group=dialog.fg_group)
 
-        Image.size(self, dialog)
+        Image.size(self, dialog, scale)
 
     def layout(self, x, y):
         Image.layout(self, x, y)

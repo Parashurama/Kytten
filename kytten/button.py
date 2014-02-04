@@ -143,7 +143,7 @@ class Button(Control):
         if self.on_double_click_func is not None:
             self.on_double_click_func(x, y, button, modifiers)
 
-    def size(self, dialog):
+    def size(self, dialog, scale):
         '''
         Sizes the Button.  If necessary, (re)creates the graphic elements.
 
@@ -151,7 +151,7 @@ class Button(Control):
         '''
         if dialog is None:
             return
-        Control.size(self, dialog)
+        Control.size(self, dialog, scale)
         if self.is_pressed:
             path = ['button', 'down']
         else:
@@ -394,8 +394,8 @@ class ImageButton(Button):
             else:
                 raise TypeError
 
-    def size(self, dialog):
-        Control.size(self, dialog)
+    def size(self, dialog, scale):
+        Control.size(self, dialog, scale)
 
         content_width, content_height = 0, 0
 

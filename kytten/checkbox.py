@@ -122,7 +122,7 @@ class Checkbox(Control):
         self.is_checked=checked
         self._force_refresh()
 
-    def size(self, dialog):
+    def size(self, dialog, scale):
         '''
         Sizes the Checkbox.  If necessary, creates the graphic elements.
 
@@ -130,7 +130,7 @@ class Checkbox(Control):
         '''
         if dialog is None:
             return
-        Control.size(self, dialog)
+        Control.size(self, dialog, scale)
         if self.is_checked:
             path = ['checkbox', 'checked']
         else:

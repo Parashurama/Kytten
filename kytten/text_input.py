@@ -223,11 +223,11 @@ class Input(Control):
         if self.saved_dialog is not None:
             self.saved_dialog.set_needs_layout()
 
-    def size(self, dialog):
+    def size(self, dialog, scale):
         if dialog is None:
             return
 
-        Control.size(self, dialog)
+        Control.size(self, dialog, scale)
 
         if self.is_disabled():
             color = dialog.theme['input']['disabled_color']
@@ -416,10 +416,10 @@ class MultilineInput(Input):
         self.text_layout.y = y + self.padding
         self.text_layout.end_update()
 
-    def size(self, dialog):
+    def size(self, dialog, scale):
         if dialog is None:
             return
-        Control.size(self, dialog)
+        Control.size(self, dialog, scale)
 
         if self.is_disabled():
             color = dialog.theme['input']['disabled_color']

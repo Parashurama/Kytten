@@ -175,11 +175,11 @@ class Document(Control):
         if self.saved_dialog is not None:
             self.saved_dialog.set_needs_layout()
 
-    def size(self, dialog):
+    def size(self, dialog, scale):
         if dialog is None:
             return
 
-        Control.size(self, dialog)
+        Control.size(self, dialog, scale)
         if not self.set_document_style:
             # Set Document Style for unformatted Documment
             self.do_set_document_style(dialog)
@@ -199,7 +199,7 @@ class Document(Control):
         if self.always_show_scrollbar or (self.max_height and self.content.content_height > self.max_height):
             if self.scrollbar is None:
                 self.scrollbar = VScrollbar(self.max_height)
-            self.scrollbar.size(dialog)
+            self.scrollbar.size(dialog, scale)
             self.scrollbar.set(self.max_height, self.content.content_height)
 
         elif self.scrollbar is not None and (self.max_height and self.content.content_height < self.max_height):

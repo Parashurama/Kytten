@@ -150,7 +150,7 @@ class Widget(object):
         '''
         self.x, self.y = x, y
 
-    def size(self, dialog):
+    def size(self, dialog, scale):
         '''
         Constructs any graphic elements needed, and recalculates our size
         if necessary.
@@ -315,7 +315,7 @@ class Control(Widget, KyttenEventDispatcher):
         self.disabled_flag = False
         self._force_refresh()
 
-    def size(self, dialog):
+    def size(self, dialog, scale):
         '''
         Overrides Widget size to accomodate scrollable parents.
 
@@ -324,7 +324,7 @@ class Control(Widget, KyttenEventDispatcher):
         if dialog is not self.saved_dialog:
             self.scrollable_parent = dialog
 
-        Widget.size(self, dialog)
+        Widget.size(self, dialog, scale)
 
     def get_cursor(self, x, y):
         return self.cursor
@@ -416,14 +416,14 @@ class Spacer(Widget):
         '''Indicates the Spacer can be expanded'''
         return True
 
-    def size(self, dialog):
+    def size(self, dialog, scale):
         '''Spacer shrinks down to the minimum size for placement.
 
         @param dialog Dialog which contains us'''
         if dialog is None:
             return
 
-        Widget.size(self, dialog)
+        Widget.size(self, dialog, scale)
 
         self.width, self.height = self.min_width, self.min_height
 
@@ -458,10 +458,10 @@ class Graphic(Widget):
         self.x, self.y = x, y
         self.graphic.update(x, y, self.width, self.height)
 
-    def size(self, dialog):
+    def size(self, dialog, scale):
         if dialog is None:
             return
-        Widget.size(self, dialog)
+        Widget.size(self, dialog, scale)
         if self.graphic is None:
 
             if self.color: color=self.color
@@ -552,10 +552,10 @@ class Image(Widget):
 
         self.graphic.update(x, y, self.width, self.height)
 
-    def size(self, dialog):
+    def size(self, dialog, scale):
         if dialog is None:
             return
-        Widget.size(self, dialog)
+        Widget.size(self, dialog, scale)
         if self.graphic is None:
 
             self.graphic =  DefaultTextureGraphicElement( texture=self.texture, color=self.color, size=(self.width, self.height), position=(self.x,self.y),  batch=dialog.batch,  group=dialog.bg_group)
@@ -617,10 +617,10 @@ class Label(Widget):
         self._text_style.update(style)
         self._force_refresh()
 
-    def size(self, dialog):
+    def size(self, dialog, scale):
         if dialog is None:
             return
-        Widget.size(self, dialog)
+        Widget.size(self, dialog, scale)
 
         if self.label is None:
             self.label = KyttenLabel(

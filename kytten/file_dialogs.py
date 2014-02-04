@@ -163,8 +163,8 @@ class FileLoadDialog(Dialog):
     def get(self):
         return self.selected_file
 
-    def size(self, dialog):
-        Dialog.size(self, dialog)
+    def size(self, dialog, scale):
+        Dialog.size(self, dialog, scale)
 
     def teardown(self):
         self.on_select = None
