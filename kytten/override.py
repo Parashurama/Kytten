@@ -93,7 +93,6 @@ class KyttenEventDispatcher(pyglet.event.EventDispatcher):
             if not func_name in self._func_event_stack2:
                 def _call_wrapper(self, *args, **kwargs):
                     for func in reversed(self._func_event_stack2[func_name]):
-                        print ("call", func.__name__)
                         if func(*args, **kwargs) is True:
                             return True
 
@@ -228,6 +227,7 @@ class KyttenIncrementalTextLayout(pyglet_IncrementalTextLayout):
     def get_selection(self):
         return (self.selection_start, self.selection_end)
 
+pyglet_text_Label = pyglet.text.Label
 class KyttenLabel(pyglet.text.Label):
     def __init__(self, text, *args, **kwargs):
         pyglet.text.Label.__init__(self, string_to_unicode(text), *args, **kwargs)
@@ -235,6 +235,37 @@ class KyttenLabel(pyglet.text.Label):
     def _set_text(self, text):
         self.document.text = string_to_unicode(text)
     text = property(pyglet.text.Label._get_text, _set_text)
+
+    def _set_y(self, y):
+        if self._boxes:
+            self._y = y
+            self._update()
+        else:
+            dy = y - self._y
+            l_dy = lambda y: float(y + dy)
+            for vertex_list in self._vertex_lists:
+                vertices = vertex_list.vertices[:]
+                vertices[1::2] = map(l_dy, vertices[1::2])
+                vertex_list.vertices[:] = vertices
+            self._y = y
+    y = property(pyglet.text.Label._get_y, _set_y)
+
+    def _set_x(self, x):
+        if self._boxes:
+            self._x = x
+            self._update()
+        else:
+            dx = x - self._x
+            l_dx = lambda x: float(x + dx)
+            for vertex_list in self._vertex_lists:
+                """
+                vertices = vertex_list.vertices[:]
+                vertices[::2] = map(l_dx, vertices[::2])
+
+                vertex_list.vertices[:] = vertices"""
+                vertex_list.vertices[::2] = map(l_dx, vertex_list.vertices[::2])
+            self._x = x
+    x = property(pyglet.text.Label._get_x, _set_x)
 
     def _init_groups(self, group):
         if not group:
@@ -247,6 +278,26 @@ class KyttenLabel(pyglet.text.Label):
         if group is not None:
             ReleaseKyttenLayoutGroups(group)
             self.top_group = self.background_self = self.foreground_group = self.foreground_decoration_group = None
+
+class KyttenCaret(pyglet.text.caret.Caret):
+    def __init__(self, layout, batch=None, color=(0, 0, 0)):
+        __doc__ = pyglet.text.caret.Caret.__init__.__doc__
+        from pyglet import gl
+        self._layout = layout
+        if batch is None:
+            batch = layout.batch
+        r, g, b = color
+        colors = (r, g, b, 255, r, g, b, 255)
+        self._list = batch.add(2, gl.GL_LINES, layout.foreground_decoration_group,
+            'v2f', ('c4B', colors))
+
+        self._ideal_x = None
+        self._ideal_line = None
+        self._next_attributes = {}
+
+        self.visible = True
+
+        layout.push_handlers(self)
 
 class KyttenInputLabel(KyttenLabel):
     def _get_left(self):

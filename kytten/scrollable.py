@@ -147,6 +147,9 @@ class Scrollable(Wrapper, ScrollableAssert):
         if self.vscrollbar is not None:
             self.vscrollbar.delete()
             self.vscrollbar = None
+
+    def teardown(self):
+        Wrapper.teardown(self)
         self.root_group = None
         self.panel_group = None
         self.bg_group = None
@@ -248,19 +251,22 @@ class Scrollable(Wrapper, ScrollableAssert):
         self.content_x, self.content_y = cx, cy
         left = cx
 
-        top = cy + self.content_height - self.content.height
+        top = cy + self.content_height - self.content.height*self.scale
 
         if self.hscrollbar is not None:
             left -= self.hscrollbar.get(self.content_width,
-                                        self.content.width)
+                                        self.content.width*self.scale)
         if self.vscrollbar is not None:
             top += self.vscrollbar.get(self.content_height,
-                                       self.content.height)
+                                       self.content.height*self.scale)
 
         # Set the scissor group
         self.root_group.x, self.root_group.y = cx, cy
         self.root_group.width = self.content_width + 1
         self.root_group.height = self.content_height + 1
+
+        left/=self.scale
+        top/=self.scale
 
         self.content.layout(left, top)
 
@@ -302,7 +308,7 @@ class Scrollable(Wrapper, ScrollableAssert):
         '''
         if dialog is None:
             return
-        Widget.size(self, dialog, scale)
+        Widget.size(self, dialog, self.scale)
 
         self.hscrollbar_height = \
             dialog.theme['hscrollbar']['left']['image'].height
@@ -312,7 +318,6 @@ class Scrollable(Wrapper, ScrollableAssert):
         if self.root_group is None: # do we need to re-clone dialog groups?
             self.theme = dialog.theme
             self.batch = dialog.batch
-
             self.root_group = ScrollableGroup(0, 0, self.width, self.height, parent=dialog.fg_group)
             self.panel_group = pyglet.graphics.OrderedGroup( 0, self.root_group)
             self.bg_group    = pyglet.graphics.OrderedGroup( 1, self.root_group)
@@ -320,13 +325,13 @@ class Scrollable(Wrapper, ScrollableAssert):
             self.highlight_group = pyglet.graphics.OrderedGroup( 3, self.root_group)
             Wrapper.delete(self)  # force children to abandon old groups
 
-        Wrapper.size(self, self, scale)  # all children are to use our groups
-
         self.root_group.set_scale(self.scale)
-        print (self.scale)
+
+        Wrapper.size(self, self, self.scale)  # all children are to use our groups
+
 
         if self.always_show_scrollbars or \
-           (self.max_width and self.width > self.max_width):
+           (self.max_width and self.width*self.scale > self.max_width):
             if self.hscrollbar is None:
                 self.hscrollbar = HScrollbar(self.max_width)
         else:
@@ -335,7 +340,7 @@ class Scrollable(Wrapper, ScrollableAssert):
                 self.hscrollbar = None
 
         if self.always_show_scrollbars or \
-           (self.max_height and self.height > self.max_height):
+           (self.max_height and self.height*self.scale > self.max_height):
             if self.vscrollbar is None:
                 self.vscrollbar = VScrollbar(self.max_height)
         else:
@@ -343,23 +348,26 @@ class Scrollable(Wrapper, ScrollableAssert):
                 self.vscrollbar.delete()
                 self.vscrollbar = None
 
+        self.content_width = min(self.max_width or self.width*self.scale, self.width*self.scale)
         self.width = min(self.max_width or self.width, self.width)
-        self.content_width = self.width
+        #self.content_width = self.width
+
+        self.content_height = min(self.max_height or self.height*self.scale, self.height*self.scale)
         self.height = min(self.max_height or self.height, self.height)
-        self.content_height = self.height
+        #self.content_height = self.height
 
         if self.is_fixed_size:
             self.width, self.height = self.max_width, self.max_height
 
         if self.hscrollbar is not None:
             self.hscrollbar.size(dialog, scale)
-            self.hscrollbar.set(self.max_width, max(self.content.width,
+            self.hscrollbar.set(self.max_width, max(self.content.width*self.scale,
                                                     self.max_width))
             self.height += self.hscrollbar.height + SCROLLBAR_PADDING
 
         if self.vscrollbar is not None:
             self.vscrollbar.size(dialog, scale)
-            self.vscrollbar.set(self.max_height, max(self.content.height,
+            self.vscrollbar.set(self.max_height, max(self.content.height*self.scale,
                                                      self.max_height))
             self.width += self.vscrollbar.width + SCROLLBAR_PADDING
 

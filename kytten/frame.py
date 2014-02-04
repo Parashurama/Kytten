@@ -19,7 +19,7 @@ from .widgets import Widget, Control, Graphic, Label, Spacer
 from .layout import HorizontalLayout, VerticalLayout, GetRelativePoint
 from .layout import VALIGN_BOTTOM, HALIGN_LEFT, HALIGN_CENTER, HALIGN_RIGHT
 from .layout import ANCHOR_CENTER
-from .base import DisplayGroup, Log
+from .base import DisplayGroup, Log, FLAGS
 from .theme import Repeat_NinePatchTextureGraphicElement, Stretch_NinePatchTextureGraphicElement, DefaultTextureGraphicElement
 
 class Wrapper(Widget):
@@ -53,7 +53,9 @@ class Wrapper(Widget):
         if self.content: return self.content._get_controls()
 
     def set_content(self, content):
+        FLAGS['force_delete'] = True
         self.delete_content()
+        FLAGS['force_delete'] = False
 
         self.content = content
         content._parent=weakref.proxy(self)
@@ -414,7 +416,7 @@ class GuiFrame(Frame):
 class BubbleFrame(GuiFrame, Control):
     hover=None
     focus=None
-    focusable_events=set(["on_text", "on_text_motion", "on_text_motion_select", "on_mouse_drag"])
+    focusable_events=set(["on_text", "on_text_motion", "on_text_motion_select", "on_mouse_drag", "on_key_press"])
     hover_events=set(["on_gain_hover", "on_lose_hover"])
 
     def __init__(self, content, texture, is_expandable=False, anchor=ANCHOR_CENTER, use_bg_group=False, group=None, name=None, flag='default', **kwargs):

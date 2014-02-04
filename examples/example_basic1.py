@@ -104,7 +104,7 @@ if __name__ == '__main__':
                                 always_on_top=False, theme=Theme )
 
     #Used to control SpinButtons (optional)
-    StatSpinControls=kytten.SpinControlGroup(value = 0, minv =-2, maxv=5, step=1, credit = 10, text_style=kytten.TextStyle(font_size=11) )
+    StatSpinControls=kytten.SpinControlGroup(value = 0, minv =-2, maxv=5, step=1, credit = 10, text_style=dict(font_size=11) )
     #Used to control ToggleButtons
     Choice=kytten.ToggleGroup()
 

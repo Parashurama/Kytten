@@ -20,7 +20,7 @@ from pyglet import gl
 
 from .widgets import Widget, Control, Spacer, Graphic, Image, Label, LayoutAssert, FreeLayoutAssert, DragNDropLayoutType
 from .button import ImageButton
-from .base import ReferenceName, Log, GetObjectfromName, CVars, xrange
+from .base import ReferenceName, Log, GetObjectfromName, CVars, xrange, FLAGS
 from .override import KyttenEventDispatcher
 
 # GUI layout constants
@@ -131,8 +131,8 @@ class VerticalLayout(Widget,LayoutAssert):
         @param item The Widget to be added
         '''
         item._parent=weakref.proxy(self)
+        ITEM = item or Spacer()
         if position is None:
-            ITEM = item or Spacer()
             self.content.append(ITEM)
             self.content_cache.append(ITEM)
         else:
@@ -280,7 +280,10 @@ class VerticalLayout(Widget,LayoutAssert):
 
         @param content The new list of Widgets
         '''
+        FLAGS['force_delete'] = True
         self.delete()
+        FLAGS['force_delete'] = False
+
         self.content = content[:]
         self.content_cache = content[:]
         self.hidden_content = []

@@ -8,10 +8,11 @@ from __future__ import unicode_literals, print_function
 
 import pyglet
 
-from .widgets import Control
+from .widgets import Control, Widget
 from .scrollbar import VScrollbar
 from .override import KyttenIncrementalTextLayout
-from .base import string_to_unicode, iteritems
+from .base import string_to_unicode, iteritems, FLAGS
+from .theme import UntexturedGraphicElement
 
 class KyttenDocumentError(Exception):pass
 
@@ -101,7 +102,7 @@ class Document(Control):
 
     def delete(self):
         Control.delete(self)
-        if self.content is not None and self.visible is False:
+        if self.content is not None and (self.visible is False or FLAGS['force_delete'] is True):
             self.content.delete()
             self.content = None
 
@@ -321,3 +322,140 @@ class Document(Control):
         else:
             return x >= self.x and x < self.x + self.width and \
                    y >= self.y and y < self.y + self.height
+
+
+
+class RichText(Widget):
+    content=None
+    document=None
+    background=None
+    def __init__(self, document, formatted=False, width=250, height=50, name=None, text_style={}, background_color=None, group=None):
+        '''
+        Creates a new RichText Widget.
+        '''
+        Widget.__init__(self, name=name, group=group)
+        self.background_color=background_color
+        self.content_width = width
+        self.content_height = height
+
+        if hasattr(document, 'startswith'): # document is a string
+            self.set_document(self.create_document(document, formatted))
+        else:
+            self.set_document(document)
+
+    def create_document(self, text, formatted):
+        text = string_to_unicode(text)
+
+        if not formatted:                 document = pyglet.text.document.UnformattedDocument(text)
+        elif 'attr' in formatted.lower(): document = pyglet.text.decode_attributed(text)
+        elif 'html' in formatted.lower(): document = pyglet.text.decode_html(text)
+
+        else: raise TypeError('Unrecognized formattage type')
+
+        self._formatting = formatted
+
+        return document
+
+    def set_document(self, document):
+        if not isinstance(document, pyglet.text.document.AbstractDocument):
+            raise TypeError('Invalid document type. Require pyglet document instance')
+
+        if self.document is not None:
+            if self.content is not None:
+                self.content.delete()
+                self.content = None
+
+            self.document.delete_text(0, len(self.document.text))
+
+        if isinstance(document, pyglet.text.document.FormattedDocument):
+            self.isFormatted = True
+        else:
+            self.isFormatted =False
+        self.set_document_style = False
+
+        self.document = document
+        self.document_type = document.__class__
+
+    def _force_refresh(self):
+        '''
+        Forces recreation of any graphic elements we have constructed.
+        Overriden to avoid needlessly recreating pyglet text elements.
+        '''
+        if self.saved_dialog is not None:
+            self.saved_dialog.set_needs_layout()
+
+    def layout(self, x, y):
+        self.x, self.y = x, y
+
+        if self.content is not None:
+            self.content.begin_update()
+            self.content.x = x
+            self.content.y = y
+            self.content.end_update()
+
+        if self.background is not None:
+            width = self.content.width if self.content.width is not None else self.width
+            height = self.content.height if self.content.height is not None else self.height
+            self.background.update(x, y, width, height)
+
+    def size(self, dialog, scale):
+        if dialog is None:
+            return
+
+        Widget.size(self, dialog, scale)
+        #if not self.set_document_style:
+            # Set Document Style for unformatted Documment
+        #    self.do_set_document_style(dialog)
+
+        if self.content is None:
+            self.content = pyglet.text.layout.TextLayout(  self.document,  self.content_width, self.content_height, multiline=True,
+                                                    batch=dialog.batch, group=dialog.fg_group, wrap_lines=True)
+
+        if self.background is None and self.background_color is not None:
+
+            self.background = UntexturedGraphicElement( color=self.background_color,
+                                                        batch=dialog.batch,
+                                                        group=dialog.bg_group)
+
+        self.height = self.content.height #self.content.content_height
+        self.width = self.content.width #self.content.content_width
+
+    def set_content_width(self, width):
+        self.content_width = width
+        if self.content is not None:
+            self.content.width = width
+        self._force_refresh()
+
+    def set_text(self, text, formatted=False):
+
+        if formatted != self.isFormatted or self.document is None:
+            self.set_document(self.create_document(text, formatted))
+        else:
+            self.document.text = string_to_unicode(text)
+
+        self._force_refresh()
+
+    def delete(self):
+        Widget.delete(self)
+        if self.content is not None and (self.visible is False or FLAGS['force_delete'] is True):
+            self.content.delete()
+            self.content = None
+
+        if self.background is not None:
+            self.background.delete()
+            self.background=None
+
+    def _hide(self):
+        self.visible=False
+        self.delete()
+
+    def teardown(self):
+        Widget.teardown(self)
+
+        if self.document is not None:
+            self.document.delete_text(0, len(self.document.text))
+            self.document = None
+
+    def get_text(self):
+        return self.document.text
+

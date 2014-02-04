@@ -9,7 +9,7 @@ from __future__ import unicode_literals, print_function
 import pyglet
 import pyglet.window.key as key
 from .widgets import Control
-from .override import KyttenInputLabel,KyttenIncrementalTextLayout
+from .override import KyttenInputLabel,KyttenIncrementalTextLayout, KyttenCaret
 from .base import string_to_unicode
 from . import pyperclip
 
@@ -57,7 +57,6 @@ class Input(Control):
         if self.highlight is not None:
             self.highlight.delete()
             self.highlight = None
-
 
     def _force_refresh(self):
         '''
@@ -144,7 +143,6 @@ class Input(Control):
                 self.text_layout.select_all()
                 self._force_refresh()
                 return pyglet.event.EVENT_HANDLED
-
 
     def on_lose_focus(self):
         Control.on_lose_focus(self)
@@ -260,7 +258,7 @@ class Input(Control):
                 assert self.caret is None
             assert self.label is None
             if self.caret is None:
-                self.caret = pyglet.text.caret.Caret(
+                self.caret = KyttenCaret(
                     self.text_layout,
                     color=dialog.theme['input']['gui_color'][0:3])
                 self.caret.visible = True
@@ -298,6 +296,12 @@ class Input(Control):
     def teardown(self):
         self.on_input = False
         Control.teardown(self)
+
+        if self.text_layout is not None:
+            self.document.remove_handlers(self.text_layout)
+            self.text_layout.delete()
+            self.text_layout = None
+            self.document=None
 
 class MultilineInput(Input):
 
@@ -442,9 +446,11 @@ class MultilineInput(Input):
             assert self.caret is None
 
         if self.caret is None and self.is_focus():
-            self.caret = pyglet.text.caret.Caret(
+            self.caret = KyttenCaret(
                 self.text_layout,
+                batch=dialog.batch,
                 color=dialog.theme['input']['gui_color'][0:3])
+
             self.caret.visible = True
             self.caret.mark = 0
             self.caret.position = len(self.document.text)

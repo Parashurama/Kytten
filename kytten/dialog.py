@@ -144,10 +144,10 @@ class DialogEventManager(Control):
             if self.focus is not None:
                 if self.focus.dispatch_event("on_key_press", symbol, modifiers):
                     return self.EventHandled()
-                else:
-                    char = '\n' if symbol == pyglet.window.key.ENTER else ''
-                    if self.focus.dispatch_event("on_text", char):
-                        return self.EventHandled()
+                if symbol == pyglet.window.key.ENTER:
+                    self.focus.dispatch_event("on_text", '\n')
+
+                return self.EventHandled()
 
     def on_key_release(self, symbol, modifiers):
         '''Pass key release events to the focus
@@ -166,7 +166,7 @@ class DialogEventManager(Control):
         y=args[1]
         if not self.always_on_top:
             for member in __int__.kytten_always_on_top_dialog_order:
-                if member.hit_test(x, y) and member.visible is True:
+                if member.visible is True and member.hit_test(x, y):
                     if member.dispatch_event(event_type, *args): return pyglet.event.EVENT_HANDLED
 
     def on_mouse_drag(self, x, y, dx, dy, buttons, modifiers):
@@ -308,8 +308,6 @@ class DialogEventManager(Control):
 
         if self.check_for_always_on_top_dialog('on_mouse_scroll', x, y, scroll_x, scroll_y):
             return pyglet.event.EVENT_HANDLED
-        print ("wheel_target", self.wheel_target, self)
-        print ("wheel_hint", self.wheel_hint)
 
         if self.wheel_target is not None and self.wheel_target in self.controls:
             self.wheel_target.dispatch_event('on_mouse_scroll', x, y, scroll_x, scroll_y)
@@ -873,6 +871,26 @@ class Dialog(Wrapper, DialogEventManager, DialogAssert):
         assert self.own_batch
         self.batch.draw()
 
+    def enable_exclusive_mode(self):
+        mouse_press_func = self.on_mouse_press
+
+        def mouse_press_wrapper(self, *args):
+            if self.visible is True:
+                mouse_press_func(*args)
+                return True
+
+        def hit_test_wrapper(self, x, y):
+            if self.visible is True:
+                return True
+
+        self.patch_instance("on_mouse_press")(mouse_press_wrapper)
+        self.patch_instance("hit_test")(hit_test_wrapper)
+
+    def disable_exclusive_mode(self):
+
+        self._func_event_stack2["on_mouse_press"].pop()
+        self._func_event_stack2["hit_test"].pop()
+
     def ensure_visible(self, control):
         '''
         Ensure a control is visible.  For Dialog, this doesn't matter
@@ -1312,7 +1330,7 @@ class ToolTip(GuiElement):
         if self.child_dialogs:
             for child_dialog in self.child_dialogs:
                 if not child_dialog.visible: continue
-                child_dialog.size(child_dialog)
+                child_dialog.size(child_dialog, 1.0)
 
             EFFECTIVE_SIZE, EFFECTIVE_OFFSET = self.get_relative_size()
 

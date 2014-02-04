@@ -7,6 +7,8 @@ from __future__ import unicode_literals, print_function
 
 import weakref
 
+FLAGS={'force_delete':False}
+
 class InvalidWidgetNameError(Exception):
     pass
 

@@ -43,6 +43,7 @@ class Widget(object):
     destroyed=False
     visible=True
     _parent=None
+    _scale=1.0
     name=None
     x=y=0
     def __init__(self, width=0, height=0, name=None, group=None, spacer=False):
@@ -119,8 +120,8 @@ class Widget(object):
         @param y Y coordinate of point
         @returns True if the point is within our area
         '''
-        return x >= self.x and x < self.x + self.width and \
-               y >= self.y and y < self.y + self.height
+        return x >= self.x*self._scale and x < self.x*self._scale + self.width*self._scale and \
+               y >= self.y*self._scale and y < self.y*self._scale + self.height*self._scale
 
     def is_expandable(self):
         '''
@@ -168,6 +169,7 @@ class Widget(object):
                 dialog = weakref.proxy(dialog)
 
             self.saved_dialog = dialog
+            self._scale = scale
 
     def teardown(self):
         '''
@@ -294,9 +296,8 @@ class Control(Widget, KyttenEventDispatcher):
         '''
         Creates a new Control.
         '''
-        return [(self, self.x, self.x + self.width,    # control, left, right,
-                       self.y + self.height, self.y)]  # top, bottom
-
+        return [(self, self.x*self._scale, self.x*self._scale + self.width*self._scale,    # control, left, right,
+                       self.y*self._scale + self.height*self._scale, self.y*self._scale)]  # top, bottom
     def disable(self):
         '''
         Disable Control.
