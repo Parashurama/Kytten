@@ -30,7 +30,7 @@ class Input(Control):
         self.length = int(length)
         self.max_length = int(max_length) if max_length is not None else None
         self.padding = int(padding)
-        self.on_input = on_input
+        self.on_input = self._wrap_method(on_input)
         self.document = pyglet.text.document.UnformattedDocument(text)
         self.label = None
         self.restricted = set(restricted) if restricted is not None else self.restricted
@@ -310,10 +310,10 @@ class MultilineInput(Input):
         self.content_height = height
 
         self.padding = padding
-        self.on_input = on_input
+        self.on_input = self._wrap_method(on_input)
         self.document = pyglet.text.document.UnformattedDocument(self.text)
 
-        self._auto_complete_func = auto_complete
+        self._auto_complete_func = self._wrap_method(auto_complete)
 
     def set_text(self, text):
         self.document.text = string_to_unicode(text)
@@ -343,7 +343,7 @@ class MultilineInput(Input):
         line = self.caret._layout.get_line_from_position(match.start())
         position = x, y = self.caret._layout.get_point_from_position(match.start(), line)
 
-        new_word = self._auto_complete_func(self, word, position)
+        new_word = self._auto_complete_func(word, position)
 
         if new_word is not None:
             new_word = new_word[len(word):]
@@ -377,10 +377,7 @@ class MultilineInput(Input):
             self.highlight = None
 
         if self.on_input is not None:
-            if self.name is not None:
-                self.on_input(self.name, self.get_text())
-            else:
-                self.on_input(self.get_text())
+            self.on_input(self.get_text())
 
     def on_mouse_scroll(self, x, y, scroll_x, scroll_y):
         if self.caret is not None and self.hit_test(x, y):

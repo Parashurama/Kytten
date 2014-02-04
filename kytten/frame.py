@@ -150,6 +150,12 @@ class Wrapper(Widget):
 
         self._try_refresh()
 
+    def _destroy_obj(self, item):
+        self.hidden_content = None
+        self.content = None
+
+        self._try_refresh()
+
     def _dereference_obj(self, *args):
         self.hidden_content = self.content
         self.content = None
@@ -421,7 +427,7 @@ class BubbleFrame(GuiFrame, Control):
         '''Returns Controls contained by the Wrapper.'''
         CONTROLS = self.content._get_controls() if self.content is not None else []
         self._controls_list = [ctrl[0] for ctrl in CONTROLS]
-        self.control_areas = dict( (str(ctrl[0]),(ctrl[1],ctrl[2], ctrl[2], ctrl[4])) for ctrl in CONTROLS )
+        self.control_areas = dict( (str(ctrl[0]),(ctrl[1],ctrl[2], ctrl[3], ctrl[4])) for ctrl in CONTROLS )
 
         return Control._get_controls(self)
 
@@ -436,7 +442,6 @@ class BubbleFrame(GuiFrame, Control):
         if event_type in ("on_update",): return
 
         if   event_type in ("on_mouse_press", "on_mouse_motion", "on_lose_focus", "on_lose_hover", "on_gain_focus", "on_gain_hover"):
-            print ("Event", event_type, args)
             return Control.dispatch_event(self, event_type, *args)
 
         elif  event_type in self.focusable_events:
@@ -446,8 +451,6 @@ class BubbleFrame(GuiFrame, Control):
         elif event_type == "on_mouse_release":
             for ctrl in self._controls_list:
                 ctrl.dispatch_event(event_type, *args)
-        else:
-            print("Ignored Event", event_type)
 
     def on_mouse_press(self, x, y, *args):
 
@@ -469,7 +472,7 @@ class BubbleFrame(GuiFrame, Control):
     def on_lose_focus(self):
         self.set_focus(None)
 
-    def on_lose_hover(self, *args):
+    def on_lose_hover(self):
         self.set_hover(None)
 
     def set_hover(self, hover):
@@ -479,7 +482,7 @@ class BubbleFrame(GuiFrame, Control):
         if self.hover is not None:
             self.hover.dispatch_event('on_lose_highlight')
             if self.hover.hover_flag is True:
-                self.hover.dispatch_event('on_lose_hover', self.hover)
+                self.hover.dispatch_event('on_lose_hover')
 
         self.hover = hover
         if hover is not None:

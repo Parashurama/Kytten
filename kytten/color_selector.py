@@ -51,7 +51,7 @@ class ColorWheel(Control):
         Control.__init__(self, name=name)
         self.alpha = color[3]
         self.tip_color = [0, 0, 0]
-        self.on_select = on_select
+        self.on_select = self._wrap_method(on_select)
         self.circle_vlist = None
         self.inner_circle_vlist = None
         self.inner_circle_bg_vlist = None
@@ -202,7 +202,7 @@ class ColorWheel(Control):
                 int(min(self.pointer_i * gI + self.pointer_j * 255, 255)),
                 int(min(self.pointer_i * bI + self.pointer_j * 255, 255)),
                 int(self.alpha)]
-            if self.on_select:
+            if self.on_select is not None:
                 self.on_select(self.color)
 
 
@@ -470,7 +470,7 @@ class ColorSelector(Control):
         self.swatch_label = None
         self.swatch = None
         self.vlist = None
-        self.on_select = on_select
+        self.on_select = self._wrap_method(on_select)
         self.select_dialog = None
         self.wheel = None
         self.red_input = None
@@ -540,7 +540,7 @@ class ColorSelector(Control):
         def on_escape(dialog):
             self._delete_select_dialog()
 
-        def on_color_set(color):
+        def on_color_set(wheel, color):
             self.color = color
             if self.red_input is not None:
                 self.red_input.set_text(str(color[0]))
@@ -549,28 +549,25 @@ class ColorSelector(Control):
             if self.blue_input is not None:
                 self.blue_input.set_text(str(color[2]))
 
-        def on_red_set(red):
+        def on_red_set(obj, red):
             red = min(max(int(red), 0), 255)
-            print("red = {}".format(red))
             self.color = [red] + self.color[1:]
             self.wheel.set_color(self.color)
 
-        def on_green_set(green):
+        def on_green_set(obj, green):
             green = min(max(int(green), 0), 255)
-            print("green = {}".format(green))
             self.color = [self.color[0], green] + self.color[2:]
             self.wheel.set_color(self.color)
 
-        def on_blue_set(blue):
+        def on_blue_set(obj, blue):
             blue = min(max(int(blue), 0), 255)
-            print("blue = {}".format(blue))
             self.color = self.color[:2] + [blue, self.color[3]]
             self.wheel.set_color(self.color)
 
         def on_alpha_set(obj,alpha):
             self.wheel.set_alpha(int(alpha))
 
-        def on_set_color_button(obj):
+        def on_set_color_button(btn):
             if self.on_select is not None:
                 self.on_select(self, self.color)
 
@@ -586,7 +583,7 @@ class ColorSelector(Control):
             if self.saved_dialog is not None:
                 self.saved_dialog.set_needs_layout()
 
-        def on_cancel_button(obj):
+        def on_cancel_button(btn):
             self._delete_select_dialog()
             self.saved_dialog.set_needs_layout()
 

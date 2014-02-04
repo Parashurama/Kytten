@@ -49,7 +49,7 @@ class FileLoadDialog(Dialog):
         self.path = path
         self.extensions = extensions
         self.title = title
-        self.on_select = on_select
+        self.on_select = self._wrap_method(on_select)
         self.selected_file = None
         self._set_files()
 
@@ -58,10 +58,10 @@ class FileLoadDialog(Dialog):
             self.select_button = Button("Select", on_click=on_enter)
             self.cancel_button = Button("Cancel", on_click=on_escape)
 
-        def on_parent_menu_select(choice, choice_index=None):
+        def on_parent_menu_select(menu, choice, choice_index=None):
             self._select_file(self.parents_dict[choice])
 
-        def on_menu_select(choice, choice_index=None):
+        def on_menu_select(menu, choice, choice_index=None):
             self._select_file(self.files_dict[choice])
 
         self.dropdown = Dropdown(options=self.parents,
@@ -99,9 +99,8 @@ class FileLoadDialog(Dialog):
             self.menu.set_options(self.files)
         else:
             self.selected_file = filename
-            if self.on_select is not None:
-                if self.on_select(filename):
-                    self.teardown()
+            if self.on_select is not None and self.on_select(filename, None):
+                self.teardown()
 
     def _set_files(self):
         # Once we have a new path, update our files

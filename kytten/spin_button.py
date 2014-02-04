@@ -163,20 +163,20 @@ class SpinControl(HorizontalLayout, Control):
                                          self.label
                                         ], align=VALIGN_CENTER, padding=6, name=name )
 
-        self.on_spin_func = on_spin
+        self.on_spin_func = self._wrap_method(on_spin)
 
     def set_value(self, value):
         self.value=value
 
         self._update()
 
-    def _increment(self, *args):
+    def _increment(self, btn):
         if not self.isMax:
             self.value+=self.step
 
             self._update()
 
-    def _decrement(self, *args):
+    def _decrement(self, btn):
         if not self.isMin:
             self.value-=self.step
 
@@ -193,7 +193,7 @@ class SpinControl(HorizontalLayout, Control):
         self.label.set_text(str(self.value).rjust(2) )
 
         if self.on_spin_func is not None:
-            self.on_spin_func(self, self.value)
+            self.on_spin_func(self.value)
 
     def _check_bound_value(self, control_group):
         if self.value >= self.max_value:

@@ -210,7 +210,7 @@ class Menu(VerticalLayout):
 
         self._make_options(options)
 
-        self.on_select = on_select
+        self.on_select =  self._wrap_method(on_select)
         self.selected_index = None
 
         VerticalLayout.__init__(self, self.menu_options,
@@ -362,7 +362,7 @@ class Dropdown(Control):
         self.fixed_width = fixed_width
         self.max_height = max_height
         self.align = align
-        self.on_select = on_select
+        self.on_select =  self._wrap_method(on_select)
 
         self.field = None
         self.label = None
@@ -424,7 +424,7 @@ class Dropdown(Control):
         def on_escape(dialog):
             self._delete_pulldown_menu()
 
-        def on_select(choice, index):
+        def on_select(dialog, choice, index):
             self.selected = choice
             if self.label is not None:
                 self.label.delete()

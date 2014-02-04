@@ -45,7 +45,7 @@ class ToggleButton(Button):
             self.select()
 
             if self.on_click is not None:
-                self.on_click(self)
+                self.on_click()
         else:
             if self.is_pressed: # Button Down, Toggle it Off
                 self.unselect()
@@ -53,7 +53,7 @@ class ToggleButton(Button):
             else :  # Button Up, Toggle it On
                 self.select()
                 if self.on_click is not None and self.hit_test(x, y):
-                    self.on_click(self)
+                    self.on_click()
 
     def on_mouse_release(self, x, y, button, modifiers):
         pass

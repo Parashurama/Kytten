@@ -43,7 +43,7 @@ class Slider(Control):
         self.max_value = float(max_value)
         self.steps = steps
         self.min_width = width
-        self.on_set = on_set
+        self.on_set =  self._wrap_method(on_set)
         self.bar = None
         self.knob = None
         self.markers = []
@@ -119,7 +119,7 @@ class Slider(Control):
             self.set_pos(float(x - bar_x) / bar_width)
 
         if self.on_set is not None:
-            self.on_set(self, self.get_value())
+            self.on_set(self.get_value())
 
     def on_mouse_press(self, x, y, button, modifiers):
         if self.is_disabled():
@@ -137,7 +137,7 @@ class Slider(Control):
         self.is_dragging = False
         self.snap_to_nearest()
         if self.on_set is not None:
-            self.on_set(self, self.get_value())
+            self.on_set(self.get_value())
 
 
     def set_pos(self, pos):

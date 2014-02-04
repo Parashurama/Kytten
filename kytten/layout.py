@@ -166,6 +166,13 @@ class VerticalLayout(Widget,LayoutAssert):
 
     _hide = Hide
 
+    def _destroy_obj(self, item):
+
+        try:self.content.remove(item)
+        except ValueError:
+            self.hidden_content.remove(item)
+        self.content_cache.remove(item)
+
     def _dereference_obj(self, item):
         try:
             self.content.remove(item)
@@ -308,7 +315,7 @@ class VerticalLayout(Widget,LayoutAssert):
         self.expandable = [x for x in self.content if x.is_expandable()]
 
     def clear(self):
-        for item in self.content_cache:
+        for item in self.content_cache[:]:
             item.teardown()
 
         self.content = []
@@ -317,6 +324,11 @@ class VerticalLayout(Widget,LayoutAssert):
 
     def teardown(self):
         self.clear()
+
+        if self._parent is not None:
+            self._parent._destroy_obj(self)
+            self._parent=None
+
         Widget.teardown(self)
 
 class HorizontalLayout(VerticalLayout):
@@ -463,6 +475,18 @@ class GridLayout(Widget, LayoutAssert):
 
         if self.saved_dialog is not None:
             self.saved_dialog.set_needs_layout()
+
+    def _destroy_obj(self, item):
+        '''
+        Remove permanently an object from the layout.
+        '''
+        try:row_id, index =self._item_ref.pop(item)
+        except KeyError:
+            raise AssertionError("item '{}' not in GridLayout.".format(item))
+        self.content[row_id].pop(index)
+        self.content_cache[row_id].pop(index)
+        self.hidden_content[row_id].pop(index)
+
 
     def _dereference_obj(self, item):
         try:
@@ -624,7 +648,7 @@ class GridLayout(Widget, LayoutAssert):
         self.hidden_content[row_id][column_id] = None
         self.content_cache[row_id][column_id] = item
 
-        self._item_ref[item] = (i, j)
+        self._item_ref[item] = (row_id,column_id)
 
         item._parent=weakref.proxy(self)
 
@@ -680,7 +704,7 @@ class GridLayout(Widget, LayoutAssert):
             self.height = 0
 
     def clear(self):
-        for row in self.content_cache:
+        for row in self.content_cache[:]:
             for cell in row:
                 cell.teardown()
         self.content = []
@@ -696,8 +720,18 @@ class PaletteLayout(GridLayout):
     def __init__(self, content, width, *args, **kwargs):
 
         grid_content = [ content[i:i + width] for i in xrange(0, len(content), width) ]
+        self._layout_width = width
 
         GridLayout.__init__(self, grid_content, *args, **kwargs)
+
+    def add(self, widget):
+        if self.content_cache:
+            ROW = self.content_cache[-1]
+            if len(ROW) >= self._layout_width:
+                self.add_row([widget])
+            else:
+                self.set(len(ROW), len(self.content_cache)-1, widget)
+
 
 
 class FreeLayout(Spacer, FreeLayoutAssert):
@@ -826,6 +860,9 @@ class FreeLayout(Spacer, FreeLayoutAssert):
                 self.content_cache.remove(x)
                 return x, i
 
+    def _destroy_obj(self, widget):
+        self.remove(widget)
+
     def size(self, dialog):
         '''
         Calculate size of the FreeLayout and all Widgets inside
@@ -887,7 +924,7 @@ class FreeLayout(Spacer, FreeLayoutAssert):
         Widget.delete(self)
 
     def clear(self):
-        for _, _, _, item in self.content:
+        for _, _, _, item in self.content[:]:
             item.teardown()
         self.content = []
         self.content_cache = []
@@ -1032,7 +1069,7 @@ class InteractiveLayout(HorizontalLayout, DragNDropLayoutType):
     def validate_drop_widget(self, widget, pos):
         x,y=pos
         if self.hit_test(x, y):
-            if self.validate_drop_widget_func is not None and not self.validate_drop_widget_func(self, widget, pos):
+            if self.validate_drop_widget_func is not None and not self.validate_drop_widget_func(widget, pos):
                 return None
 
             for i,widget in enumerate(self.content):

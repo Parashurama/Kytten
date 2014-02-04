@@ -384,7 +384,7 @@ class DialogEventManager(Control):
 
         if self.hover is not None:
             self.hover.dispatch_event('on_lose_highlight')
-            if self.hover.hover_flag : self.hover.dispatch_event('on_lose_hover', self.hover)
+            if self.hover.hover_flag : self.hover.dispatch_event('on_lose_hover')
 
         self.hover = hover
         if hover is not None:
@@ -395,7 +395,7 @@ class DialogEventManager(Control):
 
     def check_hover(self, dt, hover):
         if self.hover is hover and hover.visible and not hover.hover_disabled:
-            hover.dispatch_event('on_gain_hover', hover)
+            hover.dispatch_event('on_gain_hover')
 
     def set_wheel_hint(self, control):
         self.wheel_hint = control
@@ -616,13 +616,13 @@ class Dialog(Wrapper, DialogEventManager, DialogAssert):
         self.offset = offset
         self.theme = theme
         self.is_movable = movable
-        self.on_enter = on_enter
-        self.on_space = on_space
-        self.on_escape = on_escape
-        self.on_resize_func = on_resize
+        self.on_enter = self._wrap_method(on_enter)
+        self.on_space = self._wrap_method(on_space)
+        self.on_escape = self._wrap_method(on_escape)
+        self.on_resize_func = self._wrap_method(on_resize)
 
-        self.on_mouse_enter_func = on_mouse_enter
-        self.on_mouse_leave_func = on_mouse_leave
+        self.on_mouse_enter_func = self._wrap_method(on_mouse_enter)
+        self.on_mouse_leave_func = self._wrap_method(on_mouse_leave)
 
         if batch is None:
             self.batch = pyglet.graphics.Batch()
@@ -899,17 +899,17 @@ class Dialog(Wrapper, DialogEventManager, DialogAssert):
         if not retval:
             if symbol in [pyglet.window.key.TAB, pyglet.window.key.ENTER]:
                 if self.on_enter is not None and ( not modifiers & pyglet.window.key.MOD_ALT and not modifiers & pyglet.window.key.MOD_SHIFT):
-                    self.on_enter(self)
+                    self.on_enter()
                     return self.EventHandled()
 
             elif symbol == pyglet.window.key.ESCAPE:
                 if self.on_escape is not None:
-                    self.on_escape(self)
+                    self.on_escape()
                     return self.EventHandled()
 
             elif symbol == pyglet.window.key.SPACE:
                 if self.on_space is not None:
-                    self.on_space(self)
+                    self.on_space()
                     return self.EventHandled()
 
         return retval
@@ -1008,7 +1008,7 @@ class Dialog(Wrapper, DialogEventManager, DialogAssert):
             self.needs_layout = True
 
         if self.on_resize_func is not None and self.visible:
-            self.on_resize_func(self, width, height)
+            self.on_resize_func(width, height)
 
 
     def on_update(self, dt):

@@ -45,7 +45,7 @@ class TabbedForm(VerticalLayout):
         self._tab_id+=1
         btn = tab.button
         btn.tid=self._tab_id
-        btn.on_click= self.on_click_tab_button
+        btn.on_click= btn._wrap_method(self.on_click_tab_button)
         btn.set_toggling_group(self._toggle_group)
 
         self._buttons.add(btn)

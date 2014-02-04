@@ -50,7 +50,7 @@ class Selectable(Control, Image):
         self.selection_color1 = selection_color1
         self.selection_color2 = selection_color2
 
-        self.on_select = on_select
+        self.on_select = self._wrap_method(on_select)
 
     def on_mouse_press(self, x, y, button, *args):
         if button ==1:

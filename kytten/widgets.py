@@ -18,6 +18,7 @@
 # Label: a Widget which wraps a simple text label.
 from __future__ import unicode_literals, print_function
 
+from types import MethodType
 import pyglet
 import weakref
 from pyglet import gl
@@ -63,6 +64,12 @@ class Widget(object):
         if name is not None:
             ReferenceName(self,name)
             self.name=name
+
+    def _wrap_method(self, func):
+        '''
+        Return this function as a bound method. (recipe: http://www.ianlewis.org/en/dynamically-adding-method-classes-or-class-instanc
+        '''
+        return MethodType(func, self, type(self)) if func is not None else None
 
     def _get_controls(self):
         '''
@@ -278,10 +285,10 @@ class Control(Widget, KyttenEventDispatcher):
         self.disabled_flag = disabled
 
         if on_gain_hover is not None:
-            self.on_gain_hover_func=on_gain_hover
+            self.on_gain_hover_func=self._wrap_method(on_gain_hover)
 
         if on_lose_hover is not None:
-            self.on_lose_hover_func=on_lose_hover
+            self.on_lose_hover_func=self._wrap_method(on_lose_hover)
 
     def _get_controls(self):
         '''
@@ -349,17 +356,17 @@ class Control(Widget, KyttenEventDispatcher):
     def on_lose_highlight(self):
         self.highlight_flag = False
 
-    def on_gain_hover(self,*args):
+    def on_gain_hover(self):
         self.hover_flag=True
         if self.on_gain_hover_func is not None:
-            self.on_gain_hover_func(self)
+            self.on_gain_hover_func()
 
-    def on_lose_hover(self,*args):
+    def on_lose_hover(self):
         self.hover_flag=False
         if self.on_lose_hover_func is not None:
-            self.on_lose_hover_func(self)
+            self.on_lose_hover_func()
 
-    def on_mouse_double_click(self, *args):
+    def on_mouse_double_click(self, x, y, button, modifiers):
         pass
 
 # Controls can potentially accept most of the events defined for the window,
@@ -653,11 +660,17 @@ class DragNDropLayoutType(KyttenEventDispatcher):
     def __init__(self, on_drag_object=None, on_drop_object=None, validate_drop_widget=None):
         self.set_handlers(['on_drag_object', 'on_drop_object'], on_drag_object=on_drag_object,
                                                                 on_drop_object=on_drop_object)
-        self.validate_drop_widget_func=validate_drop_widget
+        self.validate_drop_widget_func=self._wrap_method(validate_drop_widget)
+
+    def _wrap_method(self, func):
+        '''
+        Return this function as a bound method. (recipe: http://www.ianlewis.org/en/dynamically-adding-method-classes-or-class-instanc
+        '''
+        return MethodType(func, self, type(self)) if func is not None else None
 
     def validate_drop_widget(self, widget, pos):
         if self.hit_test(*pos) and self.validate_drop_widget_func is not None:
-            return self.validate_drop_widget_func(self, widget, pos)
+            return self.validate_drop_widget_func(widget, pos)
 
 DragNDropLayoutType.register_event_type('on_drag_object')
 DragNDropLayoutType.register_event_type('on_drop_object')

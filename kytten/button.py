@@ -32,8 +32,8 @@ class Button(Control):
         '''
         Control.__init__(self, name=name, on_gain_hover=on_gain_hover, group=group, on_lose_hover=on_lose_hover, disabled=disabled)
         self.text = string_to_unicode(text)
-        self.on_click = on_click
-        self.on_double_click_func = on_double_click
+        self.on_click = self._wrap_method(on_click)
+        self.on_double_click_func = self._wrap_method(on_double_click)
         self.label = None
         self.button = None
         self.highlight = None
@@ -130,7 +130,7 @@ class Button(Control):
 
             # Now, if mouse is still inside us, signal on_click
             if self.on_click is not None and self.hit_test(x, y):
-                self.on_click(self)
+                self.on_click()
                 return pyglet.event.EVENT_HANDLED
 
     def on_mouse_double_click(self, x, y, button, modifiers):
@@ -141,7 +141,7 @@ class Button(Control):
         @param modifiers Modifiers to apply to button
         '''
         if self.on_double_click_func is not None:
-            self.on_double_click_func(self, x, y, button, modifiers)
+            self.on_double_click_func(x, y, button, modifiers)
 
     def size(self, dialog):
         '''
@@ -297,9 +297,9 @@ class ImageButton(Button):
         self.image = self.default_image
         self.color = color
 
-        if on_click is not None: self.on_click=on_click
-        if on_gain_hover is not None: self.on_gain_hover_func = on_gain_hover
-        if on_lose_hover is not None: self.on_lose_hover_func = on_lose_hover
+        if on_click is not None:        self.on_click=self._wrap_method(on_click)
+        if on_gain_hover is not None:   self.on_gain_hover_func = self._wrap_method(on_gain_hover)
+        if on_lose_hover is not None:   self.on_lose_hover_func = self._wrap_method(on_lose_hover)
 
     def set_button_style(self, button_style, force_refresh=True):
         '''
@@ -312,9 +312,9 @@ class ImageButton(Button):
         self.square = button_style.square
         self.has_border = button_style.has_border
         self.expandable = button_style.expandable
-        self.on_click = button_style.on_click
-        self.on_gain_hover_func = button_style.on_gain_hover_func
-        self.on_lose_hover_func = button_style.on_lose_hover_func
+        self.on_click = self._wrap_method(button_style.on_click)
+        self.on_gain_hover_func = self._wrap_method(button_style.on_gain_hover_func)
+        self.on_lose_hover_func = self._wrap_method(button_style.on_lose_hover_func)
         self.text_style=button_style.text_style.copy()
 
         if force_refresh is True: self._force_refresh()
@@ -658,13 +658,13 @@ class DraggableImageButton(ImageButton):
 
             #return pyglet.event.EVENT_HANDLED
 
-    def on_gain_hover(self,*args):
+    def on_gain_hover(self):
         if self._is_dragging is True: return True
-        Control.on_gain_hover(self,*args)
+        Control.on_gain_hover(self)
 
-    def on_lose_hover(self,*args):
+    def on_lose_hover(self):
         if self._is_dragging is True: return True
-        Control.on_lose_hover(self,*args)
+        Control.on_lose_hover(self)
 
 DraggableImageButton.register_event_type('on_mouse_drag')
 DraggableImageButton.register_event_type('on_mouse_release')

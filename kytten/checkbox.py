@@ -37,7 +37,7 @@ class Checkbox(Control):
         self.is_checked = is_checked
         self.align = align
         self.padding = padding
-        self.on_click = on_click
+        self.on_click = self._wrap_method(on_click)
         self.label = None
         self.checkbox = None
         self.highlight = None
@@ -114,7 +114,7 @@ class Checkbox(Control):
         if not self.is_disabled():
             self.is_checked = not self.is_checked
             if self.on_click is not None:
-                self.on_click(self,self.is_checked)
+                self.on_click(self.is_checked)
 
             self._force_refresh()
 

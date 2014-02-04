@@ -21,7 +21,7 @@ class Document(Control):
     vertical scrollbar as needed.
     '''
     def __init__(self, document, formatted=False, width=1000, height=5000, name=None,
-                 is_fixed_size=False, always_show_scrollbar=False, text_color=None, font=None, font_size=None, group = None):
+                 is_fixed_size=False, always_show_scrollbar=False, text_color=None, font=None, font_size=None, group=None):
         '''
         Creates a new Document.
         '''
