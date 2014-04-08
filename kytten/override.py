@@ -20,39 +20,6 @@ _Line = pyglet.text.layout._Line
 
 class KyttenEventDispatcher(pyglet.event.EventDispatcher):
 
-
-    def remove_handlers(self, *args, **kwargs):
-        # See 'remove_handler' method of pyglet.event.EventDispatcher
-
-        handlers = list(self._get_handlers(args, kwargs))
-
-        # Find the first stack frame containing any of the handlers
-        def find_frame():
-            for frame in self._event_stack:
-                for name, handler in handlers:
-                    try:
-                        if frame[name] == handler:
-                            return frame
-                    except KeyError:
-                        pass
-        frame = find_frame()
-
-        # No frame matched; no error.
-        if not frame:
-            return
-
-        # Remove each handler from the frame.
-        for name, handler in handlers:
-            try:
-                if frame[name] == handler:
-                    del frame[name]
-            except KeyError:
-                pass
-
-        # Remove the frame if it's empty.
-        if not frame:
-            self._event_stack.remove(frame)
-
     def remove_handler(self, name, handler):
         # See 'remove_handler' method of pyglet.event.EventDispatcher
 
@@ -104,8 +71,6 @@ class KyttenEventDispatcher(pyglet.event.EventDispatcher):
             return self
 
         return _wrapper
-
-        #return MethodType(func_obj, self, type(self)) if func is not None else None
 
 class TextLayoutGroup_KYTTEN_OVERRIDE(pyglet.graphics.Group):
     def set_state(self):
