@@ -370,6 +370,11 @@ class Control(Widget, KyttenEventDispatcher):
     def on_mouse_double_click(self, x, y, button, modifiers):
         pass
 
+    def teardown(self):
+        Widget.teardown(self)
+        self.on_gain_hover_func = None
+        self.on_lose_hover_func = None
+
 # Controls can potentially accept most of the events defined for the window,
 # but in practice we'll only pass selected events from Dialog.  This avoids
 # a large number of unsightly empty method declarations.

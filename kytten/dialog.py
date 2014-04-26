@@ -1337,6 +1337,9 @@ class DragNDrop(Dialog):
             self.focus.dispatch_event("on_mouse_release", x,y, button,modifiers)
             return self.EventHandled()
 
+    def on_mouse_scroll(self,*args):
+        pass
+
 class PopupMessage(Dialog):
     '''A simple fire-and-forget dialog.'''
 

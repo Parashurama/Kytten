@@ -37,7 +37,7 @@ class Button(Control):
         Control.__init__(self, name=name, on_gain_hover=on_gain_hover, group=group, on_lose_hover=on_lose_hover, disabled=disabled)
         self.text = string_to_unicode(text)
         self.on_click = self._wrap_method(on_click)
-        self.on_double_click_func = self._wrap_method(on_double_click)
+        self.on_double_click = self._wrap_method(on_double_click)
 
 
     def set_text(self, text):
@@ -143,8 +143,8 @@ class Button(Control):
         @param button Button pressed
         @param modifiers Modifiers to apply to button
         '''
-        if self.on_double_click_func is not None:
-            self.on_double_click_func(x, y, button, modifiers)
+        if self.on_double_click is not None:
+            self.on_double_click(x, y, button, modifiers)
 
     def size(self, dialog, scale):
         '''
@@ -189,8 +189,9 @@ class Button(Control):
         '''
         Destroy the button definitively
         '''
-        self.on_click = None
         Control.teardown(self)
+        self.on_click = None
+        self.on_double_click = None
 
 class ButtonStyle(object):
     '''
@@ -631,6 +632,7 @@ class DraggableImageButton(ImageButton):
                 New_Parent.saved_dialog.pop_to_top()
                 New_Parent.saved_dialog.update_controls()
                 New_Parent.saved_dialog.on_mouse_motion(x, y, 0, 0)
+                New_Parent.saved_dialog.set_hover(None)
 
                 self.delete()
 

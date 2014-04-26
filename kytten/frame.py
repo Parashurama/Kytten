@@ -489,6 +489,7 @@ class BubbleFrame(GuiFrame, Control):
         self.hover = hover
         if hover is not None:
             hover.dispatch_event('on_gain_highlight')
+            pyglet.clock.schedule_once(self.check_hover, self.saved_dialog.hover_delay, hover)
 
     def set_focus(self, focus):
         '''
@@ -506,6 +507,10 @@ class BubbleFrame(GuiFrame, Control):
 
         if focus is not None:
             focus.dispatch_event('on_gain_focus')
+
+    def check_hover(self, dt, hover):
+        if self.hover is hover and hover.visible and not hover.hover_disabled:
+            hover.dispatch_event('on_gain_hover')
 
 class TitleFrame(VerticalLayout):
     def __init__(self, title, content):

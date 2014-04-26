@@ -11,13 +11,6 @@ from .glcontext import GuiInternalBuffer, GuiRenderContext
 from .base import __int__, GetActiveDialogs, GetObjectfromName
 from .dialog import PatchWindowsEventHandler
 
-def dummy(*args):
-    return None
-
-
-event_dispatcher_events_override = set(['on_mouse_press','on_mouse_release','on_mouse_motion','on_mouse_drag','on_mouse_scroll',
-                                    'on_key_press','on_key_release'])
-
 class GuiManager(pyglet.graphics.Batch):
     def __init__(self, window, isBuffered=True):
         pyglet.graphics.Batch.__init__(self)
