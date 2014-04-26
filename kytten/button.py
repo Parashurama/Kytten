@@ -646,7 +646,7 @@ class DraggableImageButton(ImageButton):
                 Widget._force_copy=(Widget._force_copy,) #
                 Widget.dispatch_event('on_mouse_drag', x, y, 0, 0, button, modifiers)
 
-                DRAGGABLE.offset=(int(x-Widget.width/2.),int(y-Widget.height/2.))
+                DRAGGABLE.offset=(int(x-Widget.width//2),int(y-Widget.height//2))
                 if not _discard_old_parent:
                     Widget._old_parent = New_Parent
                     Widget._old_parent_layout_info = layout_info
@@ -657,7 +657,7 @@ class DraggableImageButton(ImageButton):
             self._old_parent_layout_info=None
             self._is_dragging=False
 
-            #return pyglet.event.EVENT_HANDLED
+            return pyglet.event.EVENT_HANDLED
 
     def on_gain_hover(self):
         if self._is_dragging is True: return True

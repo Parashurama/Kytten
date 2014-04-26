@@ -141,7 +141,6 @@ class PageManager:
 
     @staticmethod
     def prev_page(*args):
-
         PageManager._current_page_id-=1
         if not PageManager._update_display():
             PageManager._current_page_id+=1

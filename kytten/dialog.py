@@ -26,7 +26,7 @@ from .layout import ANCHOR_TOP_LEFT, ANCHOR_TOP, ANCHOR_TOP_RIGHT, \
 from .layout import VerticalLayout, HorizontalLayout, GridLayout, FreeLayout
 from .text_input import Input
 from .base import DereferenceName, ReferenceDialog, DereferenceDialog, GetActiveDialogs, ActionOnAllDialogs, __int__, GetObjectfromName, Virtual, InvalidWidgetNameError
-
+from .tools import patch_instance_method
 
 event_dispatcher_events_override = set(['on_mouse_press','on_mouse_release','on_mouse_motion','on_mouse_drag','on_mouse_scroll',
                                     'on_key_press','on_key_release'])
@@ -68,11 +68,13 @@ def get_default_anchor_flag(anchor):
 def check_for_always_on_top_dialog(event_type, *args):
     x=args[0]; y=args[1]
 
-    for member in __int__.kytten_always_on_top_dialog_order:
+    for member in __int__.kytten_floating_dialogs:
         if member.visible is True and member.hit_test(x, y) and member.dispatch_event(event_type, *args):
             return pyglet.event.EVENT_HANDLED
 
 def PatchWindowsEventHandler(window):
+
+    @patch_instance_method(window, "dispatch_event")
     def dispatch_event(self, event_type, *args):
         """
         Override Event dispatcher for dialog: give priority to overhanging dialogs (always on top)
@@ -80,10 +82,6 @@ def PatchWindowsEventHandler(window):
         if event_type in event_dispatcher_events_override:
             if check_for_always_on_top_dialog(event_type, *args):
                 return pyglet.event.EVENT_HANDLED
-
-        pyglet.event.EventDispatcher.dispatch_event(self, event_type, *args)
-
-    window.dispatch_event = types.MethodType(dispatch_event, window, type(window))
 
 class DialogEventManager(Control):
     def __init__(self, name=None):
@@ -173,6 +171,8 @@ class DialogEventManager(Control):
             self.hover.dispatch_event('on_lose_highlight')
             if self.hover.hover_flag : self.hover.dispatch_event('on_lose_hover')
 
+        pyglet.clock.unschedule(self.check_hover)
+
         self.hover = hover
         if hover is not None:
             hover.dispatch_event('on_gain_highlight')
@@ -228,13 +228,17 @@ class DialogEventManager(Control):
         self.to_refresh=True
         return pyglet.event.EVENT_HANDLED
 
-__int__.kytten_next_dialog_order_id = 0
-__int__.kytten_always_on_top_dialog_order=[]
-__int__.kytten_mundane_top_dialog=0
+__int__.kytten_base_dialog_id = 0
+__int__.kytten_floating_dialog_id= 1<<32
+__int__.kytten_floating_dialogs=[]
 
-def GetNextDialogOrderId():
-    __int__.kytten_next_dialog_order_id += 1
-    return __int__.kytten_next_dialog_order_id
+def GetNextDialogOrderId(dialog):
+    if dialog.always_on_top:
+        __int__.kytten_floating_dialog_id+=1
+        return __int__.kytten_floating_dialog_id
+    else:
+        __int__.kytten_base_dialog_id+=1
+        return __int__.kytten_base_dialog_id
 
 class DialogGroup(pyglet.graphics.OrderedGroup):
     '''
@@ -248,20 +252,12 @@ class DialogGroup(pyglet.graphics.OrderedGroup):
 
         @param parent Parent group
         '''
-        t_order=GetNextDialogOrderId()
-        if not always_on_top:
-            __int__.kytten_mundane_top_dialog=t_order
-            for member in reversed(__int__.kytten_always_on_top_dialog_order):
-                member.root_group.real_order = GetNextDialogOrderId()
-
-        pyglet.graphics.OrderedGroup.__init__( self, t_order, parent )
-
+        pyglet.graphics.OrderedGroup.__init__( self, GetNextDialogOrderId(dialog), parent )
         self.real_order = self.order
+        self.dialog = weakref.proxy(dialog)
 
-        self.dialog=weakref.proxy(dialog)
-
-        if dialog.always_on_top and dialog:
-            __int__.kytten_always_on_top_dialog_order.insert(0, dialog)
+        if always_on_top and dialog:
+            __int__.kytten_floating_dialogs.insert(0, dialog)
 
     def __lt__(self, other):
         '''
@@ -280,43 +276,27 @@ class DialogGroup(pyglet.graphics.OrderedGroup):
 
     def __hash__(self):
         return hash((self.order, self.parent))
-    '''
-    #used in old version of pyglet (1.1.4)
-    def __cmp__(self, other):
 
-        if isinstance(other, DialogGroup):
-            return cmp(self.real_order, other.real_order)
-        else:
-            return pyglet.graphics.OrderedGroup.__cmp__(self, other)
-    '''
     def is_on_top(self):
         '''
         Are we the top dialog group?
         '''
 
         if self.dialog.always_on_top:
-            return self.real_order == __int__.kytten_next_dialog_order_id
+            return self.real_order == __int__.kytten_floating_dialog_id
         else:
-            return self.real_order == __int__.kytten_mundane_top_dialog
+            return self.real_order == __int__.kytten_base_dialog_id
 
     def pop_to_top(self):
         '''
         Put us on top of other dialog groups.
         '''
         if not self.dialog.always_on_top:
-            self.real_order = GetNextDialogOrderId()
-            __int__.kytten_mundane_top_dialog = self.real_order
-
-            for member in reversed(__int__.kytten_always_on_top_dialog_order):
-                member.root_group.real_order = GetNextDialogOrderId()
+             self.real_order = GetNextDialogOrderId(self.dialog)
         else:
-            try: __int__.kytten_always_on_top_dialog_order.remove(self.dialog._self())
-            except:
-                print(__int__.kytten_always_on_top_dialog_order, self.dialog)
-                raise
-
-            __int__.kytten_always_on_top_dialog_order.insert(0, self.dialog._self())
-            self.dialog.root_group.real_order = GetNextDialogOrderId()
+            __int__.kytten_floating_dialogs.remove(self.dialog._self())
+            __int__.kytten_floating_dialogs.insert(0, self.dialog._self())
+            self.real_order = GetNextDialogOrderId(self.dialog)
 
 
     def set_state(self):
@@ -324,8 +304,6 @@ class DialogGroup(pyglet.graphics.OrderedGroup):
         Ensure that blending is set.
         '''
         gl.glPushAttrib(gl.GL_ENABLE_BIT | gl.GL_CURRENT_BIT)
-        #gl.glEnable(gl.GL_BLEND)
-        #gl.glBlendFunc(gl.GL_SRC_ALPHA, gl.GL_ONE_MINUS_SRC_ALPHA)
 
     def unset_state(self):
         '''
@@ -679,22 +657,20 @@ class Dialog(Wrapper, DialogEventManager, DialogAssert):
     def enable_exclusive_mode(self):
         mouse_press_func = self.on_mouse_press
 
+        @patch_instance_method(self, "on_mouse_press")
         def mouse_press_wrapper(self, *args):
             if self.visible is True:
                 mouse_press_func(*args)
                 return True
 
+        @patch_instance_method(self, "hit_test")
         def hit_test_wrapper(self, x, y):
             if self.visible is True:
                 return True
 
-        self.patch_instance("on_mouse_press")(mouse_press_wrapper)
-        self.patch_instance("hit_test")(hit_test_wrapper)
-
     def disable_exclusive_mode(self):
-
-        self._func_event_stack2["on_mouse_press"].pop()
-        self._func_event_stack2["hit_test"].pop()
+        self._methods_stack["on_mouse_press"].pop()
+        self._methods_stack["hit_test"].pop()
 
     def ensure_visible(self, control):
         '''
@@ -802,6 +778,8 @@ class Dialog(Wrapper, DialogEventManager, DialogAssert):
         @param modifiers Modifiers to apply to button
         '''
         if self.visible is False or not self.hit_test(x, y):
+            if self.focus is not None:
+                self.set_focus(None)
             return pyglet.event.EVENT_UNHANDLED
 
         cliked_time = time.time()
@@ -855,10 +833,11 @@ class Dialog(Wrapper, DialogEventManager, DialogAssert):
         if self.visible is False:
             return pyglet.event.EVENT_UNHANDLED
 
-        self.on_mouse_motion(x, y, 0, 0)
+        if not check_for_always_on_top_dialog("on_mouse_motion", x, y, 0, 0):
+            self.on_mouse_motion(x, y, 0, 0)
 
-        if self.focus is not None:
-            self.focus.dispatch_event('on_mouse_release', x, y, button, modifiers)
+        if self.focus is not None and self.focus.dispatch_event('on_mouse_release', x, y, button, modifiers):
+            return pyglet.event.EVENT_HANDLED
 
         return pyglet.event.EVENT_UNHANDLED
 
@@ -1026,19 +1005,14 @@ class Dialog(Wrapper, DialogEventManager, DialogAssert):
         if self.content is not None:
             self.content.teardown()
             self.content = None
+
         if self.window is not None:
             self.window.remove_handlers(self)
             self.window = None
         self.batch._draw_list_dirty = True  # forces resorting groups
 
-        if self.always_on_top:
-            try:
-                __int__.kytten_always_on_top_dialog_order.remove(self)
-            except ValueError:
-                print("always_on_top but not in __int__.kytten_always_on_top_dialog_order",self)
-        #else                 : __int__.kytten_mundane_top_dialog.remove(self)#  Int not List of mundane Dialog Instance
-        #if self.name is not None:
-        #    DereferenceName(self.name)
+        if self.always_on_top is True:
+            __int__.kytten_floating_dialogs.remove(self)
 
         if self.screen is not None:
             self.screen.teardown()
@@ -1306,7 +1280,6 @@ class ToolTip(GuiElement):
         pass
 
     def on_mouse_release(self,*args):
-        print("on_mouse_release tooltip", self, self.destroyed)
         pass
 
     def on_mouse_motion(self,*args):
@@ -1346,8 +1319,11 @@ class DragNDrop(Dialog):
                 POSITION = layout.validate_drop_widget(item, pos)
                 if POSITION is not None:
                     return POSITION
+    def hit_test(self, x, y):
+        return True
 
     def on_mouse_motion(self, x, y, dx, dy):
+
         if self._emul_dragging is True:
             self.focus.dispatch_event("on_mouse_drag", x,y,dx,dy, mouse.LEFT,16)
             return self.EventHandled()

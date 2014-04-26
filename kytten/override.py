@@ -10,7 +10,7 @@ import pyglet
 import pyglet.gl as gl
 from types import MethodType
 
-from .tools import string_to_unicode
+from .tools import string_to_unicode, patch_instance_method
 from .base import xrange
 
 KYTTEN_LAYOUT_GROUPS = {}
@@ -30,47 +30,6 @@ class KyttenEventDispatcher(pyglet.event.EventDispatcher):
                     break
             except KeyError:
                 pass
-
-    @classmethod
-    def patch_class_event(cls, func_name):
-        def _wrapper(func_obj):
-            if not hasattr(cls, '_func_event_stack'):
-                cls._func_event_stack={}
-
-            if not func_name in cls._func_event_stack:
-                def _call_wrapper(self, *args, **kargs):
-                    for func in reversed(cls._func_event_stack[func_name]):
-                        if func(self, *args, **kargs) is True:
-                            break
-
-                cls._func_event_stack[func_name]=[getattr(cls,func_name) ]
-                setattr(cls, func_name, _call_wrapper)
-
-            cls._func_event_stack[func_name].append(func_obj)
-
-            return cls
-
-        return _wrapper
-
-    def patch_instance(self, func_name):
-        def _wrapper(func_obj):
-            if not hasattr(self, '_func_event_stack2'):
-                self._func_event_stack2={}
-
-            if not func_name in self._func_event_stack2:
-                def _call_wrapper(self, *args, **kwargs):
-                    for func in reversed(self._func_event_stack2[func_name]):
-                        if func(*args, **kwargs) is True:
-                            return True
-
-                self._func_event_stack2[func_name]=[getattr(self,func_name) ]
-                setattr(self, func_name, MethodType(_call_wrapper, self, type(self)))
-
-            self._func_event_stack2[func_name].append(MethodType(func_obj, self, type(self)))
-
-            return self
-
-        return _wrapper
 
 class TextLayoutGroup_KYTTEN_OVERRIDE(pyglet.graphics.Group):
     def set_state(self):
@@ -246,6 +205,13 @@ class KyttenLabel(pyglet.text.Label):
 
 class KyttenCaret(pyglet.text.caret.Caret):
     def __init__(self, layout, batch=None, color=(0, 0, 0)):
+        # temporarily swap foreground_decoration_group & layout.background_group to avoid Caret display bugs
+        layout.foreground_decoration_group, layout.background_group  = layout.background_group , layout.foreground_decoration_group
+        pyglet.text.caret.Caret.__init__(self, layout, batch, color)
+        layout.foreground_decoration_group, layout.background_group  = layout.background_group , layout.foreground_decoration_group
+
+    """
+    def __init__(self, layout, batch=None, color=(0, 0, 0)):
         __doc__ = pyglet.text.caret.Caret.__init__.__doc__
         from pyglet import gl
         self._layout = layout
@@ -263,7 +229,7 @@ class KyttenCaret(pyglet.text.caret.Caret):
         self.visible = True
 
         layout.push_handlers(self)
-
+    """
 class KyttenInputLabel(KyttenLabel):
     def _get_left(self):
         if self._multiline:
