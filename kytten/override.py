@@ -8,6 +8,7 @@ from __future__ import unicode_literals, print_function
 
 import pyglet
 import pyglet.gl as gl
+from pyglet.text import runlist
 from types import MethodType
 
 from .tools import string_to_unicode, patch_instance_method
@@ -150,6 +151,30 @@ class KyttenIncrementalTextLayout(pyglet_IncrementalTextLayout):
 
     def get_selection(self):
         return (self.selection_start, self.selection_end)
+
+class KyttenTextLayout(pyglet.text.layout.TextLayout):
+
+    def __init__(self, *args, **kwargs):
+        self.clamp_height = kwargs.pop('clamp_height', False)
+        pyglet.text.layout.TextLayout.__init__(self, *args, **kwargs)
+
+    def _get_lines(self):
+        len_text = len(self._document.text)
+        glyphs = self._get_glyphs()
+        owner_runs = runlist.RunList(len_text, None)
+        self._get_owner_runs(owner_runs, glyphs, 0, len_text)
+        lines = [line for line in self._flow_glyphs(glyphs, owner_runs,
+                                                    0, len_text)]
+        self.content_width = 0
+        self._flow_lines(lines, 0, len(lines))
+        self.heigth = -lines[-1].y if lines else 0
+
+        if self.clamp_height is not False:
+            for idx, line in enumerate(lines):
+                if line.y < -self.clamp_height:
+                    return lines[:idx]
+
+        return lines
 
 pyglet_text_Label = pyglet.text.Label
 class KyttenLabel(pyglet.text.Label):

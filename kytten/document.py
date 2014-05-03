@@ -10,7 +10,7 @@ import pyglet
 
 from .widgets import Control, Widget
 from .scrollbar import VScrollbar
-from .override import KyttenIncrementalTextLayout
+from .override import KyttenIncrementalTextLayout, KyttenTextLayout
 from .base import string_to_unicode, iteritems, FLAGS
 from .theme import UntexturedGraphicElement
 
@@ -328,14 +328,14 @@ class RichText(Widget):
     document=None
     background=None
     set_document_style = False
-    def __init__(self, document, formatted=False, width=250, height=50, name=None, text_style={}, background_color=None, group=None):
+    def __init__(self, document, formatted=False, width=None, clamp_height=False, name=None, text_style={}, background_color=None, group=None):
         '''
         Creates a new RichText Widget.
         '''
         Widget.__init__(self, name=name, group=group)
         self.background_color=background_color
         self.content_width = width
-        self.content_height = height
+        self.clamp_height = clamp_height
         self.text_style = text_style
 
         if hasattr(document, 'startswith'): # document is a string
@@ -432,17 +432,17 @@ class RichText(Widget):
             self.do_set_document_style(dialog)
 
         if self.content is None:
-            self.content = pyglet.text.layout.TextLayout(  self.document,  self.content_width, self.content_height, multiline=True,
-                                                    batch=dialog.batch, group=dialog.fg_group, wrap_lines=True)
+            clamp_height = self.clamp_height if self.clamp_height is not False else None
+            self.content = KyttenTextLayout(self.document, self.content_width, clamp_height, multiline=True,
+                                            clamp_height = self.clamp_height, batch=dialog.batch, group=dialog.fg_group, wrap_lines=True)
 
         if self.background is None and self.background_color is not None:
-
             self.background = UntexturedGraphicElement( color=self.background_color,
                                                         batch=dialog.batch,
                                                         group=dialog.bg_group)
 
-        self.height = self.content.height #self.content.content_height
-        self.width = self.content.width #self.content.content_width
+        self.height = self.content.height
+        self.width = self.content.width
 
     def set_content_width(self, width):
         self.content_width = width
@@ -483,3 +483,19 @@ class RichText(Widget):
     def get_text(self):
         return self.document.text
 
+    def check_text_height(self, text, font, max_width):
+        def _gen_wrap(glyphs):
+            if glyphs:
+                for i, glyph in enumerate(glyphs[:-1]):
+                    yield i, glyph.advance
+
+                yield i+1, glyphs[-1].width
+
+        width=0
+        for i, glyph_width in _gen_wrap(font.get_glyphs(text)):
+            width+=glyph_width
+            if width >= max_width:
+                width -=glyph_width
+                return True, i
+
+        return False, 0

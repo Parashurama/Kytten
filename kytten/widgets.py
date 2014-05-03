@@ -21,7 +21,7 @@ from __future__ import unicode_literals, print_function
 from types import MethodType
 import pyglet
 import weakref
-from pyglet import gl
+from pyglet import gl, font as pyglet_font
 from .override import KyttenLabel, KyttenEventDispatcher
 from .base import GenId, ReferenceName, DereferenceName, GetObjectfromName, DisplayGroup, Log, string_to_unicode, iteritems
 from .theme import DefaultTextureGraphicElement
@@ -158,6 +158,10 @@ class Widget(object):
 
         @param dialog The Dialog which contains this Widget
         '''
+
+        if dialog is not self.saved_dialog:
+            self.scrollable_parent = dialog
+
         if dialog != self and dialog is not None:
 
             if isinstance( dialog, ScrollableAssert):
@@ -315,17 +319,6 @@ class Control(Widget, KyttenEventDispatcher):
 
         self.disabled_flag = False
         self._force_refresh()
-
-    def size(self, dialog, scale):
-        '''
-        Overrides Widget size to accomodate scrollable parents.
-
-        @param dialog The Dialog/Scrollable which contains this Widget
-        '''
-        if dialog is not self.saved_dialog:
-            self.scrollable_parent = dialog
-
-        Widget.size(self, dialog, scale)
 
     def get_cursor(self, x, y):
         return self.cursor
@@ -577,7 +570,7 @@ class Label(Widget):
     '''
     label=None
     def __init__(self, text="", name=None, style=None, bold=False, italic=False,
-                 font_name=None, font_size=None, color=None, multiline=False, width=None, path=[], group=None):
+                 font_name=None, font_size=None, color=None, multiline=False, width=None, autoclampwidth=False, path=[], group=None):
         Widget.__init__(self, name=name, group=group)
 
         self.text = string_to_unicode(text)
@@ -588,6 +581,7 @@ class Label(Widget):
         else:
             self.set_text_style({"bold":bold, "italic":italic, "font_name":font_name, "font_size":font_size, "color":color})
 
+        self.autoclampwidth = autoclampwidth
         self.path = path
         self.is_multiline = multiline
         self.label_width = width
@@ -627,10 +621,18 @@ class Label(Widget):
         if dialog is None:
             return
         Widget.size(self, dialog, scale)
+        text = self.text
 
         if self.label is None:
+            if self.autoclampwidth:
+                font = pyglet_font.load(self._text_style["font_name"] or dialog.theme[self.path + ['font']],
+                                        self._text_style["font_size"] or dialog.theme[self.path + ['font_size']],
+                                        bold=bool(self._text_style["bold"]), italic=bool(self._text_style["italic"]), dpi=None)
+                isclamp, position = self.check_text_width(self.text, font, self.autoclampwidth)
+                text = self.text[:position]+'...' if isclamp else self.text
+
             self.label = KyttenLabel(
-                self.text,
+                text,
                 bold = self._text_style["bold"],
                 italic = self._text_style["italic"],
                 color = self._text_style["color"] or dialog.theme[self.path + ['text_color']],
@@ -648,16 +650,11 @@ class Label(Widget):
         else:
             self.height = self.label.content_height  - font.descent #font.ascent - font.descent  # descent is negative
 
-    def get_text_width(self, text):
-
-        font = self.label.document.get_font(dpi=self.label._dpi)
+    def get_text_width(self, text, font):
         glyphs = font.get_glyphs(text)
         return sum( glyph.advance for glyph in glyphs[:-1])+glyphs[-1].width
 
-    def check_text_width(self, text, max_width):
-        font = self.label.document.get_font(dpi=self.label._dpi)
-        glyphs = font.get_glyphs(text)
-
+    def check_text_width(self, text, font, max_width):
         def _gen_wrap(glyphs):
             if glyphs:
                 for i, glyph in enumerate(glyphs[:-1]):
@@ -666,11 +663,10 @@ class Label(Widget):
                 yield i+1, glyphs[-1].width
 
         width=0
-        for i, glyph_width in _gen_wrap(glyphs):
+        for i, glyph_width in _gen_wrap(font.get_glyphs(text)):
             width+=glyph_width
             if width >= max_width:
                 width -=glyph_width
-
                 return True, i
 
         return False, 0
