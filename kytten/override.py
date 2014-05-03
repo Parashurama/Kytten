@@ -231,30 +231,25 @@ class KyttenLabel(pyglet.text.Label):
 class KyttenCaret(pyglet.text.caret.Caret):
     def __init__(self, layout, batch=None, color=(0, 0, 0)):
         # temporarily swap foreground_decoration_group & layout.background_group to avoid Caret display bugs
+        # line 126: batch.add(2, gl.GL_LINES, layout.foreground_decoration_group, 'v2f', ('c4B', colors))
         layout.foreground_decoration_group, layout.background_group  = layout.background_group , layout.foreground_decoration_group
         pyglet.text.caret.Caret.__init__(self, layout, batch, color)
         layout.foreground_decoration_group, layout.background_group  = layout.background_group , layout.foreground_decoration_group
 
-    """
-    def __init__(self, layout, batch=None, color=(0, 0, 0)):
-        __doc__ = pyglet.text.caret.Caret.__init__.__doc__
-        from pyglet import gl
-        self._layout = layout
-        if batch is None:
-            batch = layout.batch
-        r, g, b = color
-        colors = (r, g, b, 255, r, g, b, 255)
-        self._list = batch.add(2, gl.GL_LINES, layout.foreground_decoration_group,
-            'v2f', ('c4B', colors))
+    def select_to_point(self, x, y):
+        __doc__ = pyglet.text.caret.Caret.select_to_point.__doc__
 
-        self._ideal_x = None
-        self._ideal_line = None
-        self._next_attributes = {}
+        lineno = self._layout.get_line_from_point(x, y)
+        line = self._layout.lines[lineno]
+        _x = x - self._layout.top_group.translate_x
 
-        self.visible = True
+        self._position = line.x
+        if _x >= self._position:
+            self._position = self._layout.get_position_on_line(lineno, x)
 
-        layout.push_handlers(self)
-    """
+        self._update(line=lineno)
+        self._next_attributes.clear()
+
 class KyttenInputLabel(KyttenLabel):
     def _get_left(self):
         if self._multiline:
