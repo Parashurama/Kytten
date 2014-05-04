@@ -8,7 +8,7 @@ from __future__ import unicode_literals, print_function
 import weakref
 import pyglet
 from .glcontext import GuiInternalBuffer, GuiRenderContext
-from .base import __int__, GetActiveDialogs, GetObjectfromName
+from .base import internals, GetActiveDialogs, GetObjectfromName
 from .dialog import PatchWindowsEventHandler
 
 class GuiManager(pyglet.graphics.Batch):

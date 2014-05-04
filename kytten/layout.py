@@ -169,9 +169,11 @@ class VerticalLayout(Widget,LayoutAssert):
     def _destroy_obj(self, item):
 
         try:self.content.remove(item)
-        except ValueError:
-            self.hidden_content.remove(item)
-        self.content_cache.remove(item)
+        except ValueError:pass
+        try:self.hidden_content.remove(item)
+        except ValueError:pass
+        try:self.content_cache.remove(item)
+        except ValueError:pass
 
     def _dereference_obj(self, item):
         try:

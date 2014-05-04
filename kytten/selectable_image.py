@@ -8,7 +8,7 @@ from __future__ import unicode_literals, print_function
 import pyglet
 
 from .widgets import Control, Image
-from .base import __int__
+from .base import internals
 from .theme import DefaultTextureGraphicElement
 
 class Selectable(Control, Image):
@@ -114,19 +114,19 @@ class Selectable(Control, Image):
 
             x, y, width, height = self.calc_real_selection_rect0()
             self.delete_selection0()
-            self.selection0 = DefaultTextureGraphicElement( texture=__int__.BlankTexture, color=self.selection_color0, size=(width, height), position=(x,y),  batch=dialog.batch,  group=dialog.fg_group)
+            self.selection0 = DefaultTextureGraphicElement( texture=internals.BlankTexture, color=self.selection_color0, size=(width, height), position=(x,y),  batch=dialog.batch,  group=dialog.fg_group)
 
         if self.start_position1 is not None and self.current_position1 is not None:
 
             x, y, width, height = self.calc_real_selection_rect1()
             self.delete_selection1()
-            self.selection1 = DefaultTextureGraphicElement( texture=__int__.BlankTexture, color=self.selection_color1, size=(width, height), position=(x,y),  batch=dialog.batch,  group=dialog.fg_group)
+            self.selection1 = DefaultTextureGraphicElement( texture=internals.BlankTexture, color=self.selection_color1, size=(width, height), position=(x,y),  batch=dialog.batch,  group=dialog.fg_group)
 
         if self.start_position2 is not None and self.current_position2 is not None:
 
             x, y, width, height = self.calc_real_selection_rect2()
             self.delete_selection2()
-            self.selection2 = DefaultTextureGraphicElement( texture=__int__.BlankTexture, color=self.selection_color2, size=(width, height), position=(x,y),  batch=dialog.batch,  group=dialog.fg_group)
+            self.selection2 = DefaultTextureGraphicElement( texture=internals.BlankTexture, color=self.selection_color2, size=(width, height), position=(x,y),  batch=dialog.batch,  group=dialog.fg_group)
 
         Image.size(self, dialog, scale)
 

@@ -38,7 +38,7 @@ from .text_input import Input, MultilineInput
 from .theme import Theme
 from .widgets import Widget, Spacer, Label, Control, Image
 from .color_selector import ColorSelector, ColorWheel
-from .base import GetObjectfromId, GetObjectfromName, ReferenceName, DisplayGroup, GetActiveDialogs
+from .base import GetObjectfromId, GetObjectfromName, ReferenceName, DisplayGroup, GetActiveDialogs, gc
 from .base import InvalidWidgetNameError
 from .manager import GuiManager, PageManager
 from .selectable_image import Selectable
@@ -57,9 +57,9 @@ def SetWindow(window, manager=None, isBuffered=True):
     KyttenRenderGUI = base.KyttenManager.Render
 
     # Initialize Elements
-    from .base import __int__
+    from .base import internals
     from .theme import KyttenTexture
-    __int__.BlankTexture = KyttenTexture( [ 255 ]*16, 'ubyte', (2,2))
+    internals.BlankTexture = KyttenTexture( [ 255 ]*16, 'ubyte', (2,2))
 
     from .dialog import DragNDrop
     DragNDrop( Frame(),

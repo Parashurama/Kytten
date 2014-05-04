@@ -12,66 +12,62 @@ FLAGS={'force_delete':False}
 class InvalidWidgetNameError(Exception):
     pass
 
-class __int__:
+class internals:
     id=-1
-
-    __guiobjects_by_Name__=weakref.WeakValueDictionary() #dict()
-    __guiobjects_by_Id__= weakref.WeakValueDictionary() #dict()
-    #__guiobjects_to_set__=[]
-    __ListOfExtantDialog__=weakref.WeakSet()
-    __clipboard_content__ = None
+    objects_by_name = weakref.WeakValueDictionary() #dict()
+    objects_by_id   = weakref.WeakValueDictionary() #dict()
+    extant_dialog_list = weakref.WeakSet()
+    display_groups_refs= {}
 
 class CVars:
     pass
 
+class gc:
+    objects_by_id = internals.objects_by_id
+    objects_by_name = internals.objects_by_name
+
 def GenId(obj):
-    __int__.id+=1
-
-    __int__.__guiobjects_by_Id__[__int__.id]=obj#weakref.ref(obj)
-    #__int__.__guiobjects_to_set__.append(obj)
-
-    return __int__.id
+    internals.id+=1
+    internals.objects_by_id[internals.id]=obj
+    return internals.id
 
 def ReferenceName(obj,Name):
-    if not Name in __int__.__guiobjects_by_Name__:
-        __int__.__guiobjects_by_Name__[Name]=obj
+    if not Name in internals.objects_by_name:
+        internals.objects_by_name[Name]=obj
     else: raise InvalidWidgetNameError("ReferenceName: Object name '{}' already in use!".format(Name))
 
 def DereferenceName(Name):
-    if Name in __int__.__guiobjects_by_Name__:
-        del __int__.__guiobjects_by_Name__[Name]
+    if Name in internals.objects_by_name:
+        del internals.objects_by_name[Name]
 
     else: raise InvalidWidgetNameError("DereferenceName: Object name '%s' not found!" %(Name))
 
 def GetObjectfromId(id):
-    try: return __int__.__guiobjects_by_Id__[id]
+    try: return internals.objects_by_id[id]
     except KeyError: raise InvalidWidgetNameError("GetObjectfromId: No Object for id '{0}'".format(id))
 
 def GetObjectfromName(Name):
-    try: return __int__.__guiobjects_by_Name__[Name]
+    try: return internals.objects_by_name[Name]
     except KeyError: raise InvalidWidgetNameError("GetObjectfromName: No Object named '{0}'".format(Name))
 
 def ReferenceDialog(dialog):
-    __int__.__ListOfExtantDialog__.add(dialog)
+    internals.extant_dialog_list.add(dialog)
 
 def DereferenceDialog(dialog):
-    __int__.__ListOfExtantDialog__.remove(dialog)
+    internals.extant_dialog_list.remove(dialog)
     #select first dialog in iteration and force_refresh
-    next(iter(__int__.__ListOfExtantDialog__)).to_refresh = True
+    next(iter(internals.extant_dialog_list)).to_refresh = True
 
 def GetActiveDialogs():
-    return __int__.__ListOfExtantDialog__
+    return internals.extant_dialog_list
 
 def ActionOnAllDialogs(exceptions, function, *args):
-    if not isinstance(exceptions, tuple) or not isinstance(exceptions, list):
+    if not isinstance(exceptions, (tuple, list)):
         exceptions=(exceptions,)
 
-    for dialog in list(__int__.__ListOfExtantDialog__):
+    for dialog in list(internals.extant_dialog_list):
         if not dialog in exceptions:
             getattr(dialog,function)(*args)
-
-
-DisplayGroupReference= dict()
 
 class Log:
     logging_bool=False
@@ -85,7 +81,7 @@ class DisplayGroup:
 
         if self.name is not None:
             ReferenceName(self,self.name)
-            DisplayGroupReference[name]=self
+            internals.display_groups_refs[name]=self
 
         if members: self.members=weakref.WeakSet(members)
         else: self.members=weakref.WeakSet()
@@ -111,14 +107,16 @@ class DisplayGroup:
         for member in self.members:
             member.Hide()
 
+    Show = ShowGroup
+    Hide = HideGroup
+
 def ShowGroups(*groups):
     for group in groups:
-        #if not isinstance(group, DisplayGroup) : raise TypeError("DsiplayGroup %s Invalide"  % (groy
-        DisplayGroupReference[group].Show()
+        internals.display_groups_refs[group].Show()
 
 def HideGroups(*groups):
     for group in groups:
-        DisplayGroupReference[group].Hide()
+        internals.display_groups_refs[group].Hide()
 
 class Virtual(object):
     def __init__(self, **kwargs):

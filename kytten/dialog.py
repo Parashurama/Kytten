@@ -25,7 +25,7 @@ from .layout import ANCHOR_TOP_LEFT, ANCHOR_TOP, ANCHOR_TOP_RIGHT, \
 
 from .layout import VerticalLayout, HorizontalLayout, GridLayout, FreeLayout
 from .text_input import Input
-from .base import DereferenceName, ReferenceDialog, DereferenceDialog, GetActiveDialogs, ActionOnAllDialogs, __int__, GetObjectfromName, Virtual, InvalidWidgetNameError
+from .base import DereferenceName, ReferenceDialog, DereferenceDialog, GetActiveDialogs, ActionOnAllDialogs, internals, GetObjectfromName, Virtual, InvalidWidgetNameError
 from .tools import patch_instance_method
 
 event_dispatcher_events_override = set(['on_mouse_press','on_mouse_release','on_mouse_motion','on_mouse_drag','on_mouse_scroll',
@@ -68,7 +68,7 @@ def get_default_anchor_flag(anchor):
 def check_for_always_on_top_dialog(event_type, *args):
     x=args[0]; y=args[1]
 
-    for member in __int__.kytten_floating_dialogs:
+    for member in internals.kytten_floating_dialogs:
         if member.visible is True and member.hit_test(x, y) and member.dispatch_event(event_type, *args):
             return pyglet.event.EVENT_HANDLED
 
@@ -228,17 +228,17 @@ class DialogEventManager(Control):
         self.to_refresh=True
         return pyglet.event.EVENT_HANDLED
 
-__int__.kytten_base_dialog_id = 0
-__int__.kytten_floating_dialog_id= 1<<32
-__int__.kytten_floating_dialogs=[]
+internals.kytten_base_dialog_id = 0
+internals.kytten_floating_dialog_id= 1<<32
+internals.kytten_floating_dialogs=[]
 
 def GetNextDialogOrderId(dialog):
     if dialog.always_on_top:
-        __int__.kytten_floating_dialog_id+=1
-        return __int__.kytten_floating_dialog_id
+        internals.kytten_floating_dialog_id+=1
+        return internals.kytten_floating_dialog_id
     else:
-        __int__.kytten_base_dialog_id+=1
-        return __int__.kytten_base_dialog_id
+        internals.kytten_base_dialog_id+=1
+        return internals.kytten_base_dialog_id
 
 class DialogGroup(pyglet.graphics.OrderedGroup):
     '''
@@ -257,7 +257,7 @@ class DialogGroup(pyglet.graphics.OrderedGroup):
         self.dialog = weakref.proxy(dialog)
 
         if always_on_top and dialog:
-            __int__.kytten_floating_dialogs.insert(0, dialog)
+            internals.kytten_floating_dialogs.insert(0, dialog)
 
     def __lt__(self, other):
         '''
@@ -283,9 +283,9 @@ class DialogGroup(pyglet.graphics.OrderedGroup):
         '''
 
         if self.dialog.always_on_top:
-            return self.real_order == __int__.kytten_floating_dialog_id
+            return self.real_order == internals.kytten_floating_dialog_id
         else:
-            return self.real_order == __int__.kytten_base_dialog_id
+            return self.real_order == internals.kytten_base_dialog_id
 
     def pop_to_top(self):
         '''
@@ -294,8 +294,8 @@ class DialogGroup(pyglet.graphics.OrderedGroup):
         if not self.dialog.always_on_top:
              self.real_order = GetNextDialogOrderId(self.dialog)
         else:
-            __int__.kytten_floating_dialogs.remove(self.dialog._self())
-            __int__.kytten_floating_dialogs.insert(0, self.dialog._self())
+            internals.kytten_floating_dialogs.remove(self.dialog._self())
+            internals.kytten_floating_dialogs.insert(0, self.dialog._self())
             self.real_order = GetNextDialogOrderId(self.dialog)
 
 
@@ -1012,7 +1012,7 @@ class Dialog(Wrapper, DialogEventManager, DialogAssert):
         self.batch._draw_list_dirty = True  # forces resorting groups
 
         if self.always_on_top is True:
-            __int__.kytten_floating_dialogs.remove(self)
+            internals.kytten_floating_dialogs.remove(self)
 
         if self.screen is not None:
             self.screen.teardown()
