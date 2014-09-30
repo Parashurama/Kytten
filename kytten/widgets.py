@@ -23,7 +23,7 @@ import pyglet
 import weakref
 from pyglet import gl, font as pyglet_font
 from .override import KyttenLabel, KyttenEventDispatcher
-from .base import GenId, ReferenceName, DereferenceName, GetObjectfromName, DisplayGroup, Log, string_to_unicode, iteritems
+from .base import GenId, ReferenceName, DereferenceName, GetObjectfromName, DisplayGroup, Log, string_to_unicode, iteritems, FLAGS
 from .theme import DefaultTextureGraphicElement
 
 class Widget(object):
@@ -84,8 +84,16 @@ class Widget(object):
         Deletes any graphic elements we have constructed.  Note that
         we may be asked to recreate them later.
         '''
-
         pass
+
+    def force_delete(self):
+        '''
+        Deletes any graphic elements we have constructed.  Note that
+        we may be asked to recreate them later.
+        '''
+        FLAGS['force_delete'] = True
+        self.delete()
+        FLAGS['force_delete'] = False
 
     def _force_refresh(self):
         '''

@@ -165,10 +165,10 @@ class SpinControl(HorizontalLayout, Control):
 
         self.on_spin_func = self._wrap_method(on_spin)
 
-    def set_value(self, value):
+    def set_value(self, value, no_callback=False):
         self.value=value
 
-        self._update()
+        self._update(no_callback)
 
     def _increment(self, btn):
         if not self.isMax:
@@ -182,7 +182,7 @@ class SpinControl(HorizontalLayout, Control):
 
             self._update()
 
-    def _update(self):
+    def _update(self, no_callback=False):
 
         if self.control_group:
             self.control_group.check_total(self)
@@ -192,7 +192,7 @@ class SpinControl(HorizontalLayout, Control):
 
         self.label.set_text(str(self.value).rjust(2) )
 
-        if self.on_spin_func is not None:
+        if no_callback is False and self.on_spin_func is not None:
             self.on_spin_func(self.value)
 
     def _check_bound_value(self, control_group):

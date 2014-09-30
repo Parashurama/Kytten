@@ -191,7 +191,7 @@ class FileSaveDialog(FileLoadDialog):
         self.on_enter = on_enter
 
         self.real_on_select = self.on_select
-        def on_select(filename):
+        def on_select(filename, index):
             self.text_input.set_text(filename)
         self.on_select = on_select
 

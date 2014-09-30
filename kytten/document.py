@@ -21,6 +21,12 @@ class Document(Control):
     Allows you to embed a document within the GUI, which includes a
     vertical scrollbar as needed.
     '''
+    document=None
+    content=None
+    scrollbar=None
+    needs_layout=False
+    set_document_style=False
+    scrollbar_to_ensure_visible=None
     def __init__(self, document, formatted=False, width=1000, height=5000, name=None,
                  is_fixed_size=False, always_show_scrollbar=False, text_color=None, font=None, font_size=None, group=None):
         '''
@@ -29,25 +35,19 @@ class Document(Control):
         Control.__init__(self, width=width, height=height, name=name, group=group)
         self.max_height = height
         self.content_width = width
-        self.document =None
 
-        if hasattr(document, 'startswith'): # document is a string
-            self.set_document(self.create_document(document, formatted))
-        else:
-            self.set_document(document)
+        try:
+            self.set_document(document) #document is a pyglet.text.document.AbstractDocument instance
+        except TypeError:
+            self.set_document(self.create_document(document, formatted)) # document is string type
 
-        self.content = None
-        self.content_width = width
+        self.font = font
         self.text_color = text_color
         self.font_size = font_size
-        self.font = font
-        self.scrollbar = None
-        self.scrollbar_to_ensure_visible=None
-        self.set_document_style = False
+        self.link_reference={}
+        self.content_width = width
         self.is_fixed_size = is_fixed_size
         self.always_show_scrollbar = always_show_scrollbar
-        self.needs_layout = False
-        self.link_reference={}
 
     def create_document(self, text, formatted):
         text = string_to_unicode(text)
@@ -338,10 +338,11 @@ class RichText(Widget):
         self.clamp_height = clamp_height
         self.text_style = text_style
 
-        if hasattr(document, 'startswith'): # document is a string
-            self.set_document(self.create_document(document, formatted))
-        else:
-            self.set_document(document)
+        try:
+            self.set_document(document) #document is a pyglet.text.document.AbstractDocument instance
+        except TypeError:
+            self.set_document(self.create_document(document, formatted)) # document is string type
+
 
     def create_document(self, text, formatted):
         text = string_to_unicode(text)

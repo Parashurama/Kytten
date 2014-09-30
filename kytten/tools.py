@@ -62,9 +62,8 @@ else:
 
     def iteritems(obj):
         return obj.iteritems()
-
     def string_to_unicode(string):
-        return string if isinstance(string, unicode) else unicode(string,'utf-8')
+        return string if isinstance(string, unicode) else string.decode('utf-8')
     def string_to_bytes(string):
-        return bytes(string)
+        return string.encode('utf-8') if isinstance(string, unicode) else bytes(string)
     string_object = string_to_bytes
