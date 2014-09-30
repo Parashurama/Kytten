@@ -5,6 +5,7 @@
 # Copyrighted (C) 2009 by Conrad "Lynx" Wong
 # Copyrighted (C) 2013 by "Parashurama"
 from __future__ import unicode_literals, print_function
+import re
 
 import pyglet
 import pyglet.window.key as key
@@ -306,7 +307,7 @@ class Input(Control):
 class MultilineInput(Input):
 
     def __init__(self, text="", width=200, height = 100, padding=0,
-                 on_input=None, auto_complete=None, name=None, disabled=False, group=None):
+                 on_input=None, on_tabulation=None, auto_complete=None, name=None, disabled=False, group=None):
 
         Control.__init__(self, name=name, disabled=disabled, group=group)
         self.text = string_to_unicode(text)
@@ -318,6 +319,7 @@ class MultilineInput(Input):
         self.document = pyglet.text.document.UnformattedDocument(self.text)
 
         self._auto_complete_func = self._wrap_method(auto_complete)
+        self._tabulation_func   = self._wrap_method(on_tabulation)
 
     def set_text(self, text):
         self.document.text = string_to_unicode(text)
@@ -334,28 +336,47 @@ class MultilineInput(Input):
                 self.get_auto_complete()
             return pyglet.event.EVENT_HANDLED
 
-    def get_auto_complete(self):
+    def on_text_motion(self, motion):
+        if not self.is_disabled() and self.caret:
+            self.caret.on_text_motion(motion)
+            if self._auto_complete_func is not None:
+                if motion == key.MOTION_BACKSPACE:
+                    self.get_auto_complete()
+                else:
+                    self.get_auto_complete(False)
+
+            return pyglet.event.EVENT_HANDLED
+        return pyglet.event.EVENT_HANDLED
+
+    _last_word_re = re.compile(r'(\w+)$')
+
+    def get_auto_complete(self, autocomplete=True):
         #caret.py line 462
+        if self.caret is not None:
+            pos = self.caret._position
+            text = self.caret._layout.document.text
+            match = self._last_word_re.search(text, 0, pos)
 
-        pos = self.caret._position
-        text = self.caret._layout.document.text
-        match = self.caret._previous_word_re.search(text, 0, pos)
-        if not match: return
+            if not match or not autocomplete:
+                return self._auto_complete_func(None, (0,0))
 
-        word = text[ match.start(): match.end()]
+            word = text[ match.start(): match.end()]
+            line = self.caret._layout.get_line_from_position(match.start())
+            position = x, y = self.caret._layout.get_point_from_position(match.start(), line)
 
-        line = self.caret._layout.get_line_from_position(match.start())
-        position = x, y = self.caret._layout.get_point_from_position(match.start(), line)
+            self._auto_complete_func(word, position)
 
-        new_word = self._auto_complete_func(word, position)
+    def on_auto_complete(self, word):
+        if self.caret is not None:
+            pos = self.caret._position
+            text = self.caret._layout.document.text
+            match = self._last_word_re.search(text, 0, pos)
+            old_word = match.group(1)
+            self.caret.on_text(word[len(old_word):])
 
-        if new_word is not None:
-            new_word = new_word[len(word):]
-            if new_word:
-                self.caret.on_text(new_word)
-
-    def on_auto_complete(self, text):
-        pass
+    def on_key_press(self, symbol, modifiers):
+        if symbol == key.TAB and self._tabulation_func is not None:
+            return self._tabulation_func()
 
     def on_gain_focus(self):
         Input.on_gain_focus(self)
@@ -386,7 +407,7 @@ class MultilineInput(Input):
     def on_mouse_scroll(self, x, y, scroll_x, scroll_y):
         if self.caret is not None and self.hit_test(x, y):
             self.caret.on_mouse_scroll(x, y, scroll_x, scroll_y)
-            return True
+            return pyglet.event.EVENT_HANDLED
 
     def delete(self):
         Control.delete(self)
@@ -469,3 +490,6 @@ class MultilineInput(Input):
             self.set_highlight()
 
         self.width, self.height = self.field.get_needed_size(self.content_width, self.content_height)
+
+
+MultilineInput.register_event_type('on_auto_complete')

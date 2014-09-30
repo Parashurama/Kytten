@@ -695,12 +695,11 @@ class Dialog(Wrapper, DialogEventManager, DialogAssert):
         @param modifiers Modifiers for key press
         '''
         if not self.visible: return
-
-        if symbol == pyglet.window.key.TAB: #[pyglet.window.key.TAB, pyglet.window.key.ENTER]:
+                                                    # MultilineInput
+        if symbol == pyglet.window.key.TAB and not hasattr(self.focus, 'on_auto_complete'): #[pyglet.window.key.TAB, pyglet.window.key.ENTER]:
             focusable = [x for x in self.controls if x.is_focusable() and not x.is_disabled()]
             if not focusable:
                 return
-
             dir = -1 if modifiers & pyglet.window.key.MOD_SHIFT else 1
 
             if self.focus is not None and self.focus in focusable:

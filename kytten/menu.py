@@ -7,6 +7,7 @@
 from __future__ import unicode_literals, print_function
 
 import pyglet
+import pyglet.window.key as key
 
 from .base import string_to_unicode
 from .widgets import Widget, Control
@@ -16,7 +17,7 @@ from .layout import GetRelativePoint, VerticalLayout
 from .layout import ANCHOR_CENTER, ANCHOR_TOP_LEFT, ANCHOR_BOTTOM_LEFT
 from .layout import HALIGN_CENTER
 from .layout import VALIGN_TOP, VALIGN_CENTER, VALIGN_BOTTOM
-from .override import KyttenLabel
+from .override import KyttenLabel, KyttenEventDispatcher
 from .scrollable import Scrollable
 import inspect
 
@@ -305,7 +306,7 @@ class Menu(VerticalLayout):
         VerticalLayout.teardown(self)
 
 
-class MenuList(Menu):
+class MenuList(Menu, KyttenEventDispatcher):
 
     def remove_choice(self, text=None, index=None):
         self.unselect_choice()
@@ -335,6 +336,20 @@ class MenuList(Menu):
         if self.saved_dialog is not None:
             self.saved_dialog.set_needs_layout()
 
+    def on_key_press(self, symbol, modifiers):
+        index = self.selected_index
+        last_index = len(self.menu_options)-1
+        if   symbol == key.UP:   new_index = index-1 if index is not None else last_index
+        elif symbol == key.DOWN: new_index = index+1 if index is not None else 0
+        elif symbol == key.ENTER: self.select(index=index) ; return pyglet.event.EVENT_HANDLED
+        else: return pyglet.event.EVENT_UNHANDLED
+
+        new_index = last_index if (new_index < 0) else (0 if new_index > last_index else new_index)
+        self.select(index=new_index, no_trigger=True)
+        if self.scrollable_parent is not None :#self.saved_dialog is not None:
+            self.scrollable_parent.ensure_visible(self.menu_options[self.selected_index])
+
+        return pyglet.event.EVENT_HANDLED
     '''
     def remove_choice(self, text=None, index=None):
 
@@ -349,6 +364,9 @@ class MenuList(Menu):
         if self.saved_dialog is not None:
             self.saved_dialog.set_needs_layout()
     '''
+
+MenuList.register_event_type('on_key_press')
+
 
 class Dropdown(Control):
     def __init__(self, options=[], selected=None, fixed_width=0,
