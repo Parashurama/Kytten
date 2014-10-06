@@ -301,6 +301,10 @@ class Menu(VerticalLayout):
         if self.saved_dialog is not None:
             self.saved_dialog.set_needs_layout()
 
+    def Hide(self):
+        VerticalLayout.Hide(self)
+        self.unselect_choice()
+
     def teardown(self):
         self.on_select = None
         VerticalLayout.teardown(self)
@@ -341,7 +345,7 @@ class MenuList(Menu, KyttenEventDispatcher):
         last_index = len(self.menu_options)-1
         if   symbol == key.UP:   new_index = index-1 if index is not None else last_index
         elif symbol == key.DOWN: new_index = index+1 if index is not None else 0
-        elif symbol == key.ENTER: self.select(index=index) ; return pyglet.event.EVENT_HANDLED
+        elif symbol == key.ENTER and index is not None: self.select(index=index) ; return pyglet.event.EVENT_HANDLED
         else: return pyglet.event.EVENT_UNHANDLED
 
         new_index = last_index if (new_index < 0) else (0 if new_index > last_index else new_index)
@@ -369,22 +373,23 @@ MenuList.register_event_type('on_key_press')
 
 
 class Dropdown(Control):
+    field = None
+    label = None
+    pulldown_menu = None
     def __init__(self, options=[], selected=None, fixed_width=0,
                  max_height=400, align=VALIGN_TOP, on_select=None,
                  disabled=False, name=None):
         assert options
+        assert (selected in options) if selected else True
         Control.__init__(self, disabled=disabled, name=name)
         self.options = options
-        self.selected = selected or options[0]
-        assert self.selected in self.options
+        self.selected = selected if selected is not None else  options[0]
+        self.selected_index = options.index(selected) if selected is not None else 0
+
+        self.on_select =  self._wrap_method(on_select)
         self.fixed_width = fixed_width
         self.max_height = max_height
         self.align = align
-        self.on_select =  self._wrap_method(on_select)
-
-        self.field = None
-        self.label = None
-        self.pulldown_menu = None
 
     def _delete_pulldown_menu(self):
         if self.pulldown_menu is not None:
@@ -406,13 +411,14 @@ class Dropdown(Control):
     def get_value(self):
         return self.selected
 
+    def get_index(self):
+        return self.selected_index
+
     def is_input(self):
         return True
 
     def set_choice(self, choice=None):
-
         if choice is None: choice = self.options[0]
-
         assert choice in self.options, ("'{}' not in Menu choices".format(choice),self.options)
 
         self.selected = choice
@@ -422,6 +428,10 @@ class Dropdown(Control):
 
         if self.saved_dialog is not None:
             self.saved_dialog.set_needs_layout()
+
+    def set_index(self, index):
+        index = max(min(index, len(self.options)), 0)
+        self.set_choice(self.options[index])
 
     def on_lose_focus(self):
         Control.on_lose_focus(self)
@@ -444,6 +454,8 @@ class Dropdown(Control):
 
         def on_select(dialog, choice, index):
             self.selected = choice
+            self.selected_index = index
+
             if self.label is not None:
                 self.label.delete()
                 self.label = None

@@ -348,7 +348,7 @@ class MultilineInput(Input):
             return pyglet.event.EVENT_HANDLED
         return pyglet.event.EVENT_HANDLED
 
-    _last_word_re = re.compile(r'(\w+)$')
+    _last_word_re = re.compile(r'(\w+)\Z')
 
     def get_auto_complete(self, autocomplete=True):
         #caret.py line 462
@@ -371,12 +371,14 @@ class MultilineInput(Input):
             pos = self.caret._position
             text = self.caret._layout.document.text
             match = self._last_word_re.search(text, 0, pos)
-            old_word = match.group(1)
-            self.caret.on_text(word[len(old_word):])
+            if match is not None:
+                old_word = match.group(1)
+                self.caret.on_text(word[len(old_word):])
 
     def on_key_press(self, symbol, modifiers):
         if symbol == key.TAB and self._tabulation_func is not None:
             return self._tabulation_func()
+        return Input.on_key_press(self, symbol, modifiers)
 
     def on_gain_focus(self):
         Input.on_gain_focus(self)
