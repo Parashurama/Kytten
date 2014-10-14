@@ -167,7 +167,7 @@ class KyttenTextLayout(pyglet.text.layout.TextLayout):
                                                     0, len_text)]
         self.content_width = 0
         self._flow_lines(lines, 0, len(lines))
-        self.heigth = -lines[-1].y if lines else 0
+        self._height = -lines[-1].y if lines else 0
 
         if self.clamp_height is not False:
             for idx, line in enumerate(lines):

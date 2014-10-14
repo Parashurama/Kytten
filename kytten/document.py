@@ -434,7 +434,7 @@ class RichText(Widget):
 
         if self.content is None:
             clamp_height = self.clamp_height if self.clamp_height is not False else None
-            self.content = KyttenTextLayout(self.document, self.content_width, clamp_height, multiline=True,
+            self.content = KyttenTextLayout(self.document, self.content_width, clamp_height, multiline=self.content_width is not None,
                                             clamp_height = self.clamp_height, batch=dialog.batch, group=dialog.fg_group, wrap_lines=True)
 
         if self.background is None and self.background_color is not None:
@@ -443,7 +443,7 @@ class RichText(Widget):
                                                         group=dialog.bg_group)
 
         self.height = self.content.height
-        self.width = self.content.width
+        self.width = self.content.width or self.content.content_width
 
     def set_content_width(self, width):
         self.content_width = width
