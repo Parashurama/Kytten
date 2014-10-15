@@ -268,7 +268,7 @@ class Scrollable(Wrapper, ScrollableAssert):
         left/=self.scale
         top/=self.scale
 
-        self.content.layout(left, top)
+        self.content.layout(int(left), int(top))
 
         self.needs_layout = False
 

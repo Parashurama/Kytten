@@ -56,7 +56,8 @@ def ReferenceDialog(dialog):
 def DereferenceDialog(dialog):
     internals.extant_dialog_list.remove(dialog)
     #select first dialog in iteration and force_refresh
-    next(iter(internals.extant_dialog_list)).to_refresh = True
+    try: next(iter(internals.extant_dialog_list)).to_refresh = True
+    except StopIteration:pass
 
 def GetActiveDialogs():
     return internals.extant_dialog_list

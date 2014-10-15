@@ -541,8 +541,11 @@ class Dropdown(Control):
                 batch=dialog.batch, group=dialog.fg_group)
         font = self.label.document.get_font()
         height = font.ascent - font.descent
-        self.width, self.height = self.field.get_needed_size(
-            self.label.content_width, height)
+
+        max_width = max( (len(opt), opt) for opt in self.options)
+        max_width = sum( g.advance for g in font.get_glyphs(max_width[1]))
+
+        self.width, self.height = self.field.get_needed_size(max_width, height)
 
         if self.fixed_width : self.width = max(self.fixed_width, self.width)
 

@@ -313,7 +313,7 @@ class HScrollbar(Control):
             path = self.IMAGE_SPACE
             self.space = dialog.theme[path]['image'].generate(
                 dialog.theme[path]['gui_color'],
-                dialog.batch, dialog.fg_group)
+                dialog.batch, dialog.bg_group)
         if self.bar is None:
             path = self.IMAGE_BAR
             self.bar = dialog.theme[path]['image'].generate(

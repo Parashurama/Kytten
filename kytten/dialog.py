@@ -396,7 +396,8 @@ class Dialog(Wrapper, DialogEventManager, DialogAssert):
             self.batch = batch
             self.own_batch = False
 
-        batch.AddDialog(self)
+        if batch is not None and hasattr(batch, 'AddDialog'):
+            batch.AddDialog(self)
 
         self.to_refresh=True
         self.always_on_top = always_on_top

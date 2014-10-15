@@ -149,10 +149,7 @@ class Input(Control):
         Control._force_refresh(self) # needs full refresh to create label and input as needed
 
         if self.on_input is not None:
-            if self.name is not None:
-                self.on_input(self.name, self.get_text())
-            else:
-                self.on_input(self.get_text())
+            self.on_input(self.get_text())
 
     def on_lose_highlight(self):
         Control.on_lose_highlight(self)
@@ -288,7 +285,7 @@ class Input(Control):
         self.width, self.height = self.field.get_needed_size(needed_width, needed_height)
 
     def teardown(self):
-        self.on_input = False
+        self.on_input = None
         Control.teardown(self)
 
         if self.text_layout is not None:

@@ -569,7 +569,7 @@ class ColorSelector(Control):
 
         def on_set_color_button(btn):
             if self.on_select is not None:
-                self.on_select(self, self.color)
+                self.on_select(self.color)
 
             if self.vlist is not None:
                 self.vlist.delete()

@@ -672,7 +672,7 @@ class GridLayout(Widget, LayoutAssert):
         Widget.size(self, dialog, scale)
         self.max_heights = [0] * len(self.content)
 
-        width = max( 0, max( len(row) for row in self.content ) )
+        width = max( 0, max( len(row) for row in self.content ) ) if self.content else 0
         self.max_widths = [self.padding] * width
 
         row_index = 0
