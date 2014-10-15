@@ -442,7 +442,7 @@ class RichText(Widget):
                                                         batch=dialog.batch,
                                                         group=dialog.bg_group)
 
-        self.height = self.content.height
+        self.height = self.content.height or self.content.content_height
         self.width = self.content.width or self.content.content_width
 
     def set_content_width(self, width):

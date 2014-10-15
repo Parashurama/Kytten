@@ -313,11 +313,7 @@ class VerticalLayout(Widget,LayoutAssert):
         width = self.minwidth
 
         for item in self.content:
-            try:
-                item.size(dialog, scale)
-            except TypeError:
-                print ("TypeError", item, item.size)
-                raise
+            item.size(dialog, scale)
 
             height += item.height + self.padding
             width = max(width, item.width)

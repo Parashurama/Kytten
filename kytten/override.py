@@ -158,22 +158,18 @@ class KyttenTextLayout(pyglet.text.layout.TextLayout):
         self.clamp_height = kwargs.pop('clamp_height', False)
         pyglet.text.layout.TextLayout.__init__(self, *args, **kwargs)
 
-    def _get_lines(self):
-        len_text = len(self._document.text)
-        glyphs = self._get_glyphs()
-        owner_runs = runlist.RunList(len_text, None)
-        self._get_owner_runs(owner_runs, glyphs, 0, len_text)
-        lines = [line for line in self._flow_glyphs(glyphs, owner_runs,
-                                                    0, len_text)]
-        self.content_width = 0
-        self._flow_lines(lines, 0, len(lines))
-        self._height = -lines[-1].y if lines else 0
+    def _get_top(self, lines):
+        if self._anchor_y == 'bottom': # fixes bug in RichText. Multiline text not centered properly.
+            return pyglet.text.layout.TextLayout._get_top(self, lines) + lines[0].ascent
+        else:
+            return pyglet.text.layout.TextLayout._get_top(self, lines)
 
+    def _get_lines(self):
+        lines =  pyglet.text.layout.TextLayout._get_lines(self)
         if self.clamp_height is not False:
             for idx, line in enumerate(lines):
                 if line.y < -self.clamp_height:
                     return lines[:idx]
-
         return lines
 
 pyglet_text_Label = pyglet.text.Label
@@ -191,11 +187,9 @@ class KyttenLabel(pyglet.text.Label):
             self._update()
         else:
             dy = y - self._y
-            l_dy = lambda y: float(y + dy)
+            l_dy = lambda y: float(y + dy) # Fixes rounding error bug in zoomed out mode in Scrollable
             for vertex_list in self._vertex_lists:
-                vertices = vertex_list.vertices[:]
-                vertices[1::2] = map(l_dy, vertices[1::2])
-                vertex_list.vertices[:] = vertices
+                vertex_list.vertices[1::2] = map(l_dy, vertex_list.vertices[1::2])
             self._y = y
     y = property(pyglet.text.Label._get_y, _set_y)
 
@@ -207,11 +201,6 @@ class KyttenLabel(pyglet.text.Label):
             dx = x - self._x
             l_dx = lambda x: float(x + dx)
             for vertex_list in self._vertex_lists:
-                """
-                vertices = vertex_list.vertices[:]
-                vertices[::2] = map(l_dx, vertices[::2])
-
-                vertex_list.vertices[:] = vertices"""
                 vertex_list.vertices[::2] = map(l_dx, vertex_list.vertices[::2])
             self._x = x
     x = property(pyglet.text.Label._get_x, _set_x)
@@ -237,7 +226,6 @@ class KyttenCaret(pyglet.text.caret.Caret):
         layout.foreground_decoration_group, layout.background_group  = layout.background_group , layout.foreground_decoration_group
 
     def select_to_point(self, x, y):
-        __doc__ = pyglet.text.caret.Caret.select_to_point.__doc__
 
         lineno = self._layout.get_line_from_point(x, y)
         line = self._layout.lines[lineno]
@@ -249,62 +237,3 @@ class KyttenCaret(pyglet.text.caret.Caret):
 
         self._update(line=lineno)
         self._next_attributes.clear()
-
-class KyttenInputLabel(KyttenLabel):
-    def _get_left(self):
-        if self._multiline:
-            width = self._width
-        else:
-            width = self.content_width
-            if self.width and width > self.width:
-                # align to right edge, clip left
-                return self._x + self.width - width
-
-        if self._anchor_x == 'left':
-            return self._x
-        elif self._anchor_x == 'center':
-            return self._x - width // 2
-        elif self._anchor_x == 'right':
-            return self._x - width
-        else:
-            assert False, 'Invalid anchor_x'
-
-    def _update(self):
-        pyglet.text.Label._update(self)
-
-        # Iterate through our vertex lists and break if we need to clip
-        remove = []
-        if self.width and not self._multiline:
-            for vlist in self._vertex_lists:
-                num_quads = len(vlist.vertices) / 8
-                remove_quads = 0
-                has_quads = False
-                for n in xrange(0, num_quads):
-                    x1, y1, x2, y2, x3, y3, x4, y4 = vlist.vertices[n*8:n*8+8]
-                    tx1, ty1, tz1, tx2, ty2, tz2, \
-                       tx3, ty3, tz3, tx4, ty4, tz4 = \
-                       vlist.tex_coords[n*12:n*12+12]
-                    if x2 >= self._x:
-                        has_quads = True
-                        m = n - remove_quads  # shift quads left
-                        if x1 < self._x:  # clip on left side
-                            percent = (float(self._x) - float(x1)) / \
-                                      (float(x2) - float(x1))
-                            x1 = x4 = max(self._x, x1)
-                            tx1 = tx4 = (tx2 - tx1) * percent + tx1
-                        vlist.vertices[m*8:m*8+8] = \
-                            [x1, y1, x2, y2, x3, y3, x4, y4]
-                        vlist.tex_coords[m*12:m*12+12] = \
-                             [tx1, ty1, tz1, tx2, ty2, tz2,
-                              tx3, ty3, tz3, tx4, ty4, tz4]
-                    else:
-                        # We'll delete quads entirely not visible
-                        remove_quads = remove_quads + 1
-                if remove_quads == num_quads:
-                    remove.append(vlist)
-                elif remove_quads > 0:
-                    vlist.resize((num_quads - remove_quads) * 4)
-        for vlist in remove:
-            vlist.delete()
-            self._vertex_lists.remove(vlist)
-

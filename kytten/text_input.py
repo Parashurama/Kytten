@@ -10,7 +10,7 @@ import re
 import pyglet
 import pyglet.window.key as key
 from .widgets import Control
-from .override import KyttenInputLabel,KyttenIncrementalTextLayout, KyttenCaret
+from .override import KyttenIncrementalTextLayout, KyttenCaret, KyttenLabel
 from .base import string_to_unicode
 from . import pyperclip
 
@@ -106,7 +106,6 @@ class Input(Control):
             self.label.begin_update()
             self.label.x = x + self.padding
             self.label.y = y + self.padding - descent
-            self.label.width = width - self.padding * 2
             self.label.end_update()
 
     def on_gain_highlight(self):
@@ -121,11 +120,11 @@ class Input(Control):
 
         if self.text_layout is not None:
             if   symbol == key.C and (modifiers & key.MOD_CTRL):
-                pyperclip.copy(self.text_layout.get_selection_text())#SetClipboardText(self.text_layout.get_selection_text())
+                pyperclip.copy(self.text_layout.get_selection_text())
                 return pyglet.event.EVENT_HANDLED
 
             elif symbol == key.V and (modifiers & key.MOD_CTRL):
-                clipboad_content = pyperclip.paste()#GetClipboardText()
+                clipboad_content = pyperclip.paste()
                 if clipboad_content is not None:
                     self.on_text(clipboad_content)
                     self._force_refresh()
@@ -160,16 +159,16 @@ class Input(Control):
         self.remove_highlight()
 
     def on_mouse_drag(self, x, y, dx, dy, buttons, modifiers):
-        if not self.is_disabled() and self.caret:
+        if not self.is_disabled() and self.caret is not None:
             return self.caret.on_mouse_drag(x, y, dx, dy, buttons, modifiers)
 
     def on_mouse_press(self, x, y, button, modifiers):
-        if not self.is_disabled() and self.caret:
+        if not self.is_disabled() and self.caret is not None:
             return self.caret.on_mouse_press(x, y, button, modifiers)
 
     def on_text(self, text):
 
-        if not self.is_disabled() and self.caret:
+        if not self.is_disabled() and self.caret is not None:
 
             if self.restricted is not None:
                 if not text in self.restricted:
@@ -189,11 +188,11 @@ class Input(Control):
             return pyglet.event.EVENT_HANDLED
 
     def on_text_motion(self, motion):
-        if not self.is_disabled() and self.caret:
+        if not self.is_disabled() and self.caret is not None:
             return self.caret.on_text_motion(motion)
 
     def on_text_motion_select(self, motion):
-        if not self.is_disabled() and self.caret:
+        if not self.is_disabled() and self.caret is not None:
             return self.caret.on_text_motion_select(motion)
 
     def remove_highlight(self):
@@ -242,7 +241,6 @@ class Input(Control):
                                          font_size=dialog.theme['font_size']))
             self.document_style_set = True
 
-
         # Calculate the needed size based on the font size
         font = self.document.get_font(0)
         height = font.ascent - font.descent
@@ -259,16 +257,13 @@ class Input(Control):
                 assert self.caret is None
             assert self.label is None
             if self.caret is None:
-                self.caret = KyttenCaret(
-                    self.text_layout,
-                    color=dialog.theme['input']['gui_color'][0:3])
+                self.caret = KyttenCaret( self.text_layout, color=dialog.theme['input']['gui_color'][0:3])
                 self.caret.visible = True
-                self.caret.mark = 0
-                self.caret.position = len(self.document.text)
+                self.caret.mark = self.caret.position = 0
 
         else: # Transform Text input in Label if not focus
             if self.label is None:
-                self.label = KyttenInputLabel(self.document.text,
+                self.label = KyttenLabel(self.document.text[:get_text_slice(font, self.document.text, needed_width-self.padding*2)],
                                               font_size=self.document.styles['font_size'],
                                               font_name=self.document.styles['font_name'],
                                               multiline=False,
@@ -276,6 +271,7 @@ class Input(Control):
                                               color=color,
                                               batch=dialog.batch,
                                               group=dialog.fg_group)
+
             assert self.text_layout is None and self.caret is None
 
         if self.field is None:
@@ -283,16 +279,13 @@ class Input(Control):
                 color = dialog.theme['input']['disabled_color']
             else:
                 color = dialog.theme['input']['gui_color']
-            self.field = dialog.theme['input']['image'].generate(
-                color=color,
-                batch=dialog.batch,
-                group=dialog.bg_group)
+
+            self.field = dialog.theme['input']['image'].generate(color=color, batch=dialog.batch, group=dialog.bg_group)
 
         if self.highlight is None and self.is_highlight():
             self.set_highlight()
 
-        self.width, self.height = self.field.get_needed_size(
-            needed_width, needed_height)
+        self.width, self.height = self.field.get_needed_size(needed_width, needed_height)
 
     def teardown(self):
         self.on_input = False
@@ -330,14 +323,14 @@ class MultilineInput(Input):
             self.saved_dialog.set_needs_layout()
 
     def on_text(self, text):
-        if not self.is_disabled() and self.caret:
+        if not self.is_disabled() and self.caret is not None:
             self.caret.on_text(text)
             if self._auto_complete_func is not None:
                 self.get_auto_complete()
             return pyglet.event.EVENT_HANDLED
 
     def on_text_motion(self, motion):
-        if not self.is_disabled() and self.caret:
+        if not self.is_disabled() and self.caret is not None:
             self.caret.on_text_motion(motion)
             if self._auto_complete_func is not None:
                 if motion == key.MOTION_BACKSPACE:
@@ -495,3 +488,12 @@ class MultilineInput(Input):
 
 
 MultilineInput.register_event_type('on_auto_complete')
+
+
+def get_text_slice(font, text, max_width):
+    width = 0
+    for i, g in enumerate(font.get_glyphs(text)):
+        if width >= max_width:
+            return i-1
+        width += g.advance # glyph advance is glyph width + trailing space
+    return None # full slice
