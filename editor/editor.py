@@ -28,7 +28,6 @@ from proxy_dialog import ProxyDialog
 from resizable import Resizable
 from image_region_placer import ImageRegionPlacer
 from state_manager import StateManager
-from color_selector import ColorSelector
 
 # Default theme
 theme_dir = os.path.join(os.getcwd(), 'theme')
@@ -89,7 +88,7 @@ class ThemeDirSelectState(BaseState):
     def on_show_state(self, window, manager):
         BaseState.on_show_state(self, window, manager)
 
-        def on_theme_dir_select(filename):
+        def on_theme_dir_select(menu, filename):
             if filename:
                 self.select_theme_dir(filename)
             else:
@@ -128,7 +127,7 @@ class ThemeFileSelectState(BaseState):
     def on_show_state(self, window, manager):
         BaseState.on_show_state(self, window, manager)
 
-        def on_theme_file_select(filename):
+        def on_theme_file_select(menu, filename, index):
             if filename:
                 self.select_theme_file(filename)
             else:
@@ -173,8 +172,8 @@ class ThemeNewFileState(BaseState):
             self.manager.pop()
 
         def on_theme_file_enter(dialog):
-            form = dialog.get_values()
-            filename = form['name']
+            filename = kytten.GetObjectfromName('input_name').get_value()
+
             if filename:
                 name = os.path.join(self.theme_dir, filename)
                 if os.path.isfile(name):
@@ -190,7 +189,7 @@ class ThemeNewFileState(BaseState):
             kytten.TitleFrame("kytten Theme Editor",
                 kytten.VerticalLayout([
                     kytten.Label("Please select a theme file name"),
-                    kytten.Input(id='name')
+                    kytten.Input(name='input_name')
                 ]),
             ),
             window=window,
@@ -223,9 +222,9 @@ class _NodeEditState(BaseState):
     def _get_buttons(self):
         if self.path:
             disabled = bool(self.theme.get(self.path))
-            def on_return():
+            def on_return(btn):
                 self.manager.pop()
-            def on_delete_click():
+            def on_delete_click(btn):
                 self.do_delete_this()
             self.delete_button = kytten.Button("Delete Component",
                                                disabled=disabled,
@@ -257,9 +256,9 @@ class _NodeEditState(BaseState):
         for k, v in items:
             if isinstance(v, dict):
                 components.append(k)
-        def edit_component(choice):
+        def edit_component(menu, choice, index):
             self.do_edit_component(choice)
-        def on_add_click():
+        def on_add_click(btn):
             self.do_add_new_component()
         return [kytten.FoldingSection("Custom Components",
             kytten.VerticalLayout([
@@ -271,16 +270,19 @@ class _NodeEditState(BaseState):
 
     def _get_custom_fields(self):
         # Handle all fields here that we don't have a basic handler for
-        fields_layout = None
-        def on_input(id, value):
+
+        def on_input(widget, value):
             global gDirty
             gDirty = True
+            value = str(value)
+            ID = widget.name[5:]
             try:
-                self.theme[self.path][id] = safe_eval.safe_eval(value)
+                self.theme[self.path][ID] = safe_eval.safe_eval(value)
             except kytten.safe_eval.Unsafe_Source_Error:
-                self.theme[self.path][id] = value
-        def on_delete(id):
-            self.do_delete_field(fields_layout, id)
+                self.theme[self.path][ID] = value
+        def on_delete(btn):                     #ID
+            self.do_delete_field(btn.name)
+
         fields = []
         items = list(self.theme[self.path].items())
         items.sort(lambda x, y: cmp(x[0], y[0]))
@@ -289,25 +291,24 @@ class _NodeEditState(BaseState):
             if not k.startswith('image') and not isinstance(v, dict):
                 if not k.endswith('color'):
                     fields.append([kytten.Label(k),
-                                   kytten.Input(id=k, text=str(v),
+                                   kytten.Input(name='input'+str(k), text=str(v),
                                                 on_input=on_input),
-                                   kytten.Button("Delete", id=k,
+                                   kytten.Button("Delete", name='btn'+str(k),
                                                  on_click=on_delete)])
                 else:
                     fields.append([kytten.Label(k),
-                                   ColorSelector(id=k, color=v,
+                                   kytten.ColorSelector(name='color'+str(k), color=v,
                                                  on_select=on_input),
-                                   kytten.Button("Delete", id=k,
+                                   kytten.Button("Delete", name='btn'+str(k),
                                                  on_click=on_delete)])
             index += 1
-        fields_layout = kytten.GridLayout(fields)
 
         # Pop up a dialog if we want to add a new field
-        def on_add_field():
-            self.do_add_new_field(fields_layout, on_input, on_delete)
+        def on_add_field(btn):
+            self.do_add_new_field(on_input, on_delete)
         return [kytten.FoldingSection("Custom Fields",
                     kytten.VerticalLayout([
-                        kytten.GridLayout(fields, anchor=kytten.ANCHOR_LEFT),
+                        kytten.GridLayout(fields, anchor=kytten.ANCHOR_LEFT, name='grid_field_layout'),
                         kytten.Button("Add Field", on_click=on_add_field),
                     ]))]
 
@@ -320,9 +321,9 @@ class _NodeEditState(BaseState):
             if isinstance(v, TextureGraphicElementTemplate):
                 assert k.startswith('image')
                 images.append(k)
-        def edit_image(choice):
+        def edit_image(menu, choice, index):
             self.do_edit_image(choice)
-        def add_image():
+        def add_image(btn):
             self.do_add_new_image()
         return [kytten.FoldingSection("Images",
             kytten.VerticalLayout([
@@ -334,18 +335,17 @@ class _NodeEditState(BaseState):
     def do_add_new_component(self):
         if self.popup is not None:
             self.popup.teardown()
-        def do_cancel_add(dialog=None):
+        def do_cancel_add(widget):
             self.popup.teardown()
             self.popup = None
-        def do_add_component(dialog=None):
+        def do_add_component(widget):
             global gDirty
             gDirty = True
 
-            form = self.popup.get_values()
+            name = kytten.GetObjectfromName('input_name').get_value()
             self.popup.teardown()
             self.popup = None
 
-            name = form['name']
             if name in self.theme[self.path]:
                 self.popup_message("%s is already a field name!" % name)
                 return
@@ -360,7 +360,7 @@ class _NodeEditState(BaseState):
                 kytten.VerticalLayout([
                     kytten.HorizontalLayout([
                         kytten.Label('Name'),
-                        kytten.Input(id='name', text='new_component')]),
+                        kytten.Input(name='input_name', text='new_component')]),
                     kytten.HorizontalLayout([
                         kytten.Button("Add", on_click=do_add_component),
                         None,
@@ -369,35 +369,36 @@ class _NodeEditState(BaseState):
             window=self.window, theme=gTheme,
             on_enter=do_add_component, on_escape=do_cancel_add)
 
-    def do_add_new_field(self, fields_layout, on_input, on_delete):
+    def do_add_new_field(self, on_input, on_delete):
         if self.popup is not None:
             self.popup.teardown()
-        def do_cancel_add(dialog=None):
+        def do_cancel_add(widget):
             self.popup.teardown()
             self.popup = None
-        def do_add_field(dialog=None):
+        def do_add_field(widget):
             global gDirty
             gDirty = True
+            fields_layout = kytten.GetObjectfromName('grid_field_layout')
+            name = kytten.GetObjectfromName('input_name').get_value()
+            value = kytten.GetObjectfromName('input_value').get_value()
 
-            form = self.popup.get_values()
             self.popup.teardown()
             self.popup = None
 
-            name = form['name']
             if name in self.theme[self.path]:
                 self.popup_message("%s is already a field name!" % name)
                 return
             try:
-                value = safe_eval.safe_eval(form['value'])
+                value = safe_eval.safe_eval(value)
             except kytten.safe_eval.Unsafe_Source_Error:
-                value = form['value']
+                value = value #
             self.theme[self.path][name] = value
             fields_layout.add_row(
                 [kytten.Label(name),
-                 kytten.Input(id=name, text=str(value), on_input=on_input),
-                 kytten.Button("Delete", id=name, on_click=on_delete)])
+                 kytten.Input(text=str(value), name='input'+name, on_input=on_input),
+                 kytten.Button("Delete", name='btn'+name, on_click=on_delete)])
 
-            if not self.delete_button.is_disabled():
+            if self.delete_button is not None and not self.delete_button.is_disabled():
                 self.delete_button.disable()
             self.dialog.set_needs_layout()
 
@@ -406,9 +407,9 @@ class _NodeEditState(BaseState):
                 kytten.VerticalLayout([
                     kytten.GridLayout([
                         [kytten.Label('Name'),
-                         kytten.Input(id='name', text='new_field')],
+                         kytten.Input(name='input_name', text='new_field')],
                         [kytten.Label('Value'),
-                         kytten.Input(id='value', text='new_value')]]),
+                         kytten.Input(name='input_value', text='new_value')]]),
                     kytten.HorizontalLayout([
                         kytten.Button("Add", on_click=do_add_field),
                         None,
@@ -420,24 +421,23 @@ class _NodeEditState(BaseState):
     def do_add_new_image(self):
         if self.popup is not None:
             self.popup.teardown()
-        def do_cancel_add(dialog=None):
+        def do_cancel_add(widget):
             self.popup.teardown()
             self.popup = None
-        def do_add_image(dialog=None):
+        def do_add_image(widget):
             global gDirty
             gDirty = True
-
-            form = self.popup.get_values()
+            name = kytten.GetObjectfromName('input_name').get_value()
+            texture = kytten.GetObjectfromName('drop_texture').get_value()
             self.popup.teardown()
             self.popup = None
 
-            name = form['name']
             if name in self.theme[self.path]:
                 self.popup_message("%s is already a field name!" % name)
                 return
             if not name.startswith('image'):
                 self.popup_message("Image names must begin with 'image'")
-            texture = self.textures[form['texture']]
+            texture = self.textures[texture]
             self.theme[self.path][name] = FrameTextureGraphicElementTemplate(
                 self.theme,
                 texture,
@@ -454,9 +454,9 @@ class _NodeEditState(BaseState):
                 kytten.VerticalLayout([
                     kytten.GridLayout([
                         [kytten.Label('Name'),
-                         kytten.Input(id='name', text='image')],
+                         kytten.Input(name='input_name', text='image')],
                         [kytten.Label('Texture'),
-                         kytten.Dropdown(id='texture',
+                         kytten.Dropdown(name='drop_texture',
                                          options=list(self.textures.keys()),
                                          selected=list(self.textures.keys())[0])]
                     ]),
@@ -468,17 +468,20 @@ class _NodeEditState(BaseState):
             window=self.window, theme=gTheme,
             on_enter=do_add_image, on_escape=do_cancel_add)
 
-    def do_delete_field(self, fields_layout, id):
+    def do_delete_field(self, name):
         global gDirty
         gDirty = True
+        ID = name[3:]
+        del self.theme[self.path][ID]
 
-        del self.theme[self.path][id]
-        index = 0
-        for row in fields_layout.content:
-            if row[1].id == id:
-                fields_layout.delete_row(index)
+        fields_layout = kytten.GetObjectfromName('grid_field_layout')
+        names = set(['input'+name[3:], 'color'+name[3:]]) # name of input & color widget
+
+        for idx, row in enumerate(fields_layout.content):
+            if row[1].name in names:
+                fields_layout.delete_row(idx)
                 break
-            index += 1
+
         if not self.theme[self.path]:
             if self.delete_button.is_disabled():
                 self.delete_button.enable()
@@ -536,11 +539,11 @@ class ThemeEditState(_NodeEditState):
                                 on_exit=self.do_exit)
 
     def _get_buttons(self):
-        def on_save():
+        def on_save(btn):
             self.do_save()
-        def on_save_as():
+        def on_save_as(btn):
             self.do_save_as()
-        def on_new():
+        def on_new(btn):
             if gDirty:
                 if self.popup is not None:
                     self.popup.teardown()
@@ -600,8 +603,7 @@ class ThemeEditState(_NodeEditState):
             self.popup.teardown()
             self.popup = None
         def do_set_filename(dialog):
-            form = dialog.get_values()
-            filename = form['name']
+            filename = kytten.GetObjectfromName('input_name').get_value()
             if filename:
                 name = os.path.join(self.theme_dir, filename)
                 if os.path.isfile(name):
@@ -618,7 +620,7 @@ class ThemeEditState(_NodeEditState):
             kytten.Frame(
                 kytten.HorizontalLayout([
                     kytten.Label("Filename"),
-                    kytten.Input(id='name')
+                    kytten.Input(name='input_name')
                 ])),
             theme=gTheme, window=self.window,
             on_enter=do_set_filename,
@@ -639,17 +641,14 @@ class ImageEditState(BaseState):
         self.state = 'Region'
 
     def _get_content(self):
-        def on_return():
+        def on_return(btn):
             self.manager.pop()
-        def on_delete():
+        def on_delete(btn):
             self.do_delete_image()
-        def on_change_texture():
+        def on_change_texture(btn):
             self.do_change_texture()
         content = [kytten.VerticalLayout([
-            kytten.Document("""Theme: %s
-Path: %s
-Image: %s
-""" % (self.theme_dir, '/'.join(self.path), self.image), width=700),
+            kytten.Document("Theme: %s\nPath: %s\nImage: %s\n" % (self.theme_dir, '/'.join(self.path), self.image), width=700),
             kytten.HorizontalLayout([
                 kytten.Button("Back", on_click=on_return),
                 kytten.Button("Change Texture", on_click=on_change_texture),
@@ -680,7 +679,7 @@ Image: %s
 
         # Create the Resizable for the example's content
         example_resizable = Resizable(100, 100)
-        def enable_example_resizable(is_checked):
+        def enable_example_resizable(checkbox, is_checked):
             if is_checked:
                 example_resizable.enable()
             else:
@@ -745,11 +744,11 @@ Image: %s
             self.dialog.set_needs_layout()
         region_placer = ImageRegionPlacer(texture, x, y, width, height,
                                           on_resize=set_region)
-        def set_placer_scale(scale):
+        def set_placer_scale(slider, scale):
             region_placer.set_scale(scale)
 
         # Create a drop-down to control what region we're setting
-        def on_region_select(choice):
+        def on_region_select(menu, choice, index):
             self.state = choice
             if choice == 'Region':
                 region_placer.set_region(
@@ -803,18 +802,18 @@ Image: %s
     def do_change_texture(self):
         if self.popup is not None:
             self.popup.teardown()
-        def do_cancel_change(dialog=None):
+        def do_cancel_change(widget):
             self.popup.teardown()
             self.popup = None
-        def do_change_texture(dialog=None):
+        def do_change_texture(widget):
             global gDirty
             gDirty = True
+            texture = kytten.GetObjectfromName('drop_texture').get_value()
+            texture = self.textures[texture]
 
-            form = self.popup.get_values()
             self.popup.teardown()
             self.popup = None
 
-            texture = self.textures[form['texture']]
             self.theme[self.path][self.image] = \
                 FrameTextureGraphicElementTemplate(
                     self.theme,
@@ -834,7 +833,7 @@ Image: %s
                 kytten.VerticalLayout([
                     kytten.HorizontalLayout([
                         kytten.Label('Texture'),
-                        kytten.Dropdown(id='texture',
+                        kytten.Dropdown(name='drop_texture',
                                         options=list(self.textures.keys()),
                                         selected=list(self.textures.keys())[0])]),
                     kytten.HorizontalLayout([

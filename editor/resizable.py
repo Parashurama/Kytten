@@ -84,14 +84,14 @@ class Resizable(Control):
         self.is_dragging = False
         self.corner = None
 
-    def size(self, dialog):
+    def size(self, dialog, scale):
         """Constructs a vertex list to draw a crossed square.
 
         @param dialog The Dialog within which we are contained
         """
         if dialog is None:
             return
-        Control.size(self, dialog)
+        Control.size(self, dialog, scale)
         if self.vertex_list is None and not self.is_disabled():
             self.color = dialog.theme['gui_color']
             num_points, vertices = self._get_vertices()

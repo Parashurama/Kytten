@@ -232,8 +232,8 @@ class ImageRegionPlacer(Control):
         if self.saved_dialog is not None:
             self.saved_dialog.set_needs_layout()
 
-    def size(self, dialog):
-        Control.size(self, dialog)
+    def size(self, dialog, scale):
+        Control.size(self, dialog, scale)
         self.width = self.texture.width * self.scale
         self.height = self.texture.height * self.scale
         if self.texture_vlist is None:

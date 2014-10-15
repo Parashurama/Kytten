@@ -37,10 +37,10 @@ class ProxyDialog(kytten.Wrapper):
         if self.saved_dialog is not None:
             self.saved_dialog.set_needs_layout()
 
-    def size(self, dialog):
+    def size(self, dialog, scale):
         if dialog is None:
             return
-        kytten.Widget.size(self, dialog)
+        kytten.Widget.size(self, dialog, scale)
         if self.root_group is None: # do we need to re-clone dialog groups?
             self.batch = dialog.batch
             self.root_group = dialog.fg_group
@@ -53,4 +53,4 @@ class ProxyDialog(kytten.Wrapper):
             self.highlight_group = pyglet.graphics.OrderedGroup(
                 3, self.root_group)
             kytten.Wrapper.delete(self)  # rebuild children
-        kytten.Wrapper.size(self, self)  # all children are to use our groups
+        kytten.Wrapper.size(self, self, scale)  # all children are to use our groups
