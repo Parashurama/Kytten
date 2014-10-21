@@ -42,6 +42,7 @@ class Widget(object):
     saved_dialog=None
     destroyed=False
     visible=True
+    anchor=None
     _parent=None
     _scale=1.0
     name=None
@@ -78,6 +79,13 @@ class Widget(object):
         are Controls.
         '''
         return []
+
+    def __or__(self, other):
+        '''
+        Set alignment anchor in Gridlayout cell (ex: ANCHOR_TOP).
+        '''
+        self.anchor = other
+        return self
 
     def delete(self):
         '''
@@ -571,6 +579,57 @@ class Image(Widget):
             self.min_height = self.graphic.height
 
         self.width, self.height = self.min_width, self.min_height
+
+class ProxyImage(object):
+    __slots__=('x','y', 'width', 'height', 'bitmap', 'visible', '_image', '_parent')
+
+    def __init__(self, image):
+        assert isinstance(image, Image), "Not Image Instance"
+        self._image = image
+        self.x=0
+        self.y=0
+        self.width=0
+        self.height=0
+        self.bitmap=None
+
+    def delete(self):
+        if self.bitmap is not None:
+            self.bitmap.delete()
+            self.bitmap = None
+
+    def _show(self):
+        self.visible=True
+
+    def _hide(self):
+        self.visible=False
+
+    def size(self, dialog, scale):
+        if dialog is None:
+            return
+        if self.bitmap is None:
+            image = self._image
+            self.bitmap = DefaultTextureGraphicElement(texture=image.texture, color=image.color, size=(image.width, image.height), position=(0,0),  batch=dialog.batch,  group=dialog.bg_group)
+        self.width = self.bitmap.width
+        self.height = self.bitmap.height
+
+    def layout(self, x, y):
+        self.bitmap.update(x, y, self.width, self.height)
+        self.x = x
+        self.y = y
+
+    def hit_test(self, x, y):
+        return (self.x <= x < self.x +  self.width) and (self.y <= y < self.y + self.height)
+
+    def is_expandable(self):
+        return False
+
+    def _get_controls(self):
+        return []
+
+    def teardown(self):
+        self.delete()
+        self._parent=None
+        self._image=None
 
 class Label(Widget):
     '''
