@@ -67,3 +67,19 @@ else:
     def string_to_bytes(string):
         return string.encode('utf-8') if isinstance(string, unicode) else bytes(string)
     string_object = string_to_bytes
+
+def minvalue(v0, v1):
+    if v0 is None:
+        return v1
+    elif v1 is None:
+        return v0
+    else:
+        return min(v0, v1)
+
+def maxvalue(v0, v1):
+    if v0 is None:
+        return v1
+    elif v1 is None:
+        return v0
+    else:
+        return max(v0, v1)

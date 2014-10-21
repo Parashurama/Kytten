@@ -123,4 +123,4 @@ class Virtual(object):
     def __init__(self, **kwargs):
         self.__dict__.update(kwargs)
 
-from .tools import yield_single_value, wrapper, string_to_unicode, iteritems, xrange
+from .tools import yield_single_value, wrapper, string_to_unicode, iteritems, xrange, minvalue, maxvalue
