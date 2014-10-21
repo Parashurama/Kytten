@@ -158,12 +158,6 @@ class KyttenTextLayout(pyglet.text.layout.TextLayout):
         self.clamp_height = kwargs.pop('clamp_height', False)
         pyglet.text.layout.TextLayout.__init__(self, *args, **kwargs)
 
-    def _get_top(self, lines):
-        if self._anchor_y == 'bottom': # fixes bug in RichText. Multiline text not centered properly.
-            return pyglet.text.layout.TextLayout._get_top(self, lines) + lines[0].ascent
-        else:
-            return pyglet.text.layout.TextLayout._get_top(self, lines)
-
     def _get_lines(self):
         lines =  pyglet.text.layout.TextLayout._get_lines(self)
         if self.clamp_height is not False:

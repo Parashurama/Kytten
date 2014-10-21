@@ -11,7 +11,7 @@ import weakref
 from .widgets import Control, DragNDropLayoutType, FreeLayoutAssert
 from .override import KyttenLabel
 from .base import  GetObjectfromName, CVars, string_to_unicode
-from .theme import DefaultTextureGraphicElement
+from .theme import DefaultTextureGraphicElement, Repeat_NinePatchTextureGraphicElement, Stretch_NinePatchTextureGraphicElement
 
 class Button(Control):
     '''
@@ -432,7 +432,7 @@ class ImageButton(Button):
 
         if self.visible is True and self.image is not None:
             if self.bitmap is None:
-                self.bitmap = DefaultTextureGraphicElement(texture=self.image, batch=dialog.batch, group=dialog.bg_group, color=self.color)
+                self.bitmap = self.get_texture_graphic_element(dialog)
 
             if self.fixed_size:
                 if self.square is True or self.image.height == self.image.width:
@@ -469,6 +469,13 @@ class ImageButton(Button):
             self.height+=self.padding * 2
         else:
             self.width, self.height = content_width, content_height
+
+    def get_texture_graphic_element(self, dialog):
+        if any(self.image.border_padding): #ninepatches
+            return Stretch_NinePatchTextureGraphicElement(texture=self.image, batch=dialog.batch, group=dialog.bg_group, color=self.color)
+            return Repeat_NinePatchTextureGraphicElement(texture=self.image, batch=dialog.batch, group=dialog.bg_group, color=self.color)
+        else:
+            return DefaultTextureGraphicElement(texture=self.image, batch=dialog.batch, group=dialog.bg_group, color=self.color)
 
     def is_expandable(self):
         return self.expandable
