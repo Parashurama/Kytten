@@ -636,7 +636,7 @@ class Label(Widget):
     A wrapper around a simple text label.
     '''
     label=None
-    def __init__(self, text="", name=None, style=None, bold=False, italic=False,
+    def __init__(self, text="", name=None, style=None, bold=None, italic=None,
                  font_name=None, font_size=None, color=None, multiline=False, width=None, autoclampwidth=False, path=[], group=None):
         Widget.__init__(self, name=name, group=group)
 
@@ -691,17 +691,24 @@ class Label(Widget):
         text = self.text
 
         if self.label is None:
+            try:font_weight = self._text_style["bold"] if self._text_style["bold"] is not None else dialog.theme[self.path + ['bold']]
+            except KeyError:  font_weight = False
+
+            try:font_style  = self._text_style["italic"]  if self._text_style["italic"] is not None else dialog.theme[self.path + ['italic']]
+            except KeyError:  font_style = False
+
             if self.autoclampwidth:
                 font = pyglet_font.load(self._text_style["font_name"] or dialog.theme[self.path + ['font']],
                                         self._text_style["font_size"] or dialog.theme[self.path + ['font_size']],
-                                        bold=bool(self._text_style["bold"]), italic=bool(self._text_style["italic"]), dpi=None)
+                                        bold=bool(font_weight),
+                                        italic=bool(font_style), dpi=None)
                 isclamp, position = self.check_text_width(self.text, font, self.autoclampwidth)
                 text = self.text[:position]+'...' if isclamp else self.text
 
             self.label = KyttenLabel(
                 text,
-                bold = self._text_style["bold"],
-                italic = self._text_style["italic"],
+                bold = bool(font_weight),
+                italic = bool(font_style),
                 color = self._text_style["color"] or dialog.theme[self.path + ['text_color']],
                 font_name = self._text_style["font_name"] or dialog.theme[self.path + ['font']],
                 font_size = self._text_style["font_size"] or dialog.theme[self.path + ['font_size']],

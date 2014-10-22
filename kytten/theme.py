@@ -737,11 +737,17 @@ class ScopedDict(dict):
             elif isinstance(v, UndefinedGraphicElementTemplate):
                 v.write(f, indent + 2)
             elif hasattr(v, 'startswith'):# string bytes or unicode
-                f.write('"%s"' % v)
+                if   v == "True":
+                    f.write("true")
+                elif v == "False":
+                    f.write("false")
+                else:
+                    f.write('"%s"' % v)
             elif isinstance(v, tuple):
                 f.write('%s' % repr(list(v)))
             else:
                 f.write(repr(v))
+
         f.write('\n')
         f.write(' ' * indent + '}')
 

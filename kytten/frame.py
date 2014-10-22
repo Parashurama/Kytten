@@ -516,10 +516,9 @@ class TitleFrame(VerticalLayout):
     def __init__(self, title, content):
         VerticalLayout.__init__(self, content=[
                 HorizontalLayout([
-                    Graphic(path=["titlebar", "left"], is_expandable=True),
-                    Frame(Label(title, path=["titlebar"]),
-                          path=["titlebar", "center"]),
-                    Graphic(path=["titlebar", "right"], is_expandable=True),
+                    Graphic(path=["titlebar", "left"]),
+                    Frame(Label(title, path=["titlebar"]), path=["titlebar", "center"], is_expandable=True),
+                    Graphic(path=["titlebar", "right"]),
                 ], align=VALIGN_BOTTOM, padding=0),
                 Frame(content, path=["titlebar", "frame"], is_expandable=True),
             ], padding=0)
