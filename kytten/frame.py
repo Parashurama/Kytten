@@ -76,8 +76,8 @@ class Wrapper(Widget):
             self.width = width
             self.height = height
 
-    def is_expandable(self):
-        return self.expandable
+    def is_expandable(self, dim=None):
+        return bool(self.expandable)
 
     def layout(self, x, y):
         '''
@@ -490,9 +490,9 @@ class TitleFrame(VerticalLayout):
     def __init__(self, title, content):
         VerticalLayout.__init__(self, content=[
                 HorizontalLayout([
-                    Graphic(path=["titlebar", "left"]),
+                    Graphic(path=["titlebar", "left"], is_expandable=(False, True)),
                     Frame(Label(title, path=["titlebar"]), path=["titlebar", "center"], is_expandable=True),
-                    Graphic(path=["titlebar", "right"]),
+                    Graphic(path=["titlebar", "right"], is_expandable=(False, True)),
                 ], align=VALIGN_BOTTOM, padding=0),
                 Frame(content, path=["titlebar", "frame"], is_expandable=True),
             ], padding=0)

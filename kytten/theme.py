@@ -195,7 +195,7 @@ class FrameRepeatTextureGraphicElementTemplate(TextureGraphicElementTemplate):
         self.padding = padding
 
     def generate(self, color, batch, group):
-        return Repeat_NinePatchTextureGraphicElement(self.texture, color, (0,0), (0,0), batch, group)
+        return Repeat_NinePatchTextureGraphicElement(self.texture, color, self.texture.size, (0,0), batch, group)
 
     def write(self, f, indent=0):
         f.write('{\n')

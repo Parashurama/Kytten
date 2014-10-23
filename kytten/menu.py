@@ -56,7 +56,7 @@ class MenuOption(Control):
         self.width = width
         self.height = height
 
-    def is_expandable(self):
+    def is_expandable(self, dim=None):
         return True
 
     def layout(self, x, y):

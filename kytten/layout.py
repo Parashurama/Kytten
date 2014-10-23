@@ -217,7 +217,7 @@ class VerticalLayout(Widget,LayoutAssert):
         self.height = height
         self.width = width
 
-    def is_expandable(self):
+    def is_expandable(self, dim=None):
         '''True if we contain expandable content.'''
         return len(self.expandable) > 0
 
@@ -318,8 +318,8 @@ class VerticalLayout(Widget,LayoutAssert):
 
             height += item.height + self.padding
             width = max(width, item.width)
-        self.width, self.height = width, height
-        self.expandable = [x for x in self.content if x.is_expandable()]
+        self.width, self.height = width, height                     #HEIGHT
+        self.expandable = [x for x in self.content if x.is_expandable(1)]
 
     def clear(self):
         for item in self.content_cache[:]:
@@ -416,8 +416,8 @@ class HorizontalLayout(VerticalLayout):
             item.size(dialog, scale)
             height = max(height, item.height)
             width += item.width + self.padding
-        self.width, self.height = width, height
-        self.expandable = [x for x in self.content if x.is_expandable()]
+        self.width, self.height = width, height                     #width
+        self.expandable = [x for x in self.content if x.is_expandable(0)]
 
 class GridLayout(Widget, LayoutAssert):
     '''

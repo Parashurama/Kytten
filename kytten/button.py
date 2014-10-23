@@ -477,7 +477,7 @@ class ImageButton(Button):
         else:
             return DefaultTextureGraphicElement(texture=self.image, batch=dialog.batch, group=dialog.bg_group, color=self.color)
 
-    def is_expandable(self):
+    def is_expandable(self, dim=None):
         return self.expandable
 
     def expand(self, width, height):

@@ -76,7 +76,7 @@ class Slider(Control):
     def set_value(self, value):
         self.set_pos( max(   min( float(value - self.min_value) / (self.max_value - self.min_value), 1.0),  0.0) )
 
-    def is_expandable(self):
+    def is_expandable(self, dim=None):
         return True
 
     def is_input(self):

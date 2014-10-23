@@ -203,7 +203,7 @@ class Scrollable(Wrapper, ScrollableAssert):
                x < self.content_x + self.ct_view_width and \
                y < self.content_y + self.ct_view_height
 
-    def is_expandable(self):
+    def is_expandable(self, dim=None):
         return True
 
     def layout(self, x, y):

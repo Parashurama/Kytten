@@ -26,6 +26,8 @@ from .override import KyttenLabel, KyttenEventDispatcher
 from .base import GenId, ReferenceName, DereferenceName, GetObjectfromName, DisplayGroup, Log, string_to_unicode, iteritems, FLAGS
 from .theme import DefaultTextureGraphicElement
 
+BOOLEANS = set([True, False])
+
 class Widget(object):
     '''
     The base of all Kytten GUI elements.  Widgets correspond to areas on the
@@ -140,7 +142,7 @@ class Widget(object):
         return x >= self.x*self._scale and x < self.x*self._scale + self.width*self._scale and \
                y >= self.y*self._scale and y < self.y*self._scale + self.height*self._scale
 
-    def is_expandable(self):
+    def is_expandable(self, dim=None):
         '''
         Returns true if the widget can expand to fill available space.
         '''
@@ -428,7 +430,7 @@ class Spacer(Widget):
         '''
         self.width, self.height = width, height
 
-    def is_expandable(self):
+    def is_expandable(self, dim=None):
         '''Indicates the Spacer can be expanded'''
         return True
 
@@ -464,11 +466,19 @@ class Graphic(Widget):
 
     def expand(self, width, height):
         if self.expandable:
-            self.width, self.height = width, height
+            if self.expandable is True:
+                self.width, self.height = width, height
+            else:
+                W, H = self.expandable
+                self.width = width if W else self.width
+                self.height = height if H else self.height
             self.graphic.update(self.x, self.y, self.width, self.height)
 
-    def is_expandable(self):
-        return self.expandable
+    def is_expandable(self, dim=None):
+        if dim is None or self.expandable in BOOLEANS:
+            return self.expandable
+        #allow to customize for expandable in only one direction.
+        return self.expandable[dim]
 
     def layout(self, x, y):
         self.x, self.y = x, y
@@ -551,7 +561,7 @@ class Image(Widget):
             self.width, self.height = width, height
             self.graphic.update(self.x, self.y, self.width, self.height)
 
-    def is_expandable(self):
+    def is_expandable(self, dim=None):
         return self.expandable
 
     def copy(self):
@@ -621,7 +631,7 @@ class ProxyImage(object):
     def hit_test(self, x, y):
         return (self.x <= x < self.x +  self.width) and (self.y <= y < self.y + self.height)
 
-    def is_expandable(self):
+    def is_expandable(self, dim=None):
         return False
 
     def _get_controls(self):
