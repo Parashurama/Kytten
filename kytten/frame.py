@@ -277,6 +277,7 @@ class Frame(Wrapper):
                 group = dialog.bg_group
             else:
                 group = dialog.panel_group
+
             template = dialog.theme[self.path][self.image_name]
 
             if not self.color:
@@ -333,8 +334,7 @@ class GuiFrame(Frame):
 
     def expand(self, width, height):
         if self.content.is_expandable():
-            content_width, content_height = \
-                         self.frame.get_content_size(width, height)
+            content_width, content_height = self.frame.get_content_size(width, height)
             self.content.expand(content_width, content_height)
         self.width, self.height = width, height
 
@@ -386,32 +386,6 @@ class GuiFrame(Frame):
 
         self.width, self.height = self.frame.get_needed_size( self.content.width, self.content.height)
 
-    def layout(self, x, y):
-        '''
-        Positions the Frame.
-
-        @param x X coordinate of lower left corner
-        @param y Y coordinate of lower left corner
-        '''
-        if not self.visible or not self.content: return
-
-        self.x, self.y = x, y
-        self.frame.update(x, y, self.width, self.height)
-
-
-        # In some cases the frame graphic element may allocate more space for
-        # the content than the content actually fills, due to repeating
-        # texture constraints.  Always center the content.
-
-        x, y, width, height = self.frame.get_content_region()
-
-        interior = Widget(width, height, spacer=True)
-        interior.x, interior.y = x, y
-
-        x, y = GetRelativePoint(interior, self.anchor,
-                                self.content, self.anchor, self.content_offset)
-
-        self.content.layout(x, y)
 
 class BubbleFrame(GuiFrame, Control):
     hover=None

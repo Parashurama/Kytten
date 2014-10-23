@@ -174,6 +174,43 @@ class TextureSkewedElementTemplate(TextureGraphicElementTemplate):
             self.skewed, self.skew)
 
 
+class FrameRepeatTextureGraphicElementTemplate(TextureGraphicElementTemplate):
+    def __init__(self, theme, texture, repeat, padding,
+                 width=None, height=None):
+        TextureGraphicElementTemplate.__init__(self, theme, texture,
+                                               width=width, height=height)
+        #bottom-left, top-right opengl texture coordinates wich is different from pyglet texture 'tex_coords' (12 float tuple)
+        s0,t0,_, s1,t0,_, s1, t1, _, s0, t1, _ =  texture.tex_coords
+        self.texture.texcoords = (s0,t0,s1,t1)
+
+        x, y, width, height = repeat
+        self.texture.size = (float(self.texture.width), float(self.texture.height))
+        self.texture.header_bar=[0,0,None,None]
+        self.texture.content_padding = padding
+        self.texture.border_padding = ( x, texture.width - width - x,   # left, right
+                                        texture.height - height - y, y) # top, bottom
+
+    def generate(self, color, batch, group):
+        return Repeat_NinePatchTextureGraphicElement(self.texture, color, (0,0), (0,0), batch, group)
+
+    def write(self, f, indent=0):
+        f.write('{\n')
+        f.write(' ' * (indent + 2) + '"src": "%s"' % self.texture.src)
+        if hasattr(self.texture, 'region'):
+            f.write(',\n' + ' ' * (indent + 2) + '"region": %s' %
+                    repr(list(self.texture.region)))
+        left, right, top, bottom = self.margins
+
+        if left != 0 or right != 0 or top != 0 or bottom != 0 or \
+           self.padding != [0, 0, 0, 0]:
+            repeat = [left, bottom,
+                       self.width - right - left, self.height - top - bottom]
+            f.write(',\n' + ' ' * (indent + 2) + '"repeat": %s' %
+                    repr(list(repeat)))
+            f.write(',\n' + ' ' * (indent + 2) + '"padding": %s' %
+                    repr(list(self.padding)))
+        f.write('\n' + ' ' * indent + '}')
+
 
 class TextureIconElement:
     def __init__(self, theme, texture, icon, color, batch, group, igroup,
@@ -874,6 +911,13 @@ class Theme(ScopedDict):
                             self,
                             texture,
                             v['stretch'],
+                            v.get('padding', [0, 0, 0, 0]),
+                            width=width, height=height)
+                    elif 'repeat' in v:
+                        target[k] = FrameRepeatTextureGraphicElementTemplate(
+                            self,
+                            texture,
+                            v['repeat'],
                             v.get('padding', [0, 0, 0, 0]),
                             width=width, height=height)
                     else:

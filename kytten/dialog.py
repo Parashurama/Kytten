@@ -14,9 +14,9 @@ import pyglet.gl as gl
 import pyglet.window.mouse as mouse
 
 
-from .widgets import Widget, Spacer, Control, Label, DialogAssert, FreeLayoutAssert, DragNDropLayoutType
+from .widgets import Widget, Spacer, Control, Label, DialogAssert, LayoutAssert, FreeLayoutAssert, DragNDropLayoutType
 from .button import Button
-from .frame import Wrapper, Frame, SectionHeader, GuiFrame, TransparentFrame
+from .frame import Wrapper, Frame, SectionHeader, GuiFrame, TransparentFrame, TitleFrame, Frame
 from .layout import GetRelativePoint, ANCHOR_CENTER, HALIGN_LEFT, HALIGN_CENTER, VALIGN_TOP, VALIGN_CENTER
 
 from .layout import ANCHOR_TOP_LEFT, ANCHOR_TOP, ANCHOR_TOP_RIGHT, \
@@ -27,6 +27,7 @@ from .layout import VerticalLayout, HorizontalLayout, GridLayout, FreeLayout
 from .text_input import Input
 from .base import DereferenceName, ReferenceDialog, DereferenceDialog, GetActiveDialogs, ActionOnAllDialogs, internals, GetObjectfromName, Virtual, InvalidWidgetNameError
 from .tools import patch_instance_method
+from .theme import Theme
 
 event_dispatcher_events_override = set(['on_mouse_press','on_mouse_release','on_mouse_motion','on_mouse_drag','on_mouse_scroll',
                                     'on_key_press','on_key_release'])
@@ -34,6 +35,9 @@ event_dispatcher_events_override = set(['on_mouse_press','on_mouse_release','on_
 ANCHOR_DEFAULT_FLAG_REF = {ANCHOR_TOP_LEFT:'NW',    ANCHOR_TOP:None,    ANCHOR_TOP_RIGHT:'NE',
                            ANCHOR_LEFT:None,        ANCHOR_CENTER:None, ANCHOR_RIGHT:None,
                            ANCHOR_BOTTOM_LEFT:'SW', ANCHOR_BOTTOM:None, ANCHOR_BOTTOM_RIGHT:'SE' }
+
+DIALOG_TRANSPARENT_FRAME = 1<<1
+DIALOG_NO_CREATE_FRAME = 1<<2
 
 def SetMinMaxDialogOffsets(anchor, screen, g_width, g_height, m_width, m_height):
     width, height = screen.width, screen.height
@@ -321,7 +325,41 @@ class Dialog(Wrapper, DialogEventManager, DialogAssert):
     The Dialog is always repositioned in relationship to the window, and
     handles resize events accordingly.
     '''
-    def __init__(self, content=None,
+
+    def __init__(self, content=[], title=None, graphic=None, theme=None, fixed_size=None, offset_modifier=None, flags=0, gui_style=None, *args, **kwargs):
+
+        self.offset_modifier=offset_modifier # (ex: (-1/2.,0) offset x pos by half width towards left )
+        self.basic_offset=kwargs.get('offset', (0,0))
+        anchor = kwargs.get('anchor', ANCHOR_CENTER)
+        theme = gui_style if gui_style is not None else theme
+        try:
+            attributes = theme.attributes
+            theme = theme.get_theme()
+        except AttributeError:
+            attributes = {}
+
+        if   graphic is not None:
+            if not content:
+                if fixed_size:  width,height = fixed_size
+                else:           width,height = graphic.width, graphic.height,
+                content=GuiFrame( content= Widget(width=width, height=height),
+                                  texture=graphic, anchor=anchor, flag='default')
+            else:
+                content=GuiFrame( content= HorizontalLayout([content]),
+                                  texture=graphic, anchor=anchor, flag='repeat')
+        elif flags & DIALOG_TRANSPARENT_FRAME:
+            content=TransparentFrame(content)
+        elif not flags & DIALOG_NO_CREATE_FRAME:
+            if title is not None:
+                content=TitleFrame(title, content)
+            else:
+                content=Frame(content)
+        #else frame already created by user
+
+
+        Dialog.__init2__(self, content, theme=theme, **dict(attributes, **kwargs) )
+
+    def __init2__(self, content=None,
                        window=None,
                        batch=None,
                        group=None,
@@ -368,7 +406,9 @@ class Dialog(Wrapper, DialogEventManager, DialogAssert):
                         input within this dialog, i.e. form submit
         @param on_escape Callback for when user presses escape
         '''
-        assert isinstance(theme, dict)
+        assert isinstance(theme, dict), "Theme instance must be dict subclass"
+        assert window is not None, "Dialog 'window' argument is not set."
+
         DialogEventManager.__init__(self)
         Wrapper.__init__(self, content=content, name=name, group=display_group)
 
@@ -648,12 +688,56 @@ class Dialog(Wrapper, DialogEventManager, DialogAssert):
 
         self.needs_layout = False
 
+    def set_graphic(self, graphic, fixed_size=False):
+
+        if graphic is not None:
+
+            if isinstance(self.content, GuiFrame):
+                if isinstance(self.content.content, LayoutAssert): # has real content
+                    self.content.delete()
+                    self.content.set_texture(graphic, 'repeat')
+
+                else: # No real content , ghost widget
+                    if fixed_size:  width,height = fixed_size
+                    else:           width,height = graphic.width, graphic.height,
+
+                    self.content.delete()
+                    self.content.set_texture(graphic, 'default')
+                    self.content.set_content(Widget(width=width, height=height))
+
+            elif isinstance(self.content, TransparentFrame):
+                content = self.content.content
+                self.set_content(GuiFrame( content= HorizontalLayout([content]),
+                                           texture=graphic, anchor=self.anchor, flag='repeat') )
+            else:
+                raise NotImplementedError("'set_graphic' method of kytten.Dialog is not yet implmeented for Frame & TitleFrame")
+        else:
+            content = self.content.content
+            self.set_content(TransparentFrame(content))
+
+        self.set_needs_layout()
+
     def draw(self):
         assert self.own_batch
         self.batch.draw()
 
     def header_bar_hit_test(self, x, y):
-        return True
+        if self.content._header_bar is None:
+            return True
+        ix0,iy0,ix1,iy1=self.content._header_bar
+
+        if ix0<0: ix0=self.width+ix0
+        if iy0<0: iy0=self.height+iy0
+
+        if   ix1 is None: ix1=self.width
+        elif ix1<0:       ix1=self.width+ix1
+
+        if   iy1 is None: iy1=self.height
+        elif iy1<0:       iy1=self.height+iy1
+
+        dx = x-self.x ; dy = y-self.y
+
+        return ( ix0 <= dx < ix1) and ( iy0 <= dy < iy1)
 
     def enable_exclusive_mode(self):
         mouse_press_func = self.on_mouse_press
@@ -695,6 +779,7 @@ class Dialog(Wrapper, DialogEventManager, DialogAssert):
         @param symbol Key pressed
         @param modifiers Modifiers for key press
         '''
+
         if not self.visible: return
                                                     # MultilineInput
         if symbol == pyglet.window.key.TAB and not hasattr(self.focus, 'on_auto_complete'): #[pyglet.window.key.TAB, pyglet.window.key.ENTER]:
@@ -759,8 +844,9 @@ class Dialog(Wrapper, DialogEventManager, DialogAssert):
         if self.is_movable and self.is_dragging is True:
             if not buttons == 1: return
             if self.parent_dialog: return self.parent_dialog.on_mouse_drag(x, y, dx, dy, buttons, modifiers)
-            x, y = self.offset
-            self.offset = (int(x + dx), int(y + dy))
+
+            x, y = self.basic_offset
+            self.basic_offset = (int(x + dx), int(y + dy))
             self.set_needs_layout()
 
             return self.EventHandled()
@@ -979,12 +1065,28 @@ class Dialog(Wrapper, DialogEventManager, DialogAssert):
         self.EventHandled()
 
     def set_position(self, pos):
+        if self.anchor == ANCHOR_BOTTOM_LEFT:
+            self.set_offset(pos)
+        else:
+            raise NotImplementedError("Setting Position Only for Dialog with 'ANCHOR_BOTTOM_LEFT'")
 
-        self.set_needs_layout()
+    def get_offset(self):
+        return self.basic_offset
 
     def set_offset(self, offset):
+        self.basic_offset = (int(offset[0]), int(offset[1]))
         self.offset = (int(offset[0]), int(offset[1]))
         self.set_needs_layout()
+
+    def size(self, dialog, scale):
+        Wrapper.size(self, dialog, scale)
+
+        if self.offset_modifier is not None:
+            x, y = self.basic_offset
+            self.offset=(int(x+self.offset_modifier[0]*self.width),
+                         int(y+self.offset_modifier[1]*self.height))
+        else:
+            self.offset=self.basic_offset
 
     def Hide(self):
         Wrapper.Hide(self)
@@ -1021,126 +1123,19 @@ class Dialog(Wrapper, DialogEventManager, DialogAssert):
         self.EventHandled()
         DereferenceDialog(self)
 
-class GuiTheme:
-    def __init__(self, **kwargs):
-        self.attributes=kwargs
-
-class GuiElement(Dialog):
-
-    def __init__(self, content=[], graphic=None, gui_style=None, fixed_size=None, offset_modifier=None, *args, **kwargs):
-
-        self.offset_modifier=offset_modifier # (ex: (-1/2.,0) offset x pos by half width towards left )
-        self.basic_offset=kwargs.get('offset', (0,0))
-
-        ANCHOR = kwargs.get('anchor', ANCHOR_CENTER)
-
-        if graphic is not None:
-            if not content:
-                if fixed_size:  width,height = fixed_size
-                else:           width,height = graphic.width, graphic.height,
-                content=GuiFrame( content= Widget(width=width, height=height),
-                                  texture=graphic, anchor=ANCHOR, flag='default')
-            else:
-                content=GuiFrame( content= HorizontalLayout([content]),
-                                  texture=graphic, anchor=ANCHOR, flag='repeat')
+class GuiTheme(object):
+    def __init__(self, theme, override={}, override_theme=None, **kwargs):
+        if isinstance(theme, GuiTheme):
+            self.theme = Theme(theme.get_theme() if override_theme is None else override_theme, override=override)
+            self.attributes = dict(theme.attributes, **kwargs)
         else:
-            content=TransparentFrame(content)
+            self.theme = Theme(theme, override=override)
+            self.attributes = kwargs
 
-        if gui_style is not None:
-            ATTRIBUTES=gui_style.attributes.copy()
-            ATTRIBUTES.update(kwargs)
-        else :
-            ATTRIBUTES = kwargs
-        Dialog.__init__(self, content, **ATTRIBUTES)
+    def get_theme(self):
+        return self.theme
 
-    def header_bar_hit_test(self, x, y):
-        ix0,iy0,ix1,iy1=self.content._header_bar
-
-        if ix0<0: ix0=self.width+ix0
-        if iy0<0: iy0=self.height+iy0
-
-        if   ix1 is None: ix1=self.width
-        elif ix1<0:       ix1=self.width+ix1
-
-        if   iy1 is None: iy1=self.height
-        elif iy1<0:       iy1=self.height+iy1
-
-        dx = x-self.x ; dy = y-self.y
-
-        return ( ix0 <= dx < ix1) and ( iy0 <= dy < iy1)
-
-    def on_mouse_drag(self, x, y, dx, dy, buttons, modifiers):
-
-        if self.visible is False:
-            return pyglet.event.EVENT_UNHANDLED
-
-        if self.focus is not None:
-            self.focus.dispatch_event('on_mouse_drag', x, y, dx, dy, buttons, modifiers)
-            return self.EventHandled()
-
-        if self.is_movable and self.is_dragging is True:
-            if not buttons == 1: return
-            if self.parent_dialog: return self.parent_dialog.on_mouse_drag(x, y, dx, dy, buttons, modifiers)
-
-            x, y = self.basic_offset
-            self.basic_offset = (int(x + dx), int(y + dy))
-            self.set_needs_layout()
-
-            return self.EventHandled()
-
-    def set_graphic(self, graphic, fixed_size=False):
-
-        if graphic is not None:
-
-            if isinstance(self.content, GuiFrame):
-                if isinstance(self.content.content, HorizontalLayout): # has real content
-                    self.content.delete()
-                    self.content.set_texture(graphic, 'repeat')
-
-                else: # No real content , ghost widget
-                    if fixed_size:  width,height = fixed_size
-                    else:           width,height = graphic.width, graphic.height,
-
-                    self.content.delete()
-                    self.content.set_texture(graphic, 'default')
-                    self.content.set_content(Widget(width=width, height=height))
-
-            elif isinstance(self.content, TransparentFrame):
-                content = self.content.content
-                self.set_content(GuiFrame( content= HorizontalLayout([content]),
-                                           texture=graphic, anchor=self.anchor, flag='repeat') )
-        else:
-            content = self.content.content
-            self.set_content(TransparentFrame(content))
-
-        self.set_needs_layout()
-
-    def set_position(self, pos):
-        if self.anchor == ANCHOR_BOTTOM_LEFT:
-            self.set_offset(pos)
-        else:
-            raise NotImplementedError("Setting Position Only for Dialog with 'ANCHOR_BOTTOM_LEFT'")
-
-    def set_offset(self, offset):
-        self.basic_offset = (int(offset[0]), int(offset[1]))
-        self.offset = (int(offset[0]), int(offset[1]))
-        self.set_needs_layout()
-
-    def size(self, dialog, scale):
-        Wrapper.size(self, dialog, scale)
-
-        if self.offset_modifier:
-
-            x,y=self.basic_offset
-
-            self.offset=(int(x+self.offset_modifier[0]*self.width),
-                         int(y+self.offset_modifier[1]*self.height)
-                        )
-        else:
-            self.offset=self.basic_offset
-
-
-class ToolTip(GuiElement):
+class ToolTip(Dialog):
     def __init__(self, parent_widget, text='EMPTY', name=None, secondary=None, text_style={}, **kwargs):
 
         self.parent_widget = weakref.proxy(parent_widget)
@@ -1154,7 +1149,7 @@ class ToolTip(GuiElement):
         elif hasattr(text, 'startswith'):   content=Label(text, style=text_style)#string: bytes or unicode
         else:                               content=text
 
-        GuiElement.__init__(self,   content=content,
+        Dialog.__init__(self,   content=content,
                                     window=parent_dialog.window,
                                     theme=parent_dialog.theme,
                                     batch=parent_dialog.batch,
@@ -1174,7 +1169,7 @@ class ToolTip(GuiElement):
             secondary_doc, secondary_name = secondary
                                         #string: bytes or unicode
             if hasattr(secondary_doc, 'startswith'): content=Label(secondary_doc)
-            else:                                     content=secondary_doc
+            else:                                    content=secondary_doc
 
             if name is None:
                 raise InvalidWidgetNameError("Tooltip with child Tooltip must have a name.(was None)")
@@ -1288,7 +1283,7 @@ class ToolTip(GuiElement):
     def on_mouse_scroll(self,*args):
         pass
 
-class ToolTipProxy(GuiElement):
+class ToolTipProxy(Dialog):
 
     def on_mouse_drag(self,*args):
         pass
@@ -1343,28 +1338,24 @@ class DragNDrop(Dialog):
 class PopupMessage(Dialog):
     '''A simple fire-and-forget dialog.'''
 
-    def __init__(self, text="", window=None, batch=None, group=None, movable=False,
-                 theme=None, on_escape=None, anchor=ANCHOR_CENTER):
+    def __init__(self, text="", **kwargs):
+        on_escape = kwargs.pop("on_escape", None)
+
         def on_ok(dialog=None):
             if on_escape is not None:
                 on_escape(self)
             self.teardown()
 
-        return Dialog.__init__(self, content=Frame(
-            VerticalLayout([
-                Label(text),
-                Button("Ok", on_click=on_ok),
-            ])),
-            window=window, batch=batch, group=group,
-            theme=theme, movable=movable,
-            on_enter=on_ok, on_escape=on_ok, anchor=anchor)
+        return Dialog.__init__(self, VerticalLayout([ Label(text), Button("Ok", on_click=on_ok)]),
+                                on_enter=on_ok, on_escape=on_ok, **kwargs)
 
 class PopupConfirm(Dialog):
     '''An ok/cancel-style dialog.  Escape defaults to cancel.'''
 
-    def __init__(self, text="", ok="Ok", cancel="Cancel",
-                 window=None, batch=None, group=None, theme=None, movable=False,
-                 anchor=ANCHOR_CENTER, on_ok=None, on_cancel=None):
+    def __init__(self, text="", ok="Ok", cancel="Cancel", **kwargs):
+        on_cancel = kwargs.pop("on_cancel", None)
+        on_ok = kwargs.pop("on_ok", None)
+
         def on_ok_click(dialog=None):
             if on_ok is not None:
                 on_ok(self)
@@ -1375,18 +1366,14 @@ class PopupConfirm(Dialog):
                 on_cancel(self)
             self.teardown()
 
-        return Dialog.__init__(self, content=Frame(
-            VerticalLayout([
-                Label(text),
-                HorizontalLayout([
-                    Button(ok, on_click=on_ok_click),
-                    None,
-                    Button(cancel, on_click=on_cancel_click)
-                ], align=HALIGN_CENTER),
-            ])),
-            window=window, batch=batch, group=group,
-            theme=theme, movable=movable, anchor=anchor,
-            on_enter=on_ok_click, on_escape=on_cancel_click)
+        return Dialog.__init__(self, VerticalLayout([
+                                        Label(text),
+                                        HorizontalLayout([
+                                            Button(ok, on_click=on_ok_click),
+                                            None,
+                                            Button(cancel, on_click=on_cancel_click)
+                                        ], align=HALIGN_CENTER),
+                                    ]), on_enter=on_ok_click, on_escape=on_cancel_click, **kwargs)
 
 
 class PropertyDialog(Dialog):
@@ -1404,9 +1391,8 @@ class PropertyDialog(Dialog):
     ADD_VALUE_PRE = '_V!'
     INPUT_W = 12
     def __init__(self, title="", properties={}, ok="Ok", cancel="Cancel",
-                 window=None, batch=None, group=None, theme=None,  offset=(0,0),
-                 on_ok=None, on_cancel=None, has_remove=False, name=None,
-                 remove="x", has_add=False, add="+", on_add=None):
+                 on_ok=None, on_cancel=None, has_remove=False,
+                 remove="x", has_add=False, add="+", on_add=None, **kwargs):
 
         def on_ok_click(dialog=None):
             if on_ok is not None:
@@ -1453,7 +1439,7 @@ class PropertyDialog(Dialog):
 
         if self._has_add:
             add_content = (ANCHOR_TOP_LEFT, 0, 0, Button(add, on_click=on_add_click))
-            Dialog.__init__(self, content=Frame(#Scrollable(
+            Dialog.__init__(self, content=\
                 VerticalLayout([
                     SectionHeader(title, align=HALIGN_LEFT),
                     grid,
@@ -1462,12 +1448,10 @@ class PropertyDialog(Dialog):
                     HorizontalLayout([
                         Button(ok, on_click=on_ok_click),
                         Button(cancel, on_click=on_cancel_click)])
-                ])),#height=window.height)),
-                window=window, batch=batch, group=group,
-                theme=theme, movable=True, offset=offset, name=name,
-                on_enter=on_ok_click, on_escape=on_cancel_click)
+                ]),
+                on_enter=on_ok_click, on_escape=on_cancel_click, **kwargs)
         else:
-            Dialog.__init__(self, content=Frame(#Scrollable(
+            Dialog.__init__(self, content=\
                 VerticalLayout([
                     SectionHeader(title, align=HALIGN_LEFT),
                     grid,
@@ -1475,10 +1459,8 @@ class PropertyDialog(Dialog):
                     HorizontalLayout([
                         Button(ok, on_click=on_ok_click),
                         Button(cancel, on_click=on_cancel_click)])
-                ])),#height=window.height)),
-                window=window, batch=batch, group=group,
-                theme=theme, movable=True, offset=offset, name=name,
-                on_enter=on_ok_click, on_escape=on_cancel_click)
+                ]),
+                on_enter=on_ok_click, on_escape=on_cancel_click, **kwargs)
 
     def _make_properties(self, properties):
         property_table = [[]]

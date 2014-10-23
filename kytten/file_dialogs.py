@@ -11,7 +11,7 @@ import pyglet
 from pyglet import gl
 
 from .button import Button
-from .dialog import Dialog
+from .dialog import Dialog, DIALOG_NO_CREATE_FRAME
 from .frame import Frame, SectionHeader
 from .layout import VerticalLayout, HorizontalLayout
 from .layout import ANCHOR_CENTER, HALIGN_LEFT, VALIGN_BOTTOM, HALIGN_CENTER
@@ -43,9 +43,7 @@ class FileLoadDialog(Dialog):
     select_button=None
     cancel_button=None
     def __init__(self, path=os.getcwd(), extensions=[], title="Select File",
-                 width=540, height=300, window=None, batch=None, group=None, name=None, parent=None,
-                 anchor=ANCHOR_CENTER, offset=(0, 0),
-                 theme=None, movable=True, on_select=None, on_enter=None, on_escape=None, always_on_top=False, attached_to=None):
+                 width=540, height=300, on_select=None, **kwargs):
         self.path = path
         self.extensions = extensions
         self.title = title
@@ -55,8 +53,8 @@ class FileLoadDialog(Dialog):
 
         if on_select is None:
             # Set up buttons to be shown in our contents only if on_select is not set
-            self.select_button = Button("Select", on_click=on_enter)
-            self.cancel_button = Button("Cancel", on_click=on_escape)
+            self.select_button = Button("Select", on_click=kwargs.get('on_enter', None))
+            self.cancel_button = Button("Cancel", on_click=kwargs.get('on_escape', None))
 
         def on_parent_menu_select(menu, choice, choice_index=None):
             self._select_file(self.parents_dict[choice])
@@ -75,9 +73,7 @@ class FileLoadDialog(Dialog):
             width=width, height=height)
 
         content = self._get_content()
-        Dialog.__init__(self, content, window=window, batch=batch, group=group, name =name, parent=parent,
-                        anchor=anchor, offset=offset, theme=theme,
-                        movable=movable, on_escape=on_escape, always_on_top=always_on_top, attached_to=attached_to )
+        Dialog.__init__(self, content, flags=DIALOG_NO_CREATE_FRAME, **kwargs)
 
     def _get_content(self):
         return Frame(

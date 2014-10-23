@@ -43,6 +43,7 @@ class Widget(object):
     destroyed=False
     visible=True
     anchor=None
+    _header_bar=None
     _parent=None
     _scale=1.0
     name=None

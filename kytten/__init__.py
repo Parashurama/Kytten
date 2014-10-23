@@ -20,13 +20,14 @@ from .layout import ANCHOR_TOP_LEFT, ANCHOR_TOP, ANCHOR_TOP_RIGHT, \
                    ANCHOR_LEFT, ANCHOR_CENTER, ANCHOR_RIGHT, \
                    ANCHOR_BOTTOM_LEFT, ANCHOR_BOTTOM, ANCHOR_BOTTOM_RIGHT
 
+from .dialog import DIALOG_NO_CREATE_FRAME, DIALOG_TRANSPARENT_FRAME
 # GUI public classes
 
 from .button import Button, ButtonStyle, ImageButton, DraggableImageButton
 from .togglebutton import ToggleGroup, ToggleButton, ToggleImageButton
 from .spin_button import SpinControl, SpinControlGroup
 from .checkbox import Checkbox
-from .dialog import Dialog, PopupMessage, PopupConfirm, PropertyDialog, ToolTip, GuiElement, GuiTheme
+from .dialog import Dialog, PopupMessage, PopupConfirm, PropertyDialog, ToolTip, GuiTheme
 from .document import Document, RichText
 from .file_dialogs import FileLoadDialog, FileSaveDialog, DirectorySelectDialog
 from .frame import Frame, TitleFrame, GuiFrame, Wrapper, SectionHeader, FoldingSection, BubbleFrame
@@ -44,6 +45,8 @@ from .manager import GuiManager, PageManager
 from .selectable_image import Selectable
 from .images import LoadImage
 from .tabbed_form import TabbedForm, TabEntry
+
+from .dialog import Dialog as GuiElement
 
 def SetWindow(window, manager=None, isBuffered=True):
     global KyttenManager, KyttenRenderGUI
@@ -63,5 +66,5 @@ def SetWindow(window, manager=None, isBuffered=True):
 
     from .dialog import DragNDrop
     DragNDrop( Frame(),
-        window=window, batch=KyttenManager, group=KyttenManager.foregroup,
+        window=window, batch=KyttenManager, group=KyttenManager.foregroup, flags=DIALOG_NO_CREATE_FRAME,
         offset=(0,0), theme=DEFAULT_EMPTY_THEME, name='DRAGGABLE', anchor=ANCHOR_BOTTOM_LEFT, always_on_top=False)

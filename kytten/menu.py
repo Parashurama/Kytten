@@ -11,7 +11,7 @@ import pyglet.window.key as key
 
 from .base import string_to_unicode
 from .widgets import Widget, Control
-from .dialog import Dialog
+from .dialog import Dialog, DIALOG_NO_CREATE_FRAME
 from .frame import Frame
 from .layout import GetRelativePoint, VerticalLayout
 from .layout import ANCHOR_CENTER, ANCHOR_TOP_LEFT, ANCHOR_BOTTOM_LEFT
@@ -19,7 +19,6 @@ from .layout import HALIGN_CENTER
 from .layout import VALIGN_TOP, VALIGN_CENTER, VALIGN_BOTTOM
 from .override import KyttenLabel, KyttenEventDispatcher
 from .scrollable import Scrollable
-import inspect
 
 class MenuOption(Control):
     '''
@@ -494,7 +493,7 @@ class Dropdown(Control):
             ),
             window=root.window, batch=root.batch,
             group=root.root_group.parent, theme=root.theme,
-            movable=False, anchor=anchor, offset=(x, y), always_on_top=True,
+            movable=False, anchor=anchor, offset=(x, y), always_on_top=True, flags=DIALOG_NO_CREATE_FRAME,
             on_escape=on_escape)
 
         #root.window.push_handlers(self.pulldown_menu)

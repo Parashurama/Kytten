@@ -562,7 +562,7 @@ class DraggableImageButton(ImageButton):
                 self.delete()
 
             DRAGGABLE.set_content(self)
-            DRAGGABLE.offset=(self.x,self.y)
+            DRAGGABLE.set_offset((self.x,self.y))
             DRAGGABLE.needs_layout = True
             self._old_parent.saved_dialog.dont_pop_to_top=True
             self._old_parent.saved_dialog.set_focus(None)
@@ -573,9 +573,9 @@ class DraggableImageButton(ImageButton):
 
             return pyglet.event.EVENT_HANDLED
 
-        X,Y = DRAGGABLE.offset
+        X,Y = DRAGGABLE.get_offset()
         DRAGGABLE.set_focus(self)
-        DRAGGABLE.offset=(X+dx,Y+dy)
+        DRAGGABLE.set_offset((X+dx,Y+dy))
         DRAGGABLE.set_needs_layout()
 
         return pyglet.event.EVENT_HANDLED
