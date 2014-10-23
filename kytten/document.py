@@ -13,6 +13,7 @@ from .scrollbar import VScrollbar
 from .override import KyttenIncrementalTextLayout, KyttenTextLayout
 from .base import string_to_unicode, iteritems, FLAGS
 from .theme import UntexturedGraphicElement
+from .tools import patch_instance_method
 
 class KyttenDocumentError(Exception):pass
 
@@ -200,6 +201,10 @@ class Document(Control):
         if self.always_show_scrollbar or (self.max_height and self.content.content_height > self.max_height):
             if self.scrollbar is None:
                 self.scrollbar = VScrollbar(self.max_height)
+                #Hack: because self.scrollbar is dialog focus instead of document.
+                #TODO: find another way to pass events to scrollbar.
+                patch_instance_method(self.scrollbar, "on_mouse_press")(self.on_mouse_press_scrollbar)
+
             self.scrollbar.size(dialog, scale)
             self.scrollbar.set(self.max_height, self.content.content_height)
 
@@ -280,7 +285,6 @@ class Document(Control):
         self.link_reference.update(link_reference)
 
     def on_mouse_press(self, x, y, *args):
-
         line = self.content.get_line_from_point(x, y)
         position = self.content.get_position_on_line(line, x)
         CALLBACK = self.document.get_style('link',position)
@@ -296,6 +300,9 @@ class Document(Control):
                 else:
                     for callback_func in CALLBACK_FUNC:
                         callback_func()
+
+    def on_mouse_press_scrollbar(self, scrollbar, x, y, *args):
+        self.on_mouse_press(x, y, *args)
 
     def on_gain_focus(self):
         Control.on_gain_focus(self)

@@ -8,7 +8,7 @@ from __future__ import unicode_literals, print_function
 
 import pyglet
 import weakref
-from .widgets import Control, DragNDropLayoutType, FreeLayoutAssert
+from .widgets import Control, DragNDropLayoutType, FreeLayoutAssert, BOOLEANS
 from .override import KyttenLabel
 from .base import  GetObjectfromName, CVars, string_to_unicode
 from .theme import DefaultTextureGraphicElement, Repeat_NinePatchTextureGraphicElement, Stretch_NinePatchTextureGraphicElement
@@ -477,13 +477,21 @@ class ImageButton(Button):
         else:
             return DefaultTextureGraphicElement(texture=self.image, batch=dialog.batch, group=dialog.bg_group, color=self.color)
 
-    def is_expandable(self, dim=None):
-        return self.expandable
-
     def expand(self, width, height):
         if self.expandable:
-            self.width, self.height = width, height
+            if self.expandable is True:
+                self.width, self.height = width, height
+            else:
+                W, H = self.expandable
+                self.width = width if W else self.width
+                self.height = height if H else self.height
             self.bitmap.update(self.x, self.y, self.width, self.height)
+
+    def is_expandable(self, dim=None):
+        if dim is None or self.expandable in BOOLEANS:
+            return self.expandable
+        #allow to customize for expandable in only one direction.
+        return self.expandable[dim]
 
     def on_gain_highlight(self):
         self.image = self.hover_image

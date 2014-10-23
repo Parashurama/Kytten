@@ -326,7 +326,7 @@ class Dialog(Wrapper, DialogEventManager, DialogAssert):
     handles resize events accordingly.
     '''
 
-    def __init__(self, content=[], title=None, graphic=None, theme=None, fixed_size=None, offset_modifier=None, flags=0, gui_style=None, *args, **kwargs):
+    def __init__(self, content=[], title=None, graphic=None, graphic_flag="repeat", theme=None, fixed_size=None, offset_modifier=None, flags=0, gui_style=None, *args, **kwargs):
 
         self.offset_modifier=offset_modifier # (ex: (-1/2.,0) offset x pos by half width towards left )
         self.basic_offset=kwargs.get('offset', (0,0))
@@ -346,7 +346,7 @@ class Dialog(Wrapper, DialogEventManager, DialogAssert):
                                   texture=graphic, anchor=anchor, flag='default')
             else:
                 content=GuiFrame( content= HorizontalLayout([content]),
-                                  texture=graphic, anchor=anchor, flag='repeat')
+                                  texture=graphic, anchor=anchor, flag=graphic_flag)
         elif flags & DIALOG_TRANSPARENT_FRAME:
             content=TransparentFrame(content)
         elif not flags & DIALOG_NO_CREATE_FRAME:
