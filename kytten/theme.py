@@ -189,6 +189,10 @@ class FrameRepeatTextureGraphicElementTemplate(TextureGraphicElementTemplate):
         self.texture.content_padding = padding
         self.texture.border_padding = ( x, texture.width - width - x,   # left, right
                                         texture.height - height - y, y) # top, bottom
+        # Used for writing theme
+        self.margins = (x, texture.width - width - x,   # left, right
+                        texture.height - height - y, y) # top, bottom
+        self.padding = padding
 
     def generate(self, color, batch, group):
         return Repeat_NinePatchTextureGraphicElement(self.texture, color, (0,0), (0,0), batch, group)

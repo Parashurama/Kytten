@@ -1,5 +1,10 @@
-# image_region_placer.py
+#! /usr/bin/env python
+# *-* coding: UTF-8 *-*
+
+# editor/image_region_placer.py
 # Copyrighted (C) 2009 by Conrad "Lynx" Wong
+# Copyrighted (C) 2014 by "Parashurama"
+from __future__ import unicode_literals, print_function, absolute_import
 
 import pyglet
 from pyglet import gl
@@ -14,6 +19,7 @@ class ImageRegionPlacer(Control):
     """
     IMAGE_REGION_COLOR = (255, 128, 64, 255)
     IMAGE_STRETCH_COLOR = (64, 255, 128, 255)
+    IMAGE_REPEAT_COLOR = (64, 255, 255, 255)
     IMAGE_PADDING_COLOR = (64, 128, 255, 255)
 
     def __init__(self, texture, x=0, y=0, width=0, height=0, scale=1,

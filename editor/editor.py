@@ -1,12 +1,16 @@
-# theme_editor.py
-# Copyrighted (C) 2009 by Conrad "Lynx" Wong
+#! /usr/bin/env python
+# *-* coding: UTF-8 *-*
 
+# editor/editor.py
+# Copyrighted (C) 2009 by Conrad "Lynx" Wong
+# Copyrighted (C) 2014 by "Parashurama"
 # Creates or modifies a .json file for a kytten GUI theme.
+from __future__ import unicode_literals, print_function, absolute_import
 
 import glob
 import os
 import sys
-
+import argparse
 import pyglet
 # Disable error checking for increased performance
 pyglet.options['debug_gl'] = False
@@ -22,8 +26,9 @@ except ImportError:
 from kytten import safe_eval
 from kytten.scrollable import ScrollableGroup
 from kytten.theme import TextureGraphicElementTemplate
-from kytten.theme import FrameTextureGraphicElementTemplate
+from kytten.theme import FrameTextureGraphicElementTemplate, FrameRepeatTextureGraphicElementTemplate
 from kytten.widgets import Control
+
 from proxy_dialog import ProxyDialog
 from resizable import Resizable
 from image_region_placer import ImageRegionPlacer
@@ -635,8 +640,10 @@ class ImageEditState(BaseState):
         self.path = path
         self.image = image
         self.template = None
+        self._repeat_texturing=False
         self.region = [0, 0, 0, 0]
         self.stretch = [0, 0, 0, 0]
+        self.repeat  = [0, 0, 0, 0]
         self.padding = [0, 0, 0, 0]
         self.state = 'Region'
 
@@ -673,8 +680,8 @@ class ImageEditState(BaseState):
         width, height = self.template.width,self. template.height
         self.region = (x, y, width, height)
         left, right, top, bottom = self.template.margins
-        self.stretch = (left, bottom,
-                        width - right - left, height - top - bottom)
+        self.stretch = (left, bottom,  width-right-left, height-top-bottom)
+        self.repeat = (left, bottom, width-right-left, height-top-bottom)
         self.padding = self.template.padding
 
         # Create the Resizable for the example's content
@@ -725,6 +732,11 @@ class ImageEditState(BaseState):
             elif self.state == 'Stretch':
                 rx, ry, rwidth, rheight = self.region
                 self.stretch = (x - rx, y - ry, width, height)
+                self._repeat_texturing=False
+            elif self.state == 'Repeat':
+                rx, ry, rwidth, rheight = self.region
+                self.repeat = (x - rx, y - ry, width, height)
+                self._repeat_texturing=True
             else:  # Padding
                 rx, ry, rwidth, rheight = self.region
                 left = x - rx
@@ -735,15 +747,19 @@ class ImageEditState(BaseState):
 
             # Drop our old template and construct a new one
             x, y, width, height = self.region
-            texture = self.theme._get_texture_region(our_filename,
-                                                     x, y, width, height)
-            self.template = FrameTextureGraphicElementTemplate(
-                self.theme, texture, self.stretch, self.padding)
+            texture = self.theme._get_texture_region(our_filename, x, y, width, height)
+
+            if self._repeat_texturing is False:
+                self.template = FrameTextureGraphicElementTemplate(self.theme, texture, self.stretch, self.padding)
+            else: # Repeat
+                self.template = FrameRepeatTextureGraphicElementTemplate(self.theme, texture, self.repeat, self.padding)
             self.theme[self.path][self.image] = self.template
             example.delete()
+
             self.dialog.set_needs_layout()
-        region_placer = ImageRegionPlacer(texture, x, y, width, height,
-                                          on_resize=set_region)
+
+        region_placer = ImageRegionPlacer(texture, x, y, width, height, on_resize=set_region)
+
         def set_placer_scale(slider, scale):
             region_placer.set_scale(scale)
 
@@ -754,6 +770,7 @@ class ImageEditState(BaseState):
                 region_placer.set_region(
                     *self.region,
                     color=ImageRegionPlacer.IMAGE_REGION_COLOR)
+
             elif choice == 'Stretch':
                 rx, ry, rwidth, rheight = self.region
                 x, y, width, height = self.stretch
@@ -761,6 +778,14 @@ class ImageEditState(BaseState):
                     x + rx, y + ry, width, height,
                     color=ImageRegionPlacer.IMAGE_STRETCH_COLOR,
                     limits=self.region)
+            elif choice == 'Repeat':
+                rx, ry, rwidth, rheight = self.region
+                x, y, width, height = self.repeat
+                region_placer.set_region(
+                    x + rx, y + ry, width, height,
+                    color=ImageRegionPlacer.IMAGE_REPEAT_COLOR,
+                    limits=self.region)
+
             else:  # Padding
                 rx, ry, rwidth, rheight = self.region
                 left, right, top, bottom = self.padding
@@ -771,7 +796,7 @@ class ImageEditState(BaseState):
                     color=ImageRegionPlacer.IMAGE_PADDING_COLOR,
                     limits=self.region)
         region_control = kytten.Dropdown(
-            options=['Region', 'Stretch', 'Padding'],
+            options=['Region', 'Stretch', 'Repeat', 'Padding'],
             selected=self.state,
             on_select=on_region_select)
 
@@ -870,8 +895,7 @@ class ImageEditState(BaseState):
             on_escape=on_escape)
 
 if __name__ == '__main__':
-    window = pyglet.window.Window(
-        800, 600, caption='Kytten Theme Editor', resizable=True, vsync=True)
+    window = pyglet.window.Window( 800, 600, caption='Kytten Theme Editor', resizable=True, vsync=True)
     batch = pyglet.graphics.Batch()
     bg_group = pyglet.graphics.OrderedGroup(0)
     fg_group = pyglet.graphics.OrderedGroup(1)
@@ -885,7 +909,17 @@ if __name__ == '__main__':
     # StateManager keeps track of what we're doing
     manager = StateManager(window)
 
-    # Start off by picking the theme directory
-    manager.push(ThemeDirSelectState())
+    parser = argparse.ArgumentParser()
+
+    parser.add_argument('-p', "--theme-path", help='path to theme json')
+    parser.add_argument('-c', '--charsets', help='Specify number of character sets in file vertival & horizontal.')
+    parser.add_argument("-f", '--frames', help="display list of backup folder")
+
+    args = parser.parse_args()
+
+    if args.theme_path:
+        manager.push(ThemeFileSelectState(args.theme_path))
+    else:# Start off by picking the theme directory
+        manager.push(ThemeDirSelectState())
 
     pyglet.app.run()

@@ -1,5 +1,10 @@
-# resizable.py
+#! /usr/bin/env python
+# *-* coding: UTF-8 *-*
+
+# editor/resizable.py
 # Copyrighted (C) 2009 by Conrad "Lynx" Wong
+# Copyrighted (C) 2014 by "Parashurama"
+from __future__ import unicode_literals, print_function, absolute_import
 
 import pyglet
 from pyglet import gl
