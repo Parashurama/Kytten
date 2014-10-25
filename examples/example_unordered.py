@@ -18,18 +18,6 @@ import kytten
 import kytten
 from background import Background
 
-# Default theme, gold-colored
-theme = kytten.Theme(os.path.join(os.getcwd(), '../theme'), override={
-    "gui_color": [64, 128, 255, 255],
-    "font_size": 14
-})
-
-# Default theme, blue-colored
-theme2 = kytten.Theme(theme, override={
-    "gui_color": [255, 235, 128, 255],
-    "font_size": 12
-})
-
 # Callback functions for dialogs which may be of interest
 def on_escape(dialog):
     dialog.teardown()
@@ -56,12 +44,9 @@ colorfully!
 ''')
 
     dialog = kytten.Dialog(
-        kytten.Frame(
-            kytten.Document(document, width=300, height=150)
-        ),
-        window=window, batch=batch, group=fg_group,
+            kytten.Document(document, width=300, height=150),
         anchor=kytten.ANCHOR_CENTER,
-        theme=theme2, on_escape=on_escape)
+        theme=gui_theme2, on_escape=on_escape)
 
 def create_form_dialog():
     dialog = None
@@ -76,7 +61,6 @@ def create_form_dialog():
         print("Form canceled.")
         on_escape(dialog)
     dialog = kytten.Dialog(
-        kytten.Frame(
             kytten.Scrollable(
                 kytten.VerticalLayout([
                     kytten.SectionHeader("Personnel Data",
@@ -115,21 +99,18 @@ def create_form_dialog():
                         kytten.Button("Cancel", on_click=on_cancel),
                     ]),
                 ], align=kytten.HALIGN_LEFT),
-                height=200, width=360)
-        ),
-        window=window, batch=batch, group=fg_group,
+                height=200, width=360),
         anchor=kytten.ANCHOR_CENTER,
-        theme=theme2, on_enter=on_enter, on_escape=on_escape)
+        theme=gui_theme2, on_enter=on_enter, on_escape=on_escape)
 
 def create_scrollable_dialog():
-    def on_select(choice, index):
+    def on_select(dropdown, choice, index):
         print("Kytten is %s" % choice)
 
     def on_set(slider, value):
         print("Kytten rating is %0.0f" % value)
 
     dialog = kytten.Dialog(
-        kytten.Frame(
             kytten.Scrollable(
                 kytten.VerticalLayout([
                     kytten.Label("Rate Kytten from 1 to 10:"),
@@ -148,11 +129,9 @@ def create_scrollable_dialog():
                                          "Terrific"],
                                 align=kytten.HALIGN_LEFT, on_select=on_select),
                 ], align=kytten.HALIGN_LEFT),
-            width=200, height=150)
-        ),
-        window=window, batch=batch, group=fg_group,
+            width=200, height=150),
         anchor=kytten.ANCHOR_CENTER,
-        theme=theme2, on_escape=on_escape)
+        theme=gui_theme2, on_escape=on_escape)
 
 def create_folding_dialog():
     document1 = pyglet.text.decode_attributed("""
@@ -179,7 +158,6 @@ And wait for the Jellicle moon to rise
 """)
 
     dialog = kytten.Dialog(
-        kytten.Frame(
             kytten.Scrollable(
                 kytten.VerticalLayout([
                     kytten.SectionHeader("Jellicle Cats"),
@@ -197,18 +175,15 @@ And wait for the Jellicle moon to rise
                             kytten.Document(document4, width=300),
                         ]), is_open=False),
                 ], align=kytten.HALIGN_LEFT),
-            height=400)
-        ),
-        window=window, batch=batch, group=fg_group,
+            height=400),
         anchor=kytten.ANCHOR_CENTER,
-        theme=theme2, on_escape=on_escape)
+        theme=gui_theme2, on_escape=on_escape)
 
 def create_dropdown_dialog():
-    def on_select(choice, index):
+    def on_select(dropdown, choice, index):
         print("Selected: %s" % choice)
 
     dialog = kytten.Dialog(
-        kytten.Frame(
             kytten.VerticalLayout([
                 kytten.Label("Select a letter:"),
                 kytten.Dropdown(['Alpha', 'Beta', 'Gamma', 'Delta', 'Epsilon',
@@ -220,50 +195,45 @@ def create_dropdown_dialog():
                 kytten.Label("This dropdown is disabled"),
                 kytten.Dropdown(['Disabled', 'Enabled'], disabled=True),
             ]),
-        ),
-        window=window, batch=batch, group=fg_group,
         anchor=kytten.ANCHOR_CENTER,
-        theme=theme2, on_escape=on_escape)
+        theme=gui_theme2, on_escape=on_escape)
 
 def create_file_load_dialog():
     dialog = None
 
-    def on_select(filename, index):
+    def on_select(dropdown, filename, index):
         print("File load: %s" % filename)
         on_escape(dialog)
 
     dialog = kytten.FileLoadDialog(  # by default, path is current working dir
         extensions=['.png', '.jpg', '.bmp', '.gif'],
-        window=window, batch=batch, group=fg_group,
         anchor=kytten.ANCHOR_CENTER,
-        theme=theme2, on_escape=on_escape, on_select=on_select)
+        theme=gui_theme2, on_escape=on_escape, on_select=on_select)
 
 def create_file_save_dialog():
     dialog = None
 
-    def on_select(filename):
+    def on_select(filename, index):
         print("File save: %s" % filename)
         on_escape(dialog)
 
     dialog = kytten.FileSaveDialog(  # by default, path is current working dir
         extensions=['.png', '.jpg', '.bmp', '.gif'],
-        window=window, batch=batch, group=fg_group,
         anchor=kytten.ANCHOR_CENTER,
-        theme=theme2, on_escape=on_escape, on_select=on_select)
+        theme=gui_theme2, on_escape=on_escape, on_select=on_select)
 
 def create_directory_select_dialog():
     dialog = None
 
-    def on_select(filename):
+    def on_select(dropdown, filename, index):
         print("Directory: %s" % filename)
         on_escape(dialog)
 
     dialog = kytten.DirectorySelectDialog(
-        window=window, batch=batch, group=fg_group,
         anchor=kytten.ANCHOR_CENTER,
-        theme=theme2, on_escape=on_escape, on_select=on_select)
+        theme=gui_theme2, on_escape=on_escape, on_select=on_select)
 
-def on_select(choice, index):
+def on_select(dropdown, choice, index):
     if choice == 'Document':
         create_document_dialog()
     elif choice == 'Form':
@@ -287,9 +257,12 @@ if __name__ == '__main__':
     window = pyglet.window.Window( 640, 480, caption='Kytten Test %s' % VERSION, resizable=True, vsync=False)
     kytten.SetWindow(window)
 
-    batch = kytten.KyttenManager
-    bg_group = kytten.KyttenManager.backgroup
-    fg_group = kytten.KyttenManager.foregroup
+    gui_theme=kytten.GuiTheme( window=window, batch=kytten.KyttenManager,
+                                group=kytten.KyttenManager.foregroup, movable=True,
+                                always_on_top=False, theme='theme', override={"text_color":[0,75,25,255], "font_size": 14})
+
+    gui_theme2=kytten.GuiTheme( theme=gui_theme, override={"font_size": 12})
+
     fps = pyglet.clock.ClockDisplay()
 
     @window.event
@@ -305,12 +278,11 @@ if __name__ == '__main__':
     pyglet.clock.schedule(update)
 
     # Set up a background which changes when user hits left or right arrow
-    background = Background(batch=batch, group=bg_group)
+    background = Background(batch=kytten.KyttenManager, group=kytten.KyttenManager.backgroup)
     window.push_handlers(background)
 
     # Set up a Dialog to choose test dialogs to show
     dialog = kytten.Dialog(
-        kytten.TitleFrame("Kytten Demo",
             kytten.VerticalLayout([
                 kytten.Label("Select dialog to show"),
                 kytten.Menu(options=["Document", "Form", "Scrollable",
@@ -319,10 +291,8 @@ if __name__ == '__main__':
                                      "Directory Select"],
                             on_select=on_select),
             ]),
-        ),
-        window=window, batch=batch, group=fg_group,
-        anchor=kytten.ANCHOR_TOP_LEFT,
-        theme=theme)
+        title="Kytten Demo", anchor=kytten.ANCHOR_TOP_LEFT,
+        theme=gui_theme)
 
     # Change this flag to run with profiling and dump top 20 cumulative times
     if True:

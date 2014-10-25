@@ -102,7 +102,7 @@ The core philosophy of the language is summarized by the document "PEP 20 (The Z
     {color (128, 0, 128, 255)}{link 'write_text_callback'}{bold True}Write Text{bold False}{link false}(adds a new Entry){color (0, 0, 0, 255)}\n""")
 if __name__ == '__main__':
     # Subclass pyglet.window.Window
-    window = pyglet.window.Window( 640, 480, caption='Example Basic 0', resizable = True, vsync = False )
+    window = pyglet.window.Window( 640, 480, caption='Example Basic 2', resizable = True, vsync = False )
 
     # important to correctly initialize kytten before trying to create Gui widgets
     kytten.SetWindow(window)
