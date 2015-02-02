@@ -119,36 +119,33 @@ class TextureGraphicElementTemplate(UndefinedGraphicElementTemplate):
         f.write('\n' + ' ' * indent + '}')
 
 class FrameTextureGraphicElementTemplate(TextureGraphicElementTemplate):
-    def __init__(self, theme, texture, stretch, padding,
-                 width=None, height=None):
-        TextureGraphicElementTemplate.__init__(self, theme, texture,
-                                               width=width, height=height)
+    def __init__(self, theme, texture, stretch, padding, fixed_minsize=True, width=None, height=None):
+        TextureGraphicElementTemplate.__init__(self, theme, texture, width=width, height=height)
+
         self.stretch_texture = texture.get_region(*stretch).get_texture()
         x, y, width, height = stretch
         self.margins = (x, texture.width - width - x,   # left, right
                         texture.height - height - y, y) # top, bottom
         self.padding = padding
+        self.fixed_minsize = fixed_minsize
 
     def generate(self, color, batch, group):
         return FrameTextureGraphicElement(
             self.theme, self.texture, self.stretch_texture,
-            self.margins, self.padding, color, batch, group)
+            self.margins, self.padding, color, self.fixed_minsize, batch, group)
 
     def write(self, f, indent=0):
         f.write('{\n')
         f.write(' ' * (indent + 2) + '"src": "%s"' % self.texture.src)
         if hasattr(self.texture, 'region'):
-            f.write(',\n' + ' ' * (indent + 2) + '"region": %s' %
-                    repr(list(self.texture.region)))
+            f.write(',\n' + ' ' * (indent + 2) + '"region": %s' % repr(list(self.texture.region)))
         left, right, top, bottom = self.margins
-        if left != 0 or right != 0 or top != 0 or bottom != 0 or \
-           self.padding != [0, 0, 0, 0]:
-            stretch = [left, bottom,
-                       self.width - right - left, self.height - top - bottom]
-            f.write(',\n' + ' ' * (indent + 2) + '"stretch": %s' %
-                    repr(list(stretch)))
-            f.write(',\n' + ' ' * (indent + 2) + '"padding": %s' %
-                    repr(list(self.padding)))
+        if left != 0 or right != 0 or top != 0 or bottom != 0 or  self.padding != [0, 0, 0, 0]:
+            stretch = [left, bottom, self.width-right-left, self.height-top-bottom]
+            f.write(',\n' + ' ' * (indent + 2) + '"stretch": %s' % repr(list(stretch)))
+            f.write(',\n' + ' ' * (indent + 2) + '"padding": %s' % repr(list(self.padding)))
+        if not self.fixed_minsize:
+            f.write(',\n' + ' ' * (indent + 2) + '"fixed_minsize": false')
         f.write('\n' + ' ' * indent + '}')
 
 class TextureIconElementTemplate(TextureGraphicElementTemplate):
@@ -352,7 +349,7 @@ class TextureGraphicElement:
 
 class FrameTextureGraphicElement:
     def __init__(self, theme, texture, inner_texture, margins, padding,
-                 color, batch, group):
+                 color, fixed_minsize, batch, group):
         self.x = self.y = 0
         self.width, self.height = texture.width, texture.height
         self.group = ThemeTextureGroup(texture, group)
@@ -360,6 +357,7 @@ class FrameTextureGraphicElement:
         self.inner_texture = inner_texture
         self.margins = margins
         self.padding = padding
+        self.fixed_minsize = fixed_minsize
         self.vertex_list = batch.add(36, gl.GL_QUADS, self.group,
                                      ('v2i', self._get_vertices()),
                                      ('c4B', color * 36),
@@ -413,8 +411,9 @@ class FrameTextureGraphicElement:
 
     def get_needed_size(self, content_width, content_height):
         left, right, top, bottom = self.padding
-        return (max(content_width + left + right, self.outer_texture.width),
-                max(content_height + top + bottom, self.outer_texture.height))
+        min_size = (self.outer_texture.width, self.outer_texture.height) if self.fixed_minsize else (0,0)
+        return (max(content_width + left + right, min_size[0]),
+                max(content_height + top + bottom, min_size[1]))
 
     def update(self, x, y, width, height):
         self.x, self.y, self.width, self.height = x, y, width, height
@@ -916,6 +915,7 @@ class Theme(ScopedDict):
                             texture,
                             v['stretch'],
                             v.get('padding', [0, 0, 0, 0]),
+                            fixed_minsize = v.get('fixed_minsize', True),
                             width=width, height=height)
                     elif 'repeat' in v:
                         target[k] = FrameRepeatTextureGraphicElementTemplate(

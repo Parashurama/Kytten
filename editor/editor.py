@@ -64,6 +64,7 @@ class BaseState:
     def on_draw(self):
         if self.window is not None:
             self.window.clear()
+        gl.glEnable(gl.GL_BLEND)
         if self.dialog is not None:
             self.dialog.draw()
         if self.popup is not None:
@@ -645,6 +646,7 @@ class ImageEditState(BaseState):
         self.stretch = [0, 0, 0, 0]
         self.repeat  = [0, 0, 0, 0]
         self.padding = [0, 0, 0, 0]
+        self.fixed_minsize = True
         self.state = 'Region'
 
     def _get_content(self):
@@ -674,6 +676,7 @@ class ImageEditState(BaseState):
                 our_texture = texture
                 break
         assert our_texture is not None
+        self.fixed_minsize = getattr(self.template, "fixed_minsize", True)
 
         # Determine the region that we occupy
         x, y = self.template.texture.x, self.template.texture.y
@@ -750,7 +753,7 @@ class ImageEditState(BaseState):
             texture = self.theme._get_texture_region(our_filename, x, y, width, height)
 
             if self._repeat_texturing is False:
-                self.template = FrameTextureGraphicElementTemplate(self.theme, texture, self.stretch, self.padding)
+                self.template = FrameTextureGraphicElementTemplate(self.theme, texture, self.stretch, self.padding, self.fixed_minsize)
             else: # Repeat
                 self.template = FrameRepeatTextureGraphicElementTemplate(self.theme, texture, self.repeat, self.padding)
             self.theme[self.path][self.image] = self.template
@@ -800,10 +803,18 @@ class ImageEditState(BaseState):
             selected=self.state,
             on_select=on_region_select)
 
+        def on_check_minsize(checkbox, is_checked):
+            self.fixed_minsize=is_checked
+            if hasattr(self.template, "fixed_minsize"): # Stretch Texture Template
+                self.template.fixed_minsize = is_checked
+                example.delete()
+                self.dialog.set_needs_layout()
+
         content += [
             kytten.FoldingSection('Image Region',
                 kytten.VerticalLayout([
                     region_control,
+                    kytten.Checkbox("fixed minsize", is_checked=self.fixed_minsize, name='fixed_minsize', on_click=on_check_minsize),
                     region_placer,
                     kytten.GridLayout([
                         [kytten.Label('Scale'),
@@ -887,7 +898,7 @@ class ImageEditState(BaseState):
             kytten.TitleFrame("kytten Image Editor",
                 kytten.Scrollable(
                     kytten.VerticalLayout(content),
-                    width=750, height=500)
+                    width=750, height=800)
             ),
             window=window,
             anchor=kytten.ANCHOR_CENTER,
