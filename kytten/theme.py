@@ -1129,7 +1129,7 @@ class KyttenTexture(object):
         self._header_bar=[0,0,None,None]
         self.width, self.height = size[0], size[1]
 
-        id = c.c_ulong()
+        id = c.c_uint()
         gl.glGenTextures(1, c.byref(id))
         self.id = id.value
 

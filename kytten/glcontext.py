@@ -5,7 +5,7 @@
 # Copyrighted (C) 2013 by "Parashurama"
 from __future__ import unicode_literals, print_function
 
-from ctypes import c_ulong
+from ctypes import c_uint
 import pyglet.gl as gl
 
 class GuiRenderContextClass(object):
@@ -54,7 +54,7 @@ class GuiInternalBuffer(object):
         self.render_target_size = width, height
 
         # create the framebuffer
-        self._buffer = (c_ulong * 1)() ; gl.glGenFramebuffersEXT(1,self._buffer)
+        self._buffer = (c_uint * 1)() ; gl.glGenFramebuffersEXT(1,self._buffer)
         self._buffer = self._buffer[0]
 
         gl.glBindFramebufferEXT(gl.GL_FRAMEBUFFER_EXT, self._buffer)
@@ -80,7 +80,7 @@ class GuiInternalBuffer(object):
         if textureID is not None:
             rgb_texture = textureID
         else:
-            rgb_texture = (c_ulong * 1)() ; gl.glGenTextures(1, rgb_texture)
+            rgb_texture = (c_uint * 1)() ; gl.glGenTextures(1, rgb_texture)
             rgb_texture = rgb_texture[0]
 
         width, height = texture_size
