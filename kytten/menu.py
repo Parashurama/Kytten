@@ -512,6 +512,7 @@ class Dropdown(Control):
     def set_options(self, options, selected=None):
         self.delete()
         self.options = options
+        assert options and (selected is None or (selected in options))
         self.selected = selected or self.options[0]
 
         if self.saved_dialog is not None:

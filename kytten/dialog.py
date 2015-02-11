@@ -781,6 +781,7 @@ class Dialog(Wrapper, DialogEventManager, DialogAssert):
         '''
 
         if not self.visible: return
+
                                                     # MultilineInput
         if symbol == pyglet.window.key.TAB and not hasattr(self.focus, 'on_auto_complete'): #[pyglet.window.key.TAB, pyglet.window.key.ENTER]:
             focusable = [x for x in self.controls if x.is_focusable() and not x.is_disabled()]
@@ -799,13 +800,13 @@ class Dialog(Wrapper, DialogEventManager, DialogAssert):
 
             return pyglet.event.EVENT_HANDLED
 
-        elif symbol != pyglet.window.key.ESCAPE:
-            if self.focus is not None:
-                if self.focus.dispatch_event("on_key_press", symbol, modifiers):
-                    return self.EventHandled()
-                if symbol == pyglet.window.key.ENTER:
-                    self.focus.dispatch_event("on_text", '\n')
+        elif self.focus is not None and symbol != pyglet.window.key.ESCAPE:
+            if self.focus.dispatch_event("on_key_press", symbol, modifiers):
                 return self.EventHandled()
+
+            if symbol == pyglet.window.key.ENTER:
+                if self.focus.dispatch_event("on_text", '\n'):
+                    return self.EventHandled()
 
         if symbol == pyglet.window.key.ENTER:
             if self.on_enter is not None and not ( modifiers & pyglet.window.key.MOD_ALT or modifiers & pyglet.window.key.MOD_SHIFT):
@@ -996,22 +997,19 @@ class Dialog(Wrapper, DialogEventManager, DialogAssert):
             return self.EventHandled()
 
     def on_text(self, text):
+        if not self.visible: return
         if self.focus is not None and text != '\r' and self.focus.dispatch_event("on_text", text):
             return self.EventHandled()
 
-        return pyglet.event.EVENT_UNHANDLED
-
     def on_text_motion(self, motion):
+        if not self.visible: return
         if self.focus is not None and self.focus.dispatch_event("on_text_motion", motion):
             return self.EventHandled()
 
-        return pyglet.event.EVENT_UNHANDLED
-
     def on_text_motion_select(self, motion):
+        if not self.visible: return
         if self.focus is not None and self.focus.dispatch_event("on_text_motion_select",motion):
             return self.EventHandled()
-
-        return pyglet.event.EVENT_UNHANDLED
 
     def on_mouse_enter(self, x, y):
         if self.hit_test(x, y) and self.on_mouse_enter_func is not None:
