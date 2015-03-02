@@ -12,15 +12,15 @@
 # GridLayout: a table of Widgets.
 # FreeLayout: an open area within which Widgets may be positioned freely,
 #             relative to one of its anchor points.
-from __future__ import unicode_literals, print_function
-
+from __future__ import unicode_literals, print_function, absolute_import, division
+from .compat import *
 import pyglet
 import weakref
 from pyglet import gl
 
 from .widgets import Widget, Control, Spacer, Graphic, Image, ProxyImage, Label, LayoutAssert, FreeLayoutAssert, DragNDropLayoutType
 from .button import ImageButton
-from .base import ReferenceName, Log, GetObjectfromName, CVars, xrange, FLAGS
+from .base import ReferenceName, Log, GetObjectfromName, CVars, FLAGS
 from .override import KyttenEventDispatcher
 from .theme import DefaultTextureGraphicElement
 
@@ -44,7 +44,7 @@ ANCHOR_BOTTOM_LEFT  = (VALIGN_BOTTOM, HALIGN_LEFT)
 ANCHOR_BOTTOM       = (VALIGN_BOTTOM, HALIGN_CENTER)
 ANCHOR_BOTTOM_RIGHT = (VALIGN_BOTTOM, HALIGN_RIGHT)
 
-for var_name, var in vars().items():
+for var_name, var in list(vars().items()):
     if var_name.startswith('ANCHOR') or var_name.startswith('VALIGN') or var_name.startswith('HALIGN'):
         setattr(CVars, var_name, var)
 
@@ -732,7 +732,7 @@ class GridLayout(Widget, LayoutAssert):
 class PaletteLayout(GridLayout):
     def __init__(self, content, width, *args, **kwargs):
 
-        grid_content = [ content[i:i + width] for i in xrange(0, len(content), width) ]
+        grid_content = [ content[i:i + width] for i in range(0, len(content), width) ]
         self._layout_width = width
 
         GridLayout.__init__(self, grid_content, *args, **kwargs)

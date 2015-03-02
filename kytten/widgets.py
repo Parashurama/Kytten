@@ -16,14 +16,13 @@
 #         push other Widgets in a layout to the far right or bottom.
 # Graphic: a Widget with a texture drawn over its surface.  Can be expanded.
 # Label: a Widget which wraps a simple text label.
-from __future__ import unicode_literals, print_function
-
-from types import MethodType
+from __future__ import unicode_literals, print_function, absolute_import, division
+from .compat import *
 import pyglet
 import weakref
 from pyglet import gl, font as pyglet_font
 from .override import KyttenLabel, KyttenEventDispatcher
-from .base import GenId, ReferenceName, DereferenceName, GetObjectfromName, DisplayGroup, Log, string_to_unicode, iteritems, FLAGS
+from .base import GenId, ReferenceName, DereferenceName, GetObjectfromName, DisplayGroup, Log, FLAGS
 from .theme import DefaultTextureGraphicElement
 
 BOOLEANS = set([True, False])
@@ -60,7 +59,7 @@ class Widget(object):
         self.width = width
         self.height = height
 
-        if  isinstance(group, str) : GetObjectfromName(group).add(self)
+        if  isinstance(group, basestring) : GetObjectfromName(group).add(self)
         elif isinstance(group, DisplayGroup): group.add(self)
 
         #if not spacer: self.id=GenId(self)
@@ -74,7 +73,7 @@ class Widget(object):
         '''
         Return this function as a bound method. (recipe: http://www.ianlewis.org/en/dynamically-adding-method-classes-or-class-instanc
         '''
-        return MethodType(func, self, type(self)) if func is not None else None
+        return MethodType(func, self) if func is not None else None
 
     def _get_controls(self):
         '''
@@ -651,7 +650,7 @@ class Label(Widget):
                  font_name=None, font_size=None, color=None, multiline=False, width=None, autoclampwidth=False, path=[], group=None):
         Widget.__init__(self, name=name, group=group)
 
-        self.text = string_to_unicode(text)
+        self.text = tostring(text)
         self._text_style = {"bold":False, "italic":False, "font_name":None, "font_size":None, "color":None}
 
         if style is not None:
@@ -680,7 +679,7 @@ class Label(Widget):
         '''
         Set Label text
         '''
-        self.text = string_to_unicode(text)
+        self.text = tostring(text)
         self._force_refresh()
 
     def set_text_style(self, style):

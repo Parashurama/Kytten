@@ -3,8 +3,8 @@
 
 # kytten/color_selector.py
 # Copyrighted (C) 2009 by Conrad "Lynx" Wong
-from __future__ import unicode_literals, print_function
-
+from __future__ import unicode_literals, print_function, absolute_import, division
+from .compat import *
 import math
 import pyglet
 from pyglet import gl
@@ -16,7 +16,6 @@ from .layout import ANCHOR_CENTER, VerticalLayout, HorizontalLayout
 from .slider import Slider
 from .text_input import Input
 from .widgets import Control, Label
-from .base import xrange
 
 class ColorWheel(Control):
     '''
@@ -29,22 +28,22 @@ class ColorWheel(Control):
     BORDER = 4
     VECTORS = []
     NUM_SEGMENTS = int(2 * math.pi * (RADIUS + BORDER) // 24) * 6
-    for x in xrange(0, NUM_SEGMENTS):
+    for x in range(0, NUM_SEGMENTS):
         angle = float(x) * 2.0 * math.pi / float(NUM_SEGMENTS)
         VECTORS.append((math.cos(angle), math.sin(angle)))
     NUM_ARC_SEGMENTS = NUM_SEGMENTS // 6
     COLORS = []
-    for x in xrange(0, NUM_ARC_SEGMENTS):
+    for x in range(0, NUM_ARC_SEGMENTS):
         COLORS.append([255, x * 255 // NUM_ARC_SEGMENTS, 0])
-    for x in xrange(0, NUM_ARC_SEGMENTS):
+    for x in range(0, NUM_ARC_SEGMENTS):
         COLORS.append([255 - (x * 255 // NUM_ARC_SEGMENTS), 255, 0])
-    for x in xrange(0, NUM_ARC_SEGMENTS):
+    for x in range(0, NUM_ARC_SEGMENTS):
         COLORS.append([0, 255, x * 255 // NUM_ARC_SEGMENTS])
-    for x in xrange(0, NUM_ARC_SEGMENTS):
+    for x in range(0, NUM_ARC_SEGMENTS):
         COLORS.append([0, 255 - (x * 255 // NUM_ARC_SEGMENTS), 255])
-    for x in xrange(0, NUM_ARC_SEGMENTS):
+    for x in range(0, NUM_ARC_SEGMENTS):
         COLORS.append([x * 255 // NUM_ARC_SEGMENTS, 0, 255])
-    for x in xrange(0, NUM_ARC_SEGMENTS):
+    for x in range(0, NUM_ARC_SEGMENTS):
         COLORS.append([255, 0, 255 - (x * 255 // NUM_ARC_SEGMENTS)])
 
     def __init__(self, color, name=None, on_select=None):
@@ -192,8 +191,8 @@ class ColorWheel(Control):
         if self.crosshair is not None:
             width, height = self.crosshair.get_needed_size(0, 0)
             self.crosshair.update(
-                x + xI * self.pointer_i + xJ * self.pointer_j - width/2,
-                y + yI * self.pointer_i + yJ * self.pointer_j - width/2,
+                x + xI * self.pointer_i + xJ * self.pointer_j - width//2,
+                y + yI * self.pointer_i + yJ * self.pointer_j - width//2,
                 width, height)
         rI, gI, bI = self.tip_color
         if set_color:

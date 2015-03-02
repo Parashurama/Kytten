@@ -10,10 +10,9 @@ kytten - a skinnable, easily constructed GUI toolkit for pyglet
 Inspired by simplui (Tristam MacDonald) and many other GUI projects.
 Thanks to Gary Herron and Steve Johnson for debugging assistance!
 '''
-from __future__ import unicode_literals, print_function
+from __future__ import unicode_literals, print_function, absolute_import, division
 
 # GUI public constants
-
 from .layout import VALIGN_TOP, VALIGN_CENTER, VALIGN_BOTTOM
 from .layout import HALIGN_LEFT, HALIGN_CENTER, HALIGN_RIGHT
 from .layout import ANCHOR_TOP_LEFT, ANCHOR_TOP, ANCHOR_TOP_RIGHT, \

@@ -4,6 +4,8 @@
 # kytten/images.py
 # Copyrighted (C) 2013 by "Parashurama"
 
+from __future__ import unicode_literals, print_function, absolute_import, division
+from .compat import *
 import pyglet
 import json
 import os

@@ -4,14 +4,14 @@
 # kytten/document.py
 # Copyrighted (C) 2009 by Conrad "Lynx" Wong
 # Copyrighted (C) 2013 by "Parashurama"
-from __future__ import unicode_literals, print_function
-
+from __future__ import unicode_literals, print_function, absolute_import, division
+from .compat import *
 import pyglet
 
 from .widgets import Control, Widget
 from .scrollbar import VScrollbar
 from .override import KyttenIncrementalTextLayout, KyttenTextLayout
-from .base import string_to_unicode, iteritems, FLAGS
+from .base import FLAGS
 from .theme import UntexturedGraphicElement
 from .tools import patch_instance_method
 
@@ -51,7 +51,7 @@ class Document(Control):
         self.always_show_scrollbar = always_show_scrollbar
 
     def create_document(self, text, formatted):
-        text = string_to_unicode(text)
+        text = tostring(text)
 
         if not formatted:                 document = pyglet.text.document.UnformattedDocument(text)
         elif 'attr' in formatted.lower(): document = pyglet.text.decode_attributed(text)
@@ -242,7 +242,7 @@ class Document(Control):
         if formatted != self.isFormatted or self.document is None:
             self.set_document(self.create_document(text, formatted))
         else:
-            self.document.text = string_to_unicode(text)
+            self.document.text = tostring(text)
 
         self._force_refresh()#self.saved_dialog.set_needs_layout()#
 
@@ -251,7 +251,7 @@ class Document(Control):
 
         if self.document is not None:
 
-            text = string_to_unicode(text)
+            text = tostring(text)
 
             if formatted is not False:
 
@@ -352,7 +352,7 @@ class RichText(Widget):
 
 
     def create_document(self, text, formatted):
-        text = string_to_unicode(text)
+        text = tostring(text)
 
         if not formatted:                 document = pyglet.text.document.UnformattedDocument(text)
         elif 'attr' in formatted.lower(): document = pyglet.text.decode_attributed(text)
@@ -463,7 +463,7 @@ class RichText(Widget):
         if formatted != self.isFormatted or self.document is None:
             self.set_document(self.create_document(text, formatted))
         else:
-            self.document.text = string_to_unicode(text)
+            self.document.text = tostring(text)
 
         self._force_refresh()
 

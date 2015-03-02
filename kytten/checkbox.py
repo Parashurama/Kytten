@@ -4,8 +4,8 @@
 # kytten/checkbox.py
 # Copyrighted (C) 2009 by Conrad "Lynx" Wong
 # Copyrighted (C) 2013 by "Parashurama"
-from __future__ import unicode_literals, print_function
-
+from __future__ import unicode_literals, print_function, absolute_import, division
+from .compat import *
 import pyglet
 from .widgets import Control
 from .layout import HALIGN_LEFT, HALIGN_RIGHT
@@ -73,13 +73,13 @@ class Checkbox(Control):
         '''
         Control.layout(self, x, y)
         if self.align == HALIGN_RIGHT:  # label goes on right
-            self.checkbox.update(x, y + self.height/2 - self.checkbox.height/2,
+            self.checkbox.update(x, y + self.height//2 - self.checkbox.height//2,
                                  self.checkbox.width, self.checkbox.height)
             self.label.x = x + self.checkbox.width + self.padding
         else: # label goes on left
             self.label.x = x
             self.checkbox.update(x + self.label.content_width + self.padding,
-                                 y + self.height/2 - self.checkbox.height/2,
+                                 y + self.height//2 - self.checkbox.height//2,
                                  self.checkbox.width, self.checkbox.height)
 
         if self.highlight is not None:
@@ -87,7 +87,7 @@ class Checkbox(Control):
 
         font = self.label.document.get_font()
         height = font.ascent - font.descent
-        self.label.y = y + self.height/2 - height/2 - font.descent
+        self.label.y = y + self.height//2 - height//2 - font.descent
 
     def on_gain_highlight(self):
         Control.on_gain_highlight(self)

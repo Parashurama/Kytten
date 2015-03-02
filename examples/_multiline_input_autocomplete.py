@@ -26,7 +26,7 @@ def Default_on_tabulation(input_widget):
     autocomplete_options = kytten.GetObjectfromName('Input_Autocomplete_menu')
     if not autocomplete_options.visible:
         input_widget.dispatch_event("on_text", " "*4)
-        return pyglet.event.EVENT_UNHANDLED
+        return pyglet.event.EVENT_HANDLED
 
     if autocomplete_options.menu_options:
         kytten.GetObjectfromName('Input_Autocomplete').input_widget.dispatch_event("on_auto_complete", autocomplete_options.menu_options[0].text)
@@ -42,9 +42,7 @@ def ShowAutocomplete_Menu():
 
     def _wrapper_key_press(symbol, modifiers):
         if (symbol == key.ENTER and not autocomplete.selected_index):
-            HideAutocomplete_Menu()
-        else:
-            return autocomplete.on_key_press(symbol, modifiers)
+        #return pyglet.event.EVENT_UNHANDLED
 
     def _wrapper_text_motion(motion, select=False):
         if   motion in (key.MOTION_UP,key.MOTION_DOWN):

@@ -4,8 +4,8 @@
 # kytten/dialog.py
 # Copyrighted (C) 2009 by Conrad "Lynx" Wong
 # Copyrighted (C) 2013 by "Parashurama"
-from __future__ import unicode_literals, print_function
-
+from __future__ import unicode_literals, print_function, absolute_import, division
+from .compat import *
 import pyglet
 import weakref
 import time
@@ -513,8 +513,8 @@ class Dialog(Wrapper, DialogEventManager, DialogAssert):
 
             elif ANCHOR_LEFT == ANCHOR:
                 OFF_WIDTH=max(OFF_WIDTH, child_dialog.width)
-                OFF_HEIGHT=max(OFF_HEIGHT, child_dialog.height/2-_HEIGHT/2)
-                HEIGHT=max(HEIGHT, _HEIGHT/2+ child_dialog.height/2)#max(HEIGHT, child_dialog.height/2) #
+                OFF_HEIGHT=max(OFF_HEIGHT, child_dialog.height//2-_HEIGHT//2)
+                HEIGHT=max(HEIGHT, _HEIGHT//2+ child_dialog.height//2)#max(HEIGHT, child_dialog.height//2) #
 
             elif ANCHOR_BOTTOM_LEFT == ANCHOR:
                 if   child_dialog.anchor_flag == 'SE':
@@ -530,9 +530,9 @@ class Dialog(Wrapper, DialogEventManager, DialogAssert):
                     HEIGHT=max(HEIGHT, child_dialog.height)
 
             elif ANCHOR_BOTTOM == ANCHOR:
-                OFF_WIDTH=max(OFF_WIDTH, child_dialog.width/2-_WIDTH/2)
+                OFF_WIDTH=max(OFF_WIDTH, child_dialog.width//2-_WIDTH//2)
                 OFF_HEIGHT=max(OFF_HEIGHT, child_dialog.height)
-                WIDTH=max(WIDTH, _WIDTH/2+child_dialog.width/2)
+                WIDTH=max(WIDTH, _WIDTH//2+child_dialog.width//2)
 
             elif ANCHOR_BOTTOM_RIGHT == ANCHOR:
                 if   child_dialog.anchor_flag == 'SW':
@@ -546,9 +546,9 @@ class Dialog(Wrapper, DialogEventManager, DialogAssert):
                     WIDTH=max(WIDTH, _WIDTH+child_dialog.width)
 
             elif ANCHOR_RIGHT == ANCHOR:
-                OFF_HEIGHT=max(OFF_HEIGHT, child_dialog.height/2-_HEIGHT/2)
+                OFF_HEIGHT=max(OFF_HEIGHT, child_dialog.height//2-_HEIGHT//2)
                 WIDTH=max(WIDTH, _WIDTH+child_dialog.width)
-                HEIGHT=max(HEIGHT, child_dialog.height/2)
+                HEIGHT=max(HEIGHT, child_dialog.height//2)
 
             elif ANCHOR_TOP_RIGHT == ANCHOR:
                 if   child_dialog.anchor_flag == 'NW':
@@ -562,8 +562,8 @@ class Dialog(Wrapper, DialogEventManager, DialogAssert):
                     OFF_HEIGHT=max(OFF_HEIGHT, child_dialog.height-_HEIGHT)
 
             elif ANCHOR_TOP == ANCHOR:
-                OFF_WIDTH=max(OFF_WIDTH, child_dialog.width/2-_WIDTH/2)
-                WIDTH=max(WIDTH, _WIDTH/2+child_dialog.width/2)
+                OFF_WIDTH=max(OFF_WIDTH, child_dialog.width//2-_WIDTH//2)
+                WIDTH=max(WIDTH, _WIDTH//2+child_dialog.width//2)
                 HEIGHT=max(HEIGHT, _HEIGHT+child_dialog.height)
 
             else:
@@ -583,7 +583,7 @@ class Dialog(Wrapper, DialogEventManager, DialogAssert):
                 return ( OFFSET_X-DIALOG.width, OFFSET_Y-SCREEN.height+PARENT.height)
 
         elif ANCHOR == ANCHOR_LEFT:
-            return (OFFSET_X-DIALOG.width, OFFSET_Y-SCREEN.height/2+PARENT.height/2)
+            return (OFFSET_X-DIALOG.width, OFFSET_Y-SCREEN.height//2+PARENT.height//2)
 
         elif ANCHOR == ANCHOR_BOTTOM_LEFT:
             if   DIALOG.anchor_flag == 'SE':
@@ -594,7 +594,7 @@ class Dialog(Wrapper, DialogEventManager, DialogAssert):
                 return ( OFFSET_X-DIALOG.width, OFFSET_Y )
 
         elif ANCHOR == ANCHOR_BOTTOM:
-            return (OFFSET_X-SCREEN.width/2+PARENT.width/2,OFFSET_Y-DIALOG.height)
+            return (OFFSET_X-SCREEN.width//2+PARENT.width//2,OFFSET_Y-DIALOG.height)
 
         elif ANCHOR == ANCHOR_BOTTOM_RIGHT:
             if   DIALOG.anchor_flag == 'SW':
@@ -605,7 +605,7 @@ class Dialog(Wrapper, DialogEventManager, DialogAssert):
                 return ( (OFFSET_X)-(SCREEN.width-DIALOG.width)+PARENT.width,OFFSET_Y )
 
         elif ANCHOR == ANCHOR_RIGHT:
-            return ( (OFFSET_X)-(SCREEN.width-DIALOG.width)+PARENT.width, OFFSET_Y-SCREEN.height/2+PARENT.height/2)
+            return ( (OFFSET_X)-(SCREEN.width-DIALOG.width)+PARENT.width, OFFSET_Y-SCREEN.height//2+PARENT.height//2)
 
         elif   ANCHOR == ANCHOR_TOP_RIGHT:
             if   DIALOG.anchor_flag == 'NW':
@@ -616,7 +616,7 @@ class Dialog(Wrapper, DialogEventManager, DialogAssert):
                 return ( (OFFSET_X)-(SCREEN.width-DIALOG.width)+PARENT.width, OFFSET_Y-SCREEN.height+PARENT.height)
 
         elif ANCHOR == ANCHOR_TOP:
-            return (OFFSET_X-SCREEN.width/2+PARENT.width/2, OFFSET_Y-SCREEN.height+DIALOG.height+PARENT.height)
+            return (OFFSET_X-SCREEN.width//2+PARENT.width//2, OFFSET_Y-SCREEN.height+DIALOG.height+PARENT.height)
 
         else:
             raise NotImplementedError('')
@@ -1222,17 +1222,17 @@ class ToolTip(Dialog):
         self.child_group_size = (EFFECTIVE_SIZE[0]+EFFECTIVE_OFFSET[0], EFFECTIVE_SIZE[1]+EFFECTIVE_OFFSET[1])
 
         if self.real_anchor == ANCHOR_CENTER and self.child_dialogs:
-            center_x = self.screen.width/2
-            center_y = self.screen.height/2
+            center_x = self.screen.width//2
+            center_y = self.screen.height//2
             g_width, g_height = self.child_group_size
-            self.set_offset((center_x-g_width/2, center_y-g_height/2))
+            self.set_offset((center_x-g_width//2, center_y-g_height//2))
             self.anchor = ANCHOR_BOTTOM_LEFT
 
         # Calculate our position relative to our containing window,
         # making sure that we fit completely on the window.  If our offset
         # would send us off the screen, constrain it.
-        x = self.parent_widget.x + self.parent_widget.width/2-self.width/2
-        y = self.parent_widget.y + self.parent_widget.height/2-self.height/2
+        x = self.parent_widget.x + self.parent_widget.width//2-self.width//2
+        y = self.parent_widget.y + self.parent_widget.height//2-self.height//2
 
         #x, y = GetRelativePoint(self.screen, self.anchor,
         #                        self, None, (0, 0))

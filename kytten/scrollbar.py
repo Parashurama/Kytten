@@ -4,8 +4,8 @@
 # kytten/scrollbar.py
 # Copyrighted (C) 2009 by Conrad "Lynx" Wong
 # Copyrighted (C) 2013 by "Parashurama"
-from __future__ import unicode_literals, print_function
-
+from __future__ import unicode_literals, print_function, absolute_import, division
+from .compat import *
 import pyglet
 from .widgets import Control
 
@@ -280,11 +280,11 @@ class HScrollbar(Control):
         space_x, space_y, space_width, space_height = self._get_space_region()
         bar_x, bar_y, bar_width, bar_height = self._get_bar_region()
         if x < bar_x:
-            x -= bar_width/2.
+            x -= bar_width//2.
             self.pos = float(x - space_x) / space_width
         elif x > bar_x + bar_width:
             max_bar_x = space_width - bar_width
-            x -= bar_width/2.
+            x -= bar_width//2.
             self.pos = float(min(max_bar_x, x - space_x)) / space_width
 
         if self.bar is not None:
@@ -467,10 +467,10 @@ class VScrollbar(HScrollbar):
         bar_x, bar_y, bar_width, bar_height = self._get_bar_region()
         top = space_y + space_height
         if y > bar_y + bar_height:
-            y += bar_height/2.
+            y += bar_height//2.
             self.pos = float(top - y) / space_height
         elif y < bar_y:
-            y += bar_height/2.
+            y += bar_height//2.
             max_bar_y = space_height - bar_height
             self.pos = float(min(max_bar_y, top - y)) / space_height
         if self.bar is not None:

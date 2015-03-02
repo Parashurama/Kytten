@@ -3,8 +3,8 @@
 
 # kytten/file_dialogs.py
 # Copyrighted (C) 2009 by Conrad "Lynx" Wong
-from __future__ import unicode_literals, print_function
-
+from __future__ import unicode_literals, print_function, absolute_import, division
+from .compat import *
 import glob
 import os
 import pyglet
@@ -193,7 +193,7 @@ class FileSaveDialog(FileLoadDialog):
 
     def _do_cancel(self):
         if self.on_escape is not None:
-            self.on_escape(self)
+            self.on_escape()
         else:
             self.delete()
             self.window.remove_handlers(self)

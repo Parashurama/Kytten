@@ -5,8 +5,8 @@
 # Copyrighted (C) Michael Spencer
 #
 # Source: http://code.activestate.com/recipes/364469/
-from __future__ import unicode_literals, print_function
-
+from __future__ import unicode_literals, print_function, absolute_import, division
+from .compat import *
 import compiler
 
 class Unsafe_Source_Error(Exception):

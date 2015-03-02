@@ -4,12 +4,11 @@
 # kytten/slider.py
 # Copyrighted (C) 2009 by Conrad "Lynx" Wong
 # Copyrighted (C) 2013 by "Parashurama"
-from __future__ import unicode_literals, print_function
-
+from __future__ import unicode_literals, print_function, absolute_import, division
+from .compat import *
 
 import pyglet
 from .widgets import Control
-from .base import xrange
 
 class Slider(Control):
     '''
@@ -106,7 +105,7 @@ class Slider(Control):
             if self.markers:
                 step = float(width) / self.steps
                 offset_x, offset_y = self.step_offset
-                for n in xrange(0, self.steps + 1):
+                for n in range(0, self.steps + 1):
                     self.markers[n].update(int(x + step * n) + offset_x,
                                            y + offset_y,
                                            self.markers[n].width,
@@ -185,7 +184,7 @@ class Slider(Control):
             self.offset = dialog.theme[path]['offset']
         if not self.markers and self.steps is not None:
             path = self.IMAGE_STEP
-            for n in xrange(0, self.steps + 1):
+            for n in range(0, self.steps + 1):
                 self.markers.append(
                     dialog.theme[path]['image'].generate(
                         color,

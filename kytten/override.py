@@ -4,15 +4,14 @@
 # kytten/override.py
 # Copyrighted (C) 2009 by Conrad "Lynx" Wong
 # Copyrighted (C) 2013 by "Parashurama"
-from __future__ import unicode_literals, print_function
+from __future__ import unicode_literals, print_function, absolute_import, division
 
 import pyglet
 import pyglet.gl as gl
 from pyglet.text import runlist
 from types import MethodType
 
-from .tools import string_to_unicode, patch_instance_method
-from .base import xrange
+from .tools import tostring, patch_instance_method
 
 KYTTEN_LAYOUT_GROUPS = {}
 KYTTEN_LAYOUT_GROUP_REFCOUNTS = {}
@@ -169,10 +168,10 @@ class KyttenTextLayout(pyglet.text.layout.TextLayout):
 pyglet_text_Label = pyglet.text.Label
 class KyttenLabel(pyglet.text.Label):
     def __init__(self, text, *args, **kwargs):
-        pyglet.text.Label.__init__(self, string_to_unicode(text), *args, **kwargs)
+        pyglet.text.Label.__init__(self, tostring(text), *args, **kwargs)
 
     def _set_text(self, text):
-        self.document.text = string_to_unicode(text)
+        self.document.text = tostring(text)
     text = property(pyglet.text.Label._get_text, _set_text)
 
     def _set_y(self, y):
@@ -183,7 +182,7 @@ class KyttenLabel(pyglet.text.Label):
             dy = y - self._y
             l_dy = lambda y: float(y + dy) # Fixes rounding error bug in zoomed out mode in Scrollable
             for vertex_list in self._vertex_lists:
-                vertex_list.vertices[1::2] = map(l_dy, vertex_list.vertices[1::2])
+                vertex_list.vertices[1::2] = list(map(l_dy, vertex_list.vertices[1::2]))
             self._y = y
     y = property(pyglet.text.Label._get_y, _set_y)
 
@@ -195,7 +194,7 @@ class KyttenLabel(pyglet.text.Label):
             dx = x - self._x
             l_dx = lambda x: float(x + dx)
             for vertex_list in self._vertex_lists:
-                vertex_list.vertices[::2] = map(l_dx, vertex_list.vertices[::2])
+                vertex_list.vertices[::2] = list(map(l_dx, vertex_list.vertices[::2]))
             self._x = x
     x = property(pyglet.text.Label._get_x, _set_x)
 

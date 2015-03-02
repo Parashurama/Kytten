@@ -4,14 +4,13 @@
 # kytten/input.py
 # Copyrighted (C) 2009 by Conrad "Lynx" Wong
 # Copyrighted (C) 2013 by "Parashurama"
-from __future__ import unicode_literals, print_function
+from __future__ import unicode_literals, print_function, absolute_import, division
+from .compat import *
 import re
-
 import pyglet
 import pyglet.window.key as key
 from .widgets import Control
 from .override import KyttenIncrementalTextLayout, KyttenCaret, KyttenLabel
-from .base import string_to_unicode
 from . import pyperclip
 
 class Input(Control):
@@ -27,7 +26,7 @@ class Input(Control):
     def __init__(self, text="", length=20, max_length=None, padding=0,
                  on_input=None, name=None, disabled=False, restricted=None, group=None):
         Control.__init__(self, name=name, disabled=disabled, group=group)
-        self.text = string_to_unicode(text)
+        self.text = tostring(text)
         self.length = int(length)
         self.max_length = int(max_length) if max_length is not None else None
         self.padding = int(padding)
@@ -209,7 +208,7 @@ class Input(Control):
             self.highlight.update(self.x, self.y, self.width, self.height)
 
     def set_text(self, text):
-        self.document.text = string_to_unicode(text)
+        self.document.text = tostring(text)
         if self.caret is not None:
             self.caret.mark = self.caret.position = len(self.document.text)
         elif self.label  is not None:
@@ -300,7 +299,7 @@ class MultilineInput(Input):
                  on_input=None, on_tabulation=None, auto_complete=None, name=None, disabled=False, group=None):
 
         Control.__init__(self, name=name, disabled=disabled, group=group)
-        self.text = string_to_unicode(text)
+        self.text = tostring(text)
         self.content_width = width
         self.content_height = height
 
@@ -312,7 +311,7 @@ class MultilineInput(Input):
         self._tabulation_func   = self._wrap_method(on_tabulation)
 
     def set_text(self, text):
-        self.document.text = string_to_unicode(text)
+        self.document.text = tostring(text)
         if self.caret:
             self.caret.mark = self.caret.position = len(self.document.text)
 

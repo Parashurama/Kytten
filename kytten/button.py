@@ -4,13 +4,13 @@
 # kytten/button.py
 # Copyrighted (C) 2009 by Conrad "Lynx" Wong
 # Copyrighted (C) 2013 by "Parashurama"
-from __future__ import unicode_literals, print_function
-
+from __future__ import unicode_literals, print_function, absolute_import, division
+from .compat import *
 import pyglet
 import weakref
 from .widgets import Control, DragNDropLayoutType, FreeLayoutAssert, BOOLEANS
 from .override import KyttenLabel
-from .base import  GetObjectfromName, CVars, string_to_unicode
+from .base import  GetObjectfromName, CVars
 from .theme import DefaultTextureGraphicElement, Repeat_NinePatchTextureGraphicElement, Stretch_NinePatchTextureGraphicElement
 
 class Button(Control):
@@ -35,7 +35,7 @@ class Button(Control):
         @param disabled True  if the button should be disabled
         '''
         Control.__init__(self, name=name, on_gain_hover=on_gain_hover, group=group, on_lose_hover=on_lose_hover, disabled=disabled)
-        self.text = string_to_unicode(text)
+        self.text = tostring(text)
         self.on_click = self._wrap_method(on_click)
         self.on_double_click = self._wrap_method(on_double_click)
 
@@ -44,7 +44,7 @@ class Button(Control):
         '''
         Set Text for the button
         '''
-        self.text=string_to_unicode(text)
+        self.text=tostring(text)
         self._force_refresh()
 
     def delete(self):
@@ -77,8 +77,8 @@ class Button(Control):
 
         x, y, width, height = self.button.get_content_region()
         font = self.label.document.get_font()
-        self.label.x = x + width/2 - self.label.content_width/2
-        self.label.y = y + height/2 - font.ascent/2 - font.descent
+        self.label.x = x + width//2 - self.label.content_width//2
+        self.label.y = y + height//2 - font.ascent//2 - font.descent
 
     def on_gain_highlight(self):
         '''
@@ -592,7 +592,7 @@ class DraggableImageButton(ImageButton):
         if self._is_dragging:
 
             DRAGGABLE=GetObjectfromName('DRAGGABLE')
-            NEW_POSITION = DRAGGABLE.layout_validate_drop_widget(self, (int(self.x +self.width/2.),int(self.y+self.height/2.)))
+            NEW_POSITION = DRAGGABLE.layout_validate_drop_widget(self, (int(self.x +self.width//2),int(self.y+self.height//2)))
             _discard_old_parent=False
             Widget=None
 

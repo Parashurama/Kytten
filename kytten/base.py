@@ -3,7 +3,7 @@
 
 # kytten/base.py
 # Copyrighted (C) 2013 by "Parashurama"
-from __future__ import unicode_literals, print_function
+from __future__ import unicode_literals, print_function, absolute_import, division
 
 import weakref
 
@@ -77,35 +77,38 @@ class Log:
         return Log.logging_bool
 
 class DisplayGroup:
-    def __init__(self, name=None, members=None):
+    #visible = None
+    def __init__(self, name=None, members=[]):
         self.name=name
 
         if self.name is not None:
             ReferenceName(self,self.name)
             internals.display_groups_refs[name]=self
 
-        if members: self.members=weakref.WeakSet(members)
-        else: self.members=weakref.WeakSet()
+        self._members=weakref.WeakSet(members)
 
     def __iter__(self,*args):
-        return iter(self.members)
+        return iter(self._members)
 
     def add(self,member):
-        self.members.add(member)
+        self._members.add(member)
 
     def remove(self,member):
-        self.members.remove(member)
+        self._members.remove(member)
 
     def ToggleVisibilityGroup(self):
-        for member in self.members:
+        for member in self._members:
             member.ToggleVisibility()
 
     def ShowGroup(self):
-        for member in self.members:
+        #self.visible = True
+
+        for member in self._members:
             member.Show()
 
     def HideGroup(self):
-        for member in self.members:
+        #self.visible = False
+        for member in self._members:
             member.Hide()
 
     Show = ShowGroup
@@ -123,4 +126,4 @@ class Virtual(object):
     def __init__(self, **kwargs):
         self.__dict__.update(kwargs)
 
-from .tools import yield_single_value, wrapper, string_to_unicode, iteritems, xrange, minvalue, maxvalue
+from .tools import yield_single_value, wrapper, minvalue, maxvalue

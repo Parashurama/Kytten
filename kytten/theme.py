@@ -4,8 +4,8 @@
 # kytten/theme.py
 # Copyrighted (C) 2009 by Conrad "Lynx" Wong
 # Copyrighted (C) 2013 by "Parashurama"
-from __future__ import unicode_literals, print_function
-
+from __future__ import unicode_literals, print_function, absolute_import, division
+from .compat import *
 import os
 
 import pyglet
@@ -240,8 +240,8 @@ class TextureIconElement:
         divider = 1.5
         if self.no_label:
             divider = 2
-        x1 = int(self.x + self.width/2 - self.iwidth/2)
-        y1 = int(self.y + self.height/divider - self.iheight/2)
+        x1 = int(self.x + self.width//2 - self.iwidth//2)
+        y1 = int(self.y + self.height/divider - self.iheight//2)
         x2, y2 = x1 + int(self.iwidth), y1 + int(self.iheight)
         return (x1, y1, x2, y1, x2, y2, x1, y2)
 
@@ -1114,7 +1114,7 @@ def get_color_value(color):
             raise TypeError()
         int(color[0]) # RGBA color values
         if isinstance(color[0], float):
-            return map(lambda x: int(255*x), color)
+            return list(map(lambda x: int(255*x), color))
         return color
     except TypeError:
         raise TypeError('Invalid Color Type: must be RGBA format: [255,255,255,255] or (1.0,1.0,1.0,1.0)')

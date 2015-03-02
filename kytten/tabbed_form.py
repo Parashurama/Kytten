@@ -4,6 +4,9 @@
 # kytten/tabbed_form.py
 # Copyrighted (C) 2013 by "Parashurama"
 
+from __future__ import unicode_literals, print_function, absolute_import, division
+from .compat import *
+
 from .button import Button, ButtonStyle, ImageButton
 from .togglebutton import ToggleImageButton, ToggleGroup
 from .layout import VerticalLayout, HorizontalLayout, HALIGN_LEFT, VALIGN_TOP, ANCHOR_TOP_LEFT

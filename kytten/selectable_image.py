@@ -3,13 +3,16 @@
 
 # kytten/widgets.py
 # Copyrighted (C) 2013 by "Parashurama"
-from __future__ import unicode_literals, print_function
-
+from __future__ import unicode_literals, print_function, absolute_import, division
+from .compat import *
 import pyglet
 
 from .widgets import Control, Image
 from .base import internals
 from .theme import DefaultTextureGraphicElement
+
+def round_down(x, step):
+    return x//step*step
 
 class Selectable(Control, Image):
 
@@ -54,15 +57,15 @@ class Selectable(Control, Image):
 
     def on_mouse_press(self, x, y, button, *args):
         if button ==1:
-            self.start_position0 = (int(x-self.x)/self.step0[0]*self.step0[0], int(y-self.y)/self.step0[1]*self.step0[1])
+            self.start_position0 = (round_down(int(x-self.x), self.step0[0]), round_down(int(y-self.y), self.step0[1]) )
             self.current_position0 = None#self.start_position0
 
         elif button ==4:
-            self.start_position1 = (int(x-self.x)/self.step1[0]*self.step1[0], int(y-self.y)/self.step1[1]*self.step1[1])
+            self.start_position1 = (round_down(int(x-self.x), self.step1[0]), round_down(int(y-self.y), self.step1[1]) )
             self.current_position1 = None#self.start_position1
 
         elif button ==2:
-            self.start_position2 = (int(x-self.x)/self.step2[0]*self.step2[0], int(y-self.y)/self.step2[1]*self.step2[1])
+            self.start_position2 = (round_down(int(x-self.x), self.step2[0]), round_down(int(y-self.y), self.step2[1]) )
             self.current_position2 = None#self.start_position2
 
         if button in (1, 2, 4):
@@ -74,13 +77,13 @@ class Selectable(Control, Image):
     def on_mouse_drag(self, x, y, dx, dy, button, *args):
 
         if button ==1:
-            self.current_position0 = (int(x-self.x)/self.step0[0]*self.step0[0], int(y-self.y)/self.step0[1]*self.step0[1])
+            self.current_position0 = (round_down(int(x-self.x), self.step0[0]), round_down(int(y-self.y), self.step0[1]) )
 
         elif button ==4:
-            self.current_position1 = (int(x-self.x)/self.step1[0]*self.step1[0], int(y-self.y)/self.step1[1]*self.step1[1])
+            self.current_position1 = (round_down(int(x-self.x), self.step1[0]), round_down(int(y-self.y), self.step1[1]) )
 
         elif button ==2:
-            self.current_position2 = (int(x-self.x)/self.step2[0]*self.step2[0], int(y-self.y)/self.step2[1]*self.step2[1])
+            self.current_position2 = (round_down(int(x-self.x), self.step2[0]), round_down(int(y-self.y), self.step2[1]) )
 
         if button in (1, 2, 4):
             self._force_refresh()

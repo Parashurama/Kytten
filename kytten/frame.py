@@ -11,8 +11,8 @@
 # Frame: positions its contained Widget within a graphic, which it stretches
 #        to cover the Widget's area, or the space within which it is contained.
 # TitleFrame: like Frame, but has a title region on top as well.
-from __future__ import unicode_literals, print_function
-
+from __future__ import unicode_literals, print_function, absolute_import, division
+from .compat import *
 import pyglet
 import weakref
 from .widgets import Widget, Control, Graphic, Label, Spacer

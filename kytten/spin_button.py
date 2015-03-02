@@ -3,8 +3,8 @@
 
 # kytten/spin_button.py
 # Copyrighted (C) 2013 by "Parashurama"
-from __future__ import unicode_literals, print_function
-
+from __future__ import unicode_literals, print_function, absolute_import, division
+from .compat import *
 import pyglet
 
 from .button import Button
@@ -14,7 +14,7 @@ from .layout import VALIGN_CENTER, HALIGN_CENTER, VerticalLayout, HorizontalLayo
 class SpinControlGroup(object):
     def __init__(self, value=None, minv=0.0, maxv=100.0, step=1.0, credit=10, text_style={}):
 
-        if value is None: self.value=(maxv-minv)/2+minv
+        if value is None: self.value=(maxv-minv)//2+minv
         else: self.value=value
 
         self.text_style = text_style
@@ -144,7 +144,7 @@ class SpinControl(HorizontalLayout, Control):
             self.text_style=self.control_group.text_style
             self.control_group.add(self)
         else:
-            if value is None: self.value=(maxv-minv)/2+minv
+            if value is None: self.value=(maxv-minv)//2+minv
             else: self.value=value
 
             self.min_value=minv

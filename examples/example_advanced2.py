@@ -90,7 +90,7 @@ and controlled with the 'anchor' and 'anchor_flag' parameters.
         return [128+randint(0,16)*8, 128+randint(0,16)*8, 128+randint(0,16)*8, 255]
 
     # Randomly create DraggableImageButton in Slots.
-    for slot in [ randint(0,99) for i in range(35)]:
+    for slot in [ randint(0,99) for i in range(50)]:
         layout = SLOTS[slot/10]
         layout.set(kytten.DraggableImageButton(Images['slot_button'], padding=0, on_gain_hover=slot_hover, on_double_click=dummy, color=rnd_color()), slot%10)
 
@@ -139,7 +139,7 @@ if __name__ == '__main__':
     dialog = kytten.Dialog(
                 kytten.VerticalLayout([
                     kytten.ImageButton(style=MenuButton, text="Show Slots", on_click=on_click_show_slots),
-                    kytten.ImageButton(style=MenuButton, text="Show Text Widgets", on_click=dummy),
+                    kytten.ImageButton(style=MenuButton, text="Show Text Widgets", on_click=dummy, disabled=True),
                     kytten.ImageButton(style=MenuButton, text="Show Document", on_click=dummy),
                     kytten.ImageButton(style=MenuButton, text="Exit", on_click=on_click_exit),
                 ], align=kytten.HALIGN_LEFT),

@@ -4,12 +4,11 @@
 # kytten/menu.py
 # Copyrighted (C) 2009 by Conrad "Lynx" Wong
 # Copyrighted (C) 2013 by "Parashurama"
-from __future__ import unicode_literals, print_function
-
+from __future__ import unicode_literals, print_function, absolute_import, division
+from .compat import *
 import pyglet
 import pyglet.window.key as key
 
-from .base import string_to_unicode
 from .widgets import Widget, Control
 from .dialog import Dialog, DIALOG_NO_CREATE_FRAME
 from .frame import Frame
@@ -29,7 +28,7 @@ class MenuOption(Control):
     def __init__(self, text="", anchor=ANCHOR_CENTER, menu=None,
                  disabled=False):
         Control.__init__(self, disabled=disabled)
-        self.text = string_to_unicode(text)
+        self.text = tostring(text)
         self.anchor = anchor
         self.menu = menu
         self.label = None

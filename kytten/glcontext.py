@@ -3,8 +3,8 @@
 
 # kytten/glcontext.py
 # Copyrighted (C) 2013 by "Parashurama"
-from __future__ import unicode_literals, print_function
-
+from __future__ import unicode_literals, print_function, absolute_import, division
+from .compat import *
 from ctypes import c_uint
 import pyglet.gl as gl
 
