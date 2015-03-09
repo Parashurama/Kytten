@@ -1,12 +1,16 @@
+#! /usr/bin/env python
+# *-* coding: UTF-8 *-*
+
+# examples/_multiline_input_autocomplete.py
+# Copyrighted (C) 2014 by "Parashurama"
+from __future__ import absolute_import, unicode_literals, division, print_function
 import kytten
 import pyglet
-
 import pyglet.window.key as key
-
 
 # taken from http://world-english.org
 # list of most common words in English
-with open("ressources/most_common_words_in_english.txt", "rb") as f:
+with open("ressources/most_common_words_in_english.txt", "r") as f:
     AUTOCOMPLETE_KEYWORDS = f.read().split()
 
 
@@ -42,7 +46,9 @@ def ShowAutocomplete_Menu():
 
     def _wrapper_key_press(symbol, modifiers):
         if (symbol == key.ENTER and not autocomplete.selected_index):
-        #return pyglet.event.EVENT_UNHANDLED
+            HideAutocomplete_Menu()
+        else:
+            return autocomplete.on_key_press(symbol, modifiers)
 
     def _wrapper_text_motion(motion, select=False):
         if   motion in (key.MOTION_UP,key.MOTION_DOWN):

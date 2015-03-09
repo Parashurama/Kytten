@@ -3,7 +3,7 @@
 
 # examples/example_advanced2.py
 # Copyrighted (C) 2014 by "Parashurama"
-from __future__ import unicode_literals, print_function
+from __future__ import absolute_import, unicode_literals, division, print_function
 import random
 import pyglet
 import string
@@ -91,7 +91,7 @@ and controlled with the 'anchor' and 'anchor_flag' parameters.
 
     # Randomly create DraggableImageButton in Slots.
     for slot in [ randint(0,99) for i in range(50)]:
-        layout = SLOTS[slot/10]
+        layout = SLOTS[slot//10]
         layout.set(kytten.DraggableImageButton(Images['slot_button'], padding=0, on_gain_hover=slot_hover, on_double_click=dummy, color=rnd_color()), slot%10)
 
 

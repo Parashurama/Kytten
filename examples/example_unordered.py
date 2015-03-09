@@ -1,8 +1,9 @@
 # a_test.py
 # Copyrighted (C) 2009 by Conrad "Lynx" Wong
+# Copyrighted (C) 2014 by "Parashurama"
 
 # Test dialog using the Kytten GUI
-
+from __future__ import absolute_import, unicode_literals, division, print_function
 import os
 import sys
 import pyglet
@@ -213,7 +214,7 @@ def create_file_load_dialog():
 def create_file_save_dialog():
     dialog = None
 
-    def on_select(filename, index):
+    def on_select(dropdown, filename, index):
         print("File save: %s" % filename)
         on_escape(dialog)
 
